@@ -6,6 +6,7 @@ import {
   VaultIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -14,7 +15,10 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import {
+  AsyncResultBoundary,
+  AsyncResultFailure,
+} from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,11 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   ALL_FILTER,
   toQueryInput,
 } from "@/features/events/core/event-hero-filter";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { EventSelectItems } from "@/features/events/core/select-utils";
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
@@ -56,13 +60,15 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const navigate = useNavigate({ from: "/dashboard/events/vault" });
   const hasInitializedRef = useRef(false);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const eventsResult = useAtomValue(eventsAtom);
+  const eventsQuery = useQuery(eventsQueryOptions());
   const oldestUnpaidResult = useAtomValue(oldestUnpaidEventAtom);
   const effectiveEventId = urlEventId ?? ALL_FILTER;
   const eventQueryInput = toQueryInput(effectiveEventId);
   const vaultInput =
     eventQueryInput === undefined ? {} : { eventId: eventQueryInput };
-  const refreshEvents = useAtomRefresh(eventsAtom);
+  const refreshEvents = () => {
+    void eventsQuery.refetch();
+  };
   const refreshOldestUnpaid = useAtomRefresh(oldestUnpaidEventAtom);
   const refreshVault = useAtomRefresh(vaultAtom(vaultInput));
   const hasSpecificEvent = eventQueryInput !== undefined;
@@ -86,37 +92,49 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
     }
   }, [oldestUnpaidResult, urlEventId, navigate]);
 
+  if (eventsQuery.isPending && eventsQuery.data === undefined) {
+    return <LoadingSpinner />;
+  }
+
+  if (eventsQuery.isError && eventsQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          eventsQuery.error,
+          "Nie udało się wczytać eventów. Spróbuj ponownie."
+        )}
+        onRetry={refreshEvents}
+      />
+    );
+  }
+
   return (
-    <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
-      {(events) => (
-        <AsyncResultBoundary
-          onRetry={refreshOldestUnpaid}
-          result={oldestUnpaidResult}
-        >
-          {() =>
-            hasInitialized ? (
-              // oxlint-disable-next-line no-use-before-define
-              <VaultContent
-                effectiveEventId={effectiveEventId}
-                events={[...events]}
-                hasSpecificEvent={hasSpecificEvent}
-                onEventChange={(eventId) => {
-                  void navigate({
-                    search: {
-                      eventId,
-                    },
-                  });
-                }}
-                onRetryVault={refreshVault}
-                session={session}
-                vaultInput={vaultInput}
-              />
-            ) : (
-              <LoadingSpinner />
-            )
-          }
-        </AsyncResultBoundary>
-      )}
+    <AsyncResultBoundary
+      onRetry={refreshOldestUnpaid}
+      result={oldestUnpaidResult}
+    >
+      {() =>
+        hasInitialized ? (
+          // oxlint-disable-next-line no-use-before-define
+          <VaultContent
+            effectiveEventId={effectiveEventId}
+            events={[...(eventsQuery.data ?? [])]}
+            hasSpecificEvent={hasSpecificEvent}
+            onEventChange={(eventId) => {
+              void navigate({
+                search: {
+                  eventId,
+                },
+              });
+            }}
+            onRetryVault={refreshVault}
+            session={session}
+            vaultInput={vaultInput}
+          />
+        ) : (
+          <LoadingSpinner />
+        )
+      }
     </AsyncResultBoundary>
   );
 };

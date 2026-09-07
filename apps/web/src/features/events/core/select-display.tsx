@@ -9,7 +9,7 @@ import { getEventIcon } from "@/lib/constants";
 
 interface EventSelectDisplayParams {
   selectedEventId: string;
-  events: EventSelectOption[] | undefined;
+  events: readonly EventSelectOption[] | undefined;
   allLabel?: string;
   placeholder?: string;
 }
@@ -50,7 +50,7 @@ const getEventSelectDisplay = ({
 interface HeroSelectDisplayParams {
   selectedEventId: string;
   selectedHeroId: string;
-  sortedHeroes: HeroSelectOption[] | undefined;
+  sortedHeroes: readonly HeroSelectOption[] | undefined;
   eventPlaceholder?: string;
   allLabel?: string;
   placeholder?: string;

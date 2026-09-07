@@ -10,7 +10,7 @@ import type {
 import { getEventIcon } from "@/lib/constants";
 
 interface EventSelectItemsProps {
-  events: EventSelectOption[] | undefined;
+  events: readonly EventSelectOption[] | undefined;
   allLabel?: string;
   includeAllOption?: boolean;
 }
@@ -48,7 +48,7 @@ export const EventSelectItems = ({
 
 interface HeroSelectItemsProps {
   heroesLoading: boolean;
-  sortedHeroes: HeroSelectOption[] | undefined;
+  sortedHeroes: readonly HeroSelectOption[] | undefined;
   allLabel?: string;
   includeAllOption?: boolean;
   loadingLabel?: string;

@@ -47,16 +47,20 @@ type EventRoutePath =
 
 const loadEventRoute = async (to: EventRoutePath) => {
   const router = getRouter();
+  const query = vi
+    .spyOn(router.options.context.queryClient, "query")
+    .mockResolvedValue([]);
   router.update({
     context: { ...router.options.context, getUser, preloadAtomResults },
     history: createMemoryHistory({ initialEntries: ["/"] }),
     isServer: false,
   });
+  query.mockClear();
   await router.preloadRoute({ to });
-  return router;
+  return { query, router };
 };
 
-describe("events route loaders predeclare atoms on the request-scoped registry", () => {
+describe("event route loaders preload their data", () => {
   beforeEach(() => {
     getUser.mockReset();
     preloadAtomResults.mockReset();
@@ -64,32 +68,24 @@ describe("events route loaders predeclare atoms on the request-scoped registry",
     preloadAtomResults.mockResolvedValue();
   });
 
-  it("preloads route data after the dashboard guard verifies the session for heroes", async () => {
-    const router = await loadEventRoute("/dashboard/events/heroes");
+  it("preloads events and heroes for the heroes route", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/heroes");
 
     expect(getUser).toHaveBeenCalledOnce();
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(query).toHaveBeenCalledTimes(2);
   });
 
-  it("preloads the events atom for the list route", async () => {
-    const router = await loadEventRoute("/dashboard/events/list");
+  it("preloads events for the list route", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/list");
 
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(query).toHaveBeenCalledOnce();
   });
 
-  it("preloads stable route data for the vault route", async () => {
-    const router = await loadEventRoute("/dashboard/events/vault");
+  it("preloads events and the atom-owned vault data", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/vault");
 
+    expect(query).toHaveBeenCalledOnce();
     expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
   });
 
   it("keeps filter changes out of the event data route loaders", () => {
@@ -98,30 +94,21 @@ describe("events route loaders predeclare atoms on the request-scoped registry",
     expect(VaultRoute.options.loaderDeps).toBeUndefined();
   });
 
-  it("preloads only the events atom for the ranking route", async () => {
-    const router = await loadEventRoute("/dashboard/events/ranking");
+  it("preloads events for the ranking route", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/ranking");
 
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(query).toHaveBeenCalledOnce();
   });
 
-  it("preloads only the events atom for the history route", async () => {
-    const router = await loadEventRoute("/dashboard/events/history");
+  it("preloads events for the history route", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/history");
 
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(query).toHaveBeenCalledOnce();
   });
 
-  it("preloads the events, heroes, and verified-users atoms for the bets/add route", async () => {
-    const router = await loadEventRoute("/dashboard/events/bets/add");
+  it("preloads events, heroes, and verified users for the bets/add route", async () => {
+    const { query } = await loadEventRoute("/dashboard/events/bets/add");
 
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(query).toHaveBeenCalledTimes(3);
   });
 });

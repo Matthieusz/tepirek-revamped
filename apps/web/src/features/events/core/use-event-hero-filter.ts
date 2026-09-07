@@ -1,9 +1,7 @@
-import { useAtomValue } from "@effect/atom-react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
@@ -17,11 +15,9 @@ import type {
   EventHeroFilterState,
   FilterSelection,
 } from "@/features/events/core/event-hero-filter";
-import type {
-  EventSelectOption,
-  HeroSelectOption,
-} from "@/features/events/core/event-hero-options";
-import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
+import type { EventSelectOption } from "@/features/events/core/event-hero-options";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
+import { heroesByEventQueryOptions } from "@/features/events/heroes/hero-queries";
 
 /**
  * Route ids that share the Event/Hero URL search shape (eventId/heroId).
@@ -39,12 +35,10 @@ interface UseEventHeroFilterOptions {
 
 interface UseEventHeroFilterResult {
   state: EventHeroFilterState;
-  events: EventSelectOption[] | undefined;
-  eventsResult: AsyncResult.AsyncResult<readonly EventSelectOption[], unknown>;
-  /** Heroes for the selected Event, sorted by level. Undefined when all Events. */
+  events: readonly EventSelectOption[] | undefined;
+  /** Heroes for the selected Event, sorted by level. Empty when all Events. */
   sortedHeroes: ReturnType<typeof sortHeroesByLevel>;
   heroesLoading: boolean;
-  heroesResult: AsyncResult.AsyncResult<readonly HeroSelectOption[], unknown>;
   /** Whether the Hero query is enabled (specific Event selected). */
   heroQueryEnabled: boolean;
   /** The Event/Hero filter as router query inputs (undefined for all). */
@@ -71,18 +65,16 @@ export const useEventHeroFilter = (
 
   const state = normalizeEventHeroFilter({ urlEventId, urlHeroId });
 
-  const eventsResult = useAtomValue(eventsAtom);
-  const events = AsyncResult.isSuccess(eventsResult)
-    ? [...eventsResult.value]
-    : [];
+  const eventsQuery = useQuery(eventsQueryOptions());
+  const events = eventsQuery.data;
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
   const heroEventId = heroQueryEnabled
     ? (toQueryInput(state.eventId) ?? null)
     : null;
-  const heroesResult = useAtomValue(heroesByEventAtom(heroEventId));
-  const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
-  const heroesLoading = heroQueryEnabled && AsyncResult.isWaiting(heroesResult);
+  const heroesQuery = useQuery(heroesByEventQueryOptions(heroEventId));
+  const heroes = heroesQuery.data ?? [];
+  const heroesLoading = heroQueryEnabled && heroesQuery.isPending;
 
   const sortedHeroes = heroQueryEnabled ? sortHeroesByLevel(heroes) : [];
 
@@ -116,10 +108,8 @@ export const useEventHeroFilter = (
 
   return {
     events,
-    eventsResult,
     heroQueryEnabled,
     heroesLoading,
-    heroesResult,
     queryInputs,
     selectEvent,
     selectHero,

@@ -1,7 +1,6 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -14,14 +13,15 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { eventsAtom } from "@/features/events/core/event-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import {
   HeroEventIdSchema,
   HeroNameSchema,
 } from "@/features/events/heroes/form-schemas";
-import { createHeroAtom } from "@/features/events/heroes/hero-atoms";
+import { createHeroMutationOptions } from "@/features/events/heroes/hero-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 interface AddHeroModalProps {
   readonly trigger: React.ReactNode;
@@ -39,12 +39,13 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createHero = useAtomSet(createHeroAtom, { mode: "promise" });
-  const eventsResult = useAtomValue(eventsAtom);
-  const events = AsyncResult.isSuccess(eventsResult)
-    ? [...eventsResult.value]
-    : [];
-  const eventsLoading = !AsyncResult.isSuccess(eventsResult);
+  const queryClient = useQueryClient();
+  const createHero = useMutation(
+    createHeroMutationOptions(queryClient, runAppHttpApi)
+  );
+  const eventsQuery = useQuery(eventsQueryOptions());
+  const events = eventsQuery.data ?? [];
+  const eventsLoading = eventsQuery.isPending;
   const form = useAppForm({
     defaultValues: { eventId: "", image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
@@ -60,7 +61,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           level: decoded.value.level,
           name: decoded.value.name,
         };
-        await createHero(
+        await createHero.mutateAsync(
           decoded.value.image
             ? { ...heroPayload, image: decoded.value.image }
             : heroPayload

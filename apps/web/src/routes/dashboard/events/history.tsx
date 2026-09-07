@@ -1,8 +1,8 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import { EventHeroFilterSearchSchema } from "@/features/events/core/event-hero-filter";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import HistoryPage from "@/routes/dashboard/events/-components/history-page";
 import {
   EventsRouteError,
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/dashboard/events/history")({
   component: HistoryRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [eventsAtom]);
+    await context.queryClient.query(eventsQueryOptions());
   },
   pendingComponent: EventsRoutePending,
   staticData: {

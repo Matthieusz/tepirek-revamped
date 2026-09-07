@@ -2,10 +2,10 @@ import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Coins02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +18,6 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   ALL_FILTER,
   toQueryInput,
@@ -27,7 +26,8 @@ import {
   EventFormField,
   HeroFormField,
 } from "@/features/events/core/event-hero-form-fields";
-import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
+import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
 import {
   GoldAmountSchema,
   RequiredSelectionSchema,
@@ -54,41 +54,6 @@ const GoldFormSchema = Schema.Struct({
   heroId: RequiredSelectionSchema("Wybierz konkretnego herosa"),
 });
 const GoldFormValidator = Schema.toStandardSchemaV1(GoldFormSchema);
-
-const getEventsState = (
-  result: AsyncResult.AsyncResult<
-    readonly {
-      color: string | null;
-      endTime: Date;
-      icon: string;
-      id: number;
-      name: string;
-    }[],
-    unknown
-  >
-) => {
-  if (AsyncResult.isSuccess(result)) {
-    return { events: [...result.value], loading: false };
-  }
-  return { events: [], loading: true };
-};
-
-const getHeroesState = (
-  result: AsyncResult.AsyncResult<
-    readonly {
-      eventId: number | null;
-      id: number;
-      level: number;
-      name: string;
-    }[],
-    unknown
-  >
-) => {
-  if (AsyncResult.isSuccess(result)) {
-    return { heroes: result.value, loading: false };
-  }
-  return { heroes: [], loading: true };
-};
 
 const filterHeroesForEvent = (
   eventId: string,
@@ -138,10 +103,12 @@ const DistributeGoldModalContent = ({
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
   const distributeGold = useAtomSet(distributeGoldAtom, { mode: "promise" });
-  const eventsResult = useAtomValue(eventsAtom);
-  const { events, loading: eventsLoading } = getEventsState(eventsResult);
-  const heroesResult = useAtomValue(heroesAtom);
-  const { heroes, loading: heroesLoading } = getHeroesState(heroesResult);
+  const eventsQuery = useQuery(eventsQueryOptions());
+  const events = eventsQuery.data ?? [];
+  const eventsLoading = eventsQuery.isPending;
+  const heroesQuery = useQuery(heroesQueryOptions());
+  const heroes = heroesQuery.data ?? [];
+  const heroesLoading = heroesQuery.isPending;
   const form = useAppForm({
     defaultValues: {
       eventId: selectedEventId,

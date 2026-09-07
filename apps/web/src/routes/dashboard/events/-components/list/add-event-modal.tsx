@@ -1,7 +1,7 @@
-import { useAtomSet } from "@effect/atom-react";
 import { Calendar04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
@@ -33,7 +33,7 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { createEventAtom } from "@/features/events/core/event-atoms";
+import { createEventMutationOptions } from "@/features/events/core/event-queries";
 import {
   EventColorSchema,
   EventColors,
@@ -46,6 +46,7 @@ import type { EventColor } from "@/features/events/core/form-schemas";
 import { EVENT_ICON_MAP } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { cn } from "@/lib/utils";
 
 interface AddEventModalProps {
@@ -78,7 +79,10 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createEvent = useAtomSet(createEventAtom, { mode: "promise" });
+  const queryClient = useQueryClient();
+  const createEvent = useMutation(
+    createEventMutationOptions(queryClient, runAppHttpApi)
+  );
   const form = useAppForm({
     defaultValues: eventDefaultValues,
     onSubmit: async ({ value }) => {
@@ -89,7 +93,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       }
 
       const result = await runFormSubmission(async () => {
-        await createEvent({
+        await createEvent.mutateAsync({
           color: decoded.value.color,
           endTime: decoded.value.date,
           icon: decoded.value.icon,
