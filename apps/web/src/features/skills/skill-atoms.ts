@@ -6,13 +6,13 @@ import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asProfessionId, asSkillId, asSkillRangeId } from "@/lib/branded-ids";
-import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asProfessionId, asSkillId, asSkillRangeId } from "@/lib/branded-ids";
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 
 type SkillRange = RangeSummary;
 type Skill = SkillSummary;

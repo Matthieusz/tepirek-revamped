@@ -6,12 +6,12 @@ import { Effect } from "effect";
 import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asAppUserId, asBetId, asEventId, asHeroId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAppUserId, asBetId, asEventId, asHeroId } from "@/lib/branded-ids";
 
 interface PaginatedBetInput {
   readonly eventId?: number | undefined;

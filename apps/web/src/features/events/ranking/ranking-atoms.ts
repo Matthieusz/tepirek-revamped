@@ -8,11 +8,8 @@ import * as Data from "effect/Data";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { AppHttpApiClient, appHttpApiAtom } from "@/lib/atom-http-api-runtime";
 import { asEventId, asHeroId } from "@/lib/branded-ids";
-import {
-  AppHttpApiClient,
-  appHttpApiAtom,
-} from "@/lib/http-api-client-runtime";
 
 interface RankingInput {
   readonly eventId?: number | undefined;

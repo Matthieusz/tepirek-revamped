@@ -12,12 +12,12 @@ import {
   asMargonemAccountId,
 } from "@/features/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
-import { asAppUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAppUserId } from "@/lib/branded-ids";
 
 interface RespondToAccountAccessInviteInput {
   readonly accessId: number;

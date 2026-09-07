@@ -1,9 +1,7 @@
 import { Effect } from "effect";
 
-import {
-  HealthHttpApiClient,
-  healthHttpApiRuntime,
-} from "@/lib/health-http-api-client-runtime";
+import { healthHttpApiRuntime } from "@/lib/health-atom-runtime";
+import { HealthHttpApiClient } from "@/lib/health-http-api-client-runtime";
 
 /** Resource atom for the Effect HttpApi health check. */
 export const healthAtom = healthHttpApiRuntime.atom(
