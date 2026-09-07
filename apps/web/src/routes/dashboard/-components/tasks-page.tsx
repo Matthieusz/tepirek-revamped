@@ -15,10 +15,10 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { TodoTextSchema } from "@/features/todos/form-schemas";
 import type { Todo } from "@/features/todos/todo-api";
 import {
@@ -49,7 +49,7 @@ const TasksPage = ({ session }: TasksPageProps) => {
 
   if (todosQuery.isError && todosQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           todosQuery.error,
           "Nie udało się wczytać zadań. Spróbuj ponownie."

@@ -18,10 +18,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -80,7 +80,7 @@ const EventsHeroesPage = ({ session }: EventsHeroesPageProps) => {
 
   if (heroesQuery.isError && heroesQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           heroesQuery.error,
           "Nie udało się wczytać herosów. Spróbuj ponownie."
@@ -94,7 +94,7 @@ const EventsHeroesPage = ({ session }: EventsHeroesPageProps) => {
 
   if (eventsQuery.isError && eventsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           eventsQuery.error,
           "Nie udało się wczytać eventów. Spróbuj ponownie."

@@ -17,9 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -156,7 +156,7 @@ const HistoryContent = ({
     betsContent = <LoadingSpinner />;
   } else if (betsQuery.isError && betsData === undefined) {
     betsContent = (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           betsQuery.error,
           "Nie udało się wczytać historii obstawień. Spróbuj ponownie."
@@ -354,7 +354,7 @@ const HistoryPageChunk = (props: HistoryPageChunkProps) => {
   }
   if (query.isError && query.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           query.error,
           "Nie udało się wczytać kolejnej strony obstawień."

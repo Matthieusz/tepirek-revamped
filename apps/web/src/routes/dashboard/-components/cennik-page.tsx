@@ -16,11 +16,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -288,7 +288,7 @@ const CennikPage = ({ search, session }: CennikPageProps) => {
 
   if (pricesQuery.isError && pricesQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           pricesQuery.error,
           "Nie udało się wczytać cennika. Spróbuj ponownie."

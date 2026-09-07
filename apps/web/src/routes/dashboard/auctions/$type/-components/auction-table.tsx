@@ -13,10 +13,10 @@ import * as Schema from "effect/Schema";
 import React from "react";
 import { toast } from "sonner";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Table,
   TableBody,
@@ -359,7 +359,7 @@ const AuctionTable: React.FC<AuctionTableProps> = (props) => {
 
   if (signupsQuery.isError && signupsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           signupsQuery.error,
           "Nie udało się wczytać zapisów licytacji. Spróbuj ponownie."

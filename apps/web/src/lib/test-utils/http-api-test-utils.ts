@@ -294,7 +294,7 @@ const decodePayload = (body: Uint8Array): HttpJsonBody =>
  * Creates a real HttpApiClient test layer and records decoded endpoint calls.
  *
  * The layer performs no I/O until a test runs an Effect through it, so it can
- * be shared by Atom and Query tests without either registry owning transport.
+ * be shared by Query tests without owning transport state.
  */
 export const makeHttpApiTestLayer = () => {
   const calls: HttpApiTestCall[] = [];

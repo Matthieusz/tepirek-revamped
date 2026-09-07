@@ -19,11 +19,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { Separator } from "@/components/ui/separator";
 import type { Announcement } from "@/features/announcements/announcement-api";
 import {
@@ -54,7 +54,7 @@ const DashboardHomePage = ({ session }: DashboardHomePageProps) => {
 
   if (announcementsQuery.isError && announcementsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           announcementsQuery.error,
           "Nie udało się wczytać ogłoszeń. Spróbuj ponownie."

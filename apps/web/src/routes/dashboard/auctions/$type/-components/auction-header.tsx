@@ -5,8 +5,8 @@ import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import type { ReactElement } from "react";
 import type React from "react";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { auctionStatsQueryOptions } from "@/features/auctions/auction-queries";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -83,7 +83,7 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
 
   if (statsQuery.isError || statsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           statsQuery.error,
           "Nie udało się wczytać statystyk licytacji. Spróbuj ponownie."

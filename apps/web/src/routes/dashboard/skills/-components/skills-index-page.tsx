@@ -2,9 +2,9 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import type { SkillRange } from "@/features/skills/skill-api";
 import { skillRangesQueryOptions } from "@/features/skills/skill-queries";
 import { getErrorMessage } from "@/lib/errors";
@@ -27,7 +27,7 @@ const SkillsIndexPage = ({ session }: SkillsIndexPageProps) => {
 
   if (rangesQuery.isError && rangesQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           rangesQuery.error,
           "Nie udało się wczytać przedziałów. Spróbuj ponownie."

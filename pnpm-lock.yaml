@@ -251,9 +251,6 @@ importers:
       '@base-ui/react':
         specifier: ^1.7.0
         version: 1.7.0(@date-fns/tz@1.5.0)(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@effect/atom-react':
-        specifier: 4.0.0-beta.101
-        version: 4.0.0-beta.101(effect@4.0.0-beta.101)(react@19.2.8)(scheduler@0.27.0)
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0
@@ -693,13 +690,6 @@ packages:
 
   '@drizzle-team/brocli@0.12.0':
     resolution: {integrity: sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ==}
-
-  '@effect/atom-react@4.0.0-beta.101':
-    resolution: {integrity: sha512-Sjp0K4Yw+xvDtfjuk2n5BCCX2NMEejlRocZEwQ4mdVd82pqI9dtO1QD2fdUzFEZQeBwcEuj8ZCBYbIegj7OLQw==}
-    peerDependencies:
-      effect: ^4.0.0-beta.101
-      react: ^19.2.4
-      scheduler: '*'
 
   '@effect/platform-node-shared@4.0.0-beta.101':
     resolution: {integrity: sha512-g4L7XiyJSNJLJVhlslyg2zBCQsoKQf1y1gd+Yfd+3wD9ymC+m7ymbd/5FGqnT1aXV6E2AwRr4D/R1eyRUikvWQ==}
@@ -4885,12 +4875,6 @@ snapshots:
   '@date-fns/tz@1.5.0': {}
 
   '@drizzle-team/brocli@0.12.0': {}
-
-  '@effect/atom-react@4.0.0-beta.101(effect@4.0.0-beta.101)(react@19.2.8)(scheduler@0.27.0)':
-    dependencies:
-      effect: 4.0.0-beta.101
-      react: 19.2.8
-      scheduler: 0.27.0
 
   '@effect/platform-node-shared@4.0.0-beta.101(effect@4.0.0-beta.101)':
     dependencies:

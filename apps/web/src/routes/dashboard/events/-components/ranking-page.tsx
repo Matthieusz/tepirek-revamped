@@ -4,10 +4,10 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -83,7 +83,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
 
   if (rankingQuery.isError && rankingQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           rankingQuery.error,
           "Nie udało się wczytać rankingu. Spróbuj ponownie."

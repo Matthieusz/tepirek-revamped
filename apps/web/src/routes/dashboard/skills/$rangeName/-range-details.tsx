@@ -16,11 +16,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Table,
   TableBody,
@@ -67,7 +67,7 @@ const RangeSkillsView = ({
 
   if (skillsQuery.isError && skillsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           skillsQuery.error,
           "Nie udało się wczytać zestawów. Spróbuj ponownie."
@@ -345,7 +345,7 @@ export const RangeDetails = () => {
 
   if (rangeQuery.isError && rangeQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           rangeQuery.error,
           "Nie udało się wczytać przedziału. Spróbuj ponownie."
@@ -367,7 +367,7 @@ export const RangeDetails = () => {
 
   if (professionsQuery.isError && professionsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           professionsQuery.error,
           "Nie udało się wczytać profesji. Spróbuj ponownie."

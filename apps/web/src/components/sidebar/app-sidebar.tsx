@@ -1,7 +1,7 @@
 import { LogOutIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useRouteContext } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type * as React from "react";
 import { toast } from "sonner";
 
@@ -30,7 +30,6 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
   const navigate = useNavigate();
-  const { atomRegistry } = useRouteContext({ from: "__root__" });
   const queryClient = useQueryClient();
 
   return (
@@ -90,7 +89,6 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
                   },
                   onSuccess: async () => {
                     await clearPrivateQueryCache(queryClient);
-                    atomRegistry.reset();
                     toast.success("Wylogowano pomyślnie");
                     await navigate({
                       to: "/",

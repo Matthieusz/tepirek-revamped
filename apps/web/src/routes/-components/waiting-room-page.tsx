@@ -5,7 +5,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouteContext, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +30,6 @@ interface WaitingRoomPageProps {
 
 const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
   const router = useRouter();
-  const { atomRegistry } = useRouteContext({ from: "__root__" });
   const queryClient = useQueryClient();
   const verifyDiscordGuildMembership = useMutation(
     verifyDiscordGuildMembershipMutationOptions(queryClient, undefined, {
@@ -79,7 +78,6 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
         },
         onSuccess: async () => {
           await clearPrivateQueryCache(queryClient);
-          atomRegistry.reset();
           toast.success("Wylogowano pomyślnie");
           await router.navigate({ to: "/" });
         },

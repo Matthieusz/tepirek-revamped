@@ -8,9 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { healthQueryOptions } from "@/features/health/health-queries";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -135,7 +135,7 @@ const HomePage = (): ReactNode => {
   if (healthQuery.isError) {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <AsyncResultFailure
+        <QueryErrorState
           message={getErrorMessage(
             healthQuery.error,
             "Nie udało się wczytać danych. Spróbuj ponownie."

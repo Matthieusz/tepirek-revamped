@@ -13,12 +13,12 @@ import * as Predicate from "effect/Predicate";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -89,7 +89,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
 
   if (eventsQuery.isError && eventsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           eventsQuery.error,
           "Nie udało się wczytać eventów. Spróbuj ponownie."
@@ -101,7 +101,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
 
   if (oldestUnpaidQuery.isError && oldestUnpaidQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           oldestUnpaidQuery.error,
           "Nie udało się ustalić najstarszego niewypłaconego eventu. Spróbuj ponownie."
@@ -189,7 +189,7 @@ const VaultContent = ({
   }
   if (vaultQuery.isError && vaultQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           vaultQuery.error,
           "Nie udało się wczytać skarbca. Spróbuj ponownie."

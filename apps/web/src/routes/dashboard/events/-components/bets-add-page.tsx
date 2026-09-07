@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { latestBetForCopyQueryOptions } from "@/features/events/bets/bet-queries";
 import type { LastBetState } from "@/features/events/bets/member-selection";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
@@ -61,7 +61,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
   if (eventsQuery.isError && eventsQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           eventsQuery.error,
           "Nie udało się wczytać eventów. Spróbuj ponownie."
@@ -75,7 +75,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
   if (heroesQuery.isError && heroesQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           heroesQuery.error,
           "Nie udało się wczytać herosów. Spróbuj ponownie."
@@ -89,7 +89,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
   if (verifiedUsersQuery.isError && verifiedUsersQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           verifiedUsersQuery.error,
           "Nie udało się wczytać zweryfikowanych graczy. Spróbuj ponownie."

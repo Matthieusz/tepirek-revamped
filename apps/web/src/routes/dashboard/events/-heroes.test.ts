@@ -11,8 +11,6 @@ import { Route as VaultRoute } from "@/routes/dashboard/events/vault";
 import type { AuthSession } from "@/types/route";
 
 const getUser = vi.fn<RouterAppContext["getUser"]>();
-const preloadAtomResults = vi.fn<RouterAppContext["preloadAtomResults"]>();
-
 const verifiedSession: AuthSession = {
   session: {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -51,7 +49,7 @@ const loadEventRoute = async (to: EventRoutePath) => {
     .spyOn(router.options.context.queryClient, "query")
     .mockResolvedValue([]);
   router.update({
-    context: { ...router.options.context, getUser, preloadAtomResults },
+    context: { ...router.options.context, getUser },
     history: createMemoryHistory({ initialEntries: ["/"] }),
     isServer: false,
   });
@@ -63,9 +61,7 @@ const loadEventRoute = async (to: EventRoutePath) => {
 describe("event route loaders preload their data", () => {
   beforeEach(() => {
     getUser.mockReset();
-    preloadAtomResults.mockReset();
     getUser.mockResolvedValue(verifiedSession);
-    preloadAtomResults.mockResolvedValue();
   });
 
   it("preloads events and heroes for the heroes route", async () => {
@@ -85,7 +81,6 @@ describe("event route loaders preload their data", () => {
     const { query } = await loadEventRoute("/dashboard/events/vault");
 
     expect(query).toHaveBeenCalledTimes(2);
-    expect(preloadAtomResults).not.toHaveBeenCalled();
   });
 
   it("keeps filter changes out of the event data route loaders", () => {

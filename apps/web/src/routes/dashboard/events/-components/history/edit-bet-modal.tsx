@@ -14,8 +14,8 @@ import {
   getFieldErrorId,
   getFieldId,
 } from "@/components/forms/form-field-utils";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -119,7 +119,7 @@ const EditBetModalContent = ({
 
   if (verifiedUsersQuery.isError && verifiedUsersQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           verifiedUsersQuery.error,
           "Nie udało się wczytać zweryfikowanych graczy. Spróbuj ponownie."

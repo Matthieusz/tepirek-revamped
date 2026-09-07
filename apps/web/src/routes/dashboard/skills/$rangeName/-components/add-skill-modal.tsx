@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -131,7 +131,7 @@ const AddSkillModalContent = ({
         <form.AppForm>
           <Form form={form}>
             {professionsQuery.isError && (
-              <AsyncResultFailure
+              <QueryErrorState
                 message={getErrorMessage(
                   professionsQuery.error,
                   "Nie udało się wczytać profesji."

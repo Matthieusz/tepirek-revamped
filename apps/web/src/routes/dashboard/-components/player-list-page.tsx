@@ -8,10 +8,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import type { UserListItem } from "@/features/users/user-api";
 import { usersQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
@@ -33,7 +33,7 @@ const PlayerListPage = ({ session }: PlayerListPageProps) => {
 
   if (playersQuery.isError && playersQuery.data === undefined) {
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message={getErrorMessage(
           playersQuery.error,
           "Nie udało się wczytać listy graczy. Spróbuj ponownie."
