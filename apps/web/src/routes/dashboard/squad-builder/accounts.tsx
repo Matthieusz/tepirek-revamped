@@ -1,17 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
 import {
-  incomingAccountInvitesAtom,
-  sharedAccountsAtom,
-} from "@/features/squad-builder/account-sharing-atoms";
+  incomingAccountInvitesQueryOptions,
+  ownedAccountsQueryOptions,
+  sharedAccountsQueryOptions,
+} from "@/features/squad-builder/account-queries";
 
 export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [
-      ownedAccountsAtom,
-      incomingAccountInvitesAtom,
-      sharedAccountsAtom,
+    await Promise.all([
+      context.queryClient.query({
+        ...ownedAccountsQueryOptions(),
+        staleTime: 0,
+      }),
+      context.queryClient.query({
+        ...incomingAccountInvitesQueryOptions(),
+        staleTime: 0,
+      }),
+      context.queryClient.query({
+        ...sharedAccountsQueryOptions(),
+        staleTime: 0,
+      }),
     ]);
   },
   staticData: {

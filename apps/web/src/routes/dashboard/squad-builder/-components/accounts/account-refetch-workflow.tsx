@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   CheckIcon,
   LoaderCircleIcon,
@@ -6,7 +5,7 @@ import {
   TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -16,10 +15,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge as ReuiBadge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  applyAccountRefetchAtom,
-  previewAccountRefetchAtom,
-} from "@/features/squad-builder/account-refetch-atoms";
-import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
+  applyAccountRefetchMutationOptions,
+  previewAccountRefetchMutationOptions,
+} from "@/features/squad-builder/account-queries";
 import { getErrorMessage } from "@/lib/errors";
 import {
   changeFieldLabel,
@@ -107,12 +105,10 @@ export const AccountRefetchWorkflow = ({
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
-  const previewRefetch = useAtomSet(previewAccountRefetchAtom, {
-    mode: "promise",
-  });
-  const applyRefetch = useAtomSet(applyAccountRefetchAtom, {
-    mode: "promise",
-  });
+  const previewRefetch = useMutation(previewAccountRefetchMutationOptions());
+  const applyRefetch = useMutation(
+    applyAccountRefetchMutationOptions(queryClient)
+  );
 
   const hasDiff =
     preview !== null &&
@@ -123,7 +119,7 @@ export const AccountRefetchWorkflow = ({
   const handlePreview = async () => {
     setIsPreviewing(true);
     try {
-      const response = await previewRefetch({ accountId });
+      const response = await previewRefetch.mutateAsync({ accountId });
       setPreview(toAccountRefetchPreview(response));
     } catch (error: unknown) {
       toast.error(
@@ -140,10 +136,9 @@ export const AccountRefetchWorkflow = ({
 
     setIsApplying(true);
     try {
-      const response = await applyRefetch({
+      const response = await applyRefetch.mutateAsync({
         refetchPreviewId: preview.refetchPreviewId,
       });
-      await invalidateSquadGroupQueries(queryClient);
       toast.success(
         response.removedSquadCharacterCount > 0
           ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`

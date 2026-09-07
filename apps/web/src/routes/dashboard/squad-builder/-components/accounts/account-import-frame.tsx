@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   Alert01Icon,
   CheckmarkCircle02Icon,
@@ -10,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -41,10 +40,9 @@ import {
   ProfileUrlsSchema,
 } from "@/features/squad-builder/account-form-schemas";
 import {
-  confirmOwnedAccountImportAtom,
-  previewOwnedAccountImportsAtom,
-} from "@/features/squad-builder/account-import-atoms";
-import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
+  confirmOwnedAccountImportMutationOptions,
+  previewOwnedAccountImportsMutationOptions,
+} from "@/features/squad-builder/account-queries";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -420,12 +418,12 @@ export const AccountImportFrame = () => {
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const previewImports = useAtomSet(previewOwnedAccountImportsAtom, {
-    mode: "promise",
-  });
-  const confirmImport = useAtomSet(confirmOwnedAccountImportAtom, {
-    mode: "promise",
-  });
+  const previewImports = useMutation(
+    previewOwnedAccountImportsMutationOptions()
+  );
+  const confirmImport = useMutation(
+    confirmOwnedAccountImportMutationOptions(queryClient)
+  );
   const form = useAppForm({
     defaultValues: DEFAULT_ACCOUNT_PREVIEW_VALUES,
     onSubmit: async ({ value }) => {
@@ -436,7 +434,7 @@ export const AccountImportFrame = () => {
         return;
       }
       const result = await runFormSubmission(
-        async () => await previewImports(decoded.value)
+        async () => await previewImports.mutateAsync(decoded.value)
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
@@ -550,8 +548,7 @@ export const AccountImportFrame = () => {
       onConfirm={async (item, payload) => {
         setConfirmingId(item.pendingImportId);
         try {
-          await confirmImport(payload);
-          await invalidateSquadGroupQueries(queryClient);
+          await confirmImport.mutateAsync(payload);
         } catch (error: unknown) {
           setConfirmingId(null);
           throw error;
