@@ -1,5 +1,6 @@
-import { useAtomSet } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { UpdateProfilePayload } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -14,7 +15,7 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { updateProfileAtom } from "@/features/users/user-atoms";
+import { updateProfileMutationOptions } from "@/features/users/user-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -35,7 +36,18 @@ const EditProfileModalContent = ({
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const updateProfile = useAtomSet(updateProfileAtom, { mode: "promise" });
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const updateProfile = useMutation(
+    updateProfileMutationOptions(queryClient, undefined, {
+      onRefreshError: () => {
+        toast.error("Profil zapisano, ale nie udało się odświeżyć danych.");
+      },
+      onRouteContextRefresh: async () => {
+        await router.invalidate();
+      },
+    })
+  );
   const form = useAppForm({
     defaultValues: { name: defaultName },
     onSubmit: async ({ value }) => {
@@ -46,7 +58,7 @@ const EditProfileModalContent = ({
       }
 
       const result = await runFormSubmission(
-        async () => await updateProfile(decoded.value)
+        async () => await updateProfile.mutateAsync(decoded.value)
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

@@ -1,4 +1,5 @@
 import { useSelector } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -40,6 +41,7 @@ export const LoginForm = ({
   ...props
 }: React.ComponentProps<"div">) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const navigate = useNavigate({ from: "/" });
   const [submissionFailure, setSubmissionFailure] =
     useState<AuthFormSubmissionError>();
@@ -47,7 +49,10 @@ export const LoginForm = ({
     authClient.signIn.email(credentials, {
       onSuccess: () =>
         handleLoginSuccess({
-          invalidate: () => router.invalidate(),
+          invalidate: async () => {
+            await queryClient.invalidateQueries();
+            await router.invalidate();
+          },
           navigate: () => navigate({ to: "/dashboard" }),
           notifySuccess: toast.success,
         }),

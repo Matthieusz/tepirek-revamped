@@ -5,6 +5,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
 import type {
   AccountAccessGrantSummarySchema,
   AccountInviteTargetSchema,
@@ -33,7 +34,7 @@ import {
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
 } from "@/features/squad-builder/account-sharing-atoms";
-import { sessionAtom } from "@/features/users/user-atoms";
+import { sessionQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
@@ -57,8 +58,8 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
 };
 
 const useActorUserId = (): string => {
-  const sessionResult = useAtomValue(sessionAtom);
-  return sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
+  const sessionQuery = useQuery(sessionQueryOptions());
+  return sessionQuery.data?.user.id ?? "";
 };
 
 const getAutocompleteStatus = (

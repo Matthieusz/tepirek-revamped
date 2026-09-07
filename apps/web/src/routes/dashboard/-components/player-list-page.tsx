@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import {
   CheckmarkCircle02Icon,
   Clock01Icon,
@@ -6,12 +5,16 @@ import {
   UsersIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usersAtom } from "@/features/users/user-atoms";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import type { UserListItem } from "@/features/users/user-api";
+import { usersQueryOptions } from "@/features/users/user-queries";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { buildPlayerColumns } from "@/routes/dashboard/-components/players-table/columns";
 import { PlayerTable } from "@/routes/dashboard/-components/players-table/player-table";
@@ -22,25 +25,57 @@ interface PlayerListPageProps {
 }
 
 const PlayerListPage = ({ session }: PlayerListPageProps) => {
-  const playersResult = useAtomValue(usersAtom);
-  const refreshPlayers = useAtomRefresh(usersAtom);
+  const playersQuery = useQuery(usersQueryOptions());
+
+  if (playersQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (playersQuery.isError && playersQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          playersQuery.error,
+          "Nie udało się wczytać listy graczy. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void playersQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshPlayers} result={playersResult}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <PlayerListContent session={session} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define -- the page boundary keeps the query lifecycle separate from the table UI
+    <PlayerListContent
+      isRefreshing={playersQuery.isFetching}
+      onRetry={() => {
+        void playersQuery.refetch();
+      }}
+      playersData={playersQuery.data ?? []}
+      refreshError={playersQuery.isError ? playersQuery.error : undefined}
+      session={session}
+    />
   );
 };
 
 export default PlayerListPage;
 
-const PlayerListContent = ({ session }: PlayerListPageProps) => {
+interface PlayerListContentProps extends PlayerListPageProps {
+  readonly isRefreshing: boolean;
+  readonly onRetry: () => void;
+  readonly playersData: readonly UserListItem[];
+  readonly refreshError: unknown;
+}
+
+const PlayerListContent = ({
+  isRefreshing,
+  onRetry,
+  playersData,
+  refreshError,
+  session,
+}: PlayerListContentProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const playersResult = useAtomValue(usersAtom);
-  const playersData = AsyncResult.getOrThrow(playersResult);
   const isAdminUser = isAdmin(session);
   const cols = buildPlayerColumns(isAdminUser);
 
@@ -74,6 +109,32 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
           Zarządzaj użytkownikami i ich statusem weryfikacji.
         </p>
       </div>
+
+      {isRefreshing && (
+        <p
+          aria-live="polite"
+          className="text-muted-foreground text-center text-xs"
+        >
+          Odświeżanie…
+        </p>
+      )}
+      {refreshError !== undefined && (
+        <div
+          aria-live="assertive"
+          className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">
+            {getErrorMessage(
+              refreshError,
+              "Nie udało się odświeżyć listy graczy."
+            )}
+          </p>
+          <Button onClick={onRetry} size="sm" variant="outline">
+            Spróbuj ponownie
+          </Button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">

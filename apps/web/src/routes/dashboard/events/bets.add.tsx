@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
-import { verifiedUsersAtom } from "@/features/users/user-atoms";
+import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
 import { BetsAddPage } from "@/routes/dashboard/events/-components/bets-add-page";
 import {
   EventsRouteError,
@@ -20,10 +20,12 @@ export const Route = createFileRoute("/dashboard/events/bets/add")({
   component: BetsAddRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [
-      eventsAtom,
-      heroesAtom,
-      verifiedUsersAtom,
+    await Promise.all([
+      context.preloadAtomResults(context.atomRegistry, [
+        eventsAtom,
+        heroesAtom,
+      ]),
+      context.queryClient.query(verifiedUsersQueryOptions()),
     ]);
   },
   pendingComponent: EventsRoutePending,

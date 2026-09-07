@@ -1,11 +1,11 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   LoaderCircleIcon,
   LogOutIcon,
   RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useRouter } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouteContext, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -17,7 +17,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { verifyDiscordGuildMembershipAtom } from "@/features/users/user-atoms";
+import {
+  clearPrivateQueryCache,
+  verifyDiscordGuildMembershipMutationOptions,
+} from "@/features/users/user-queries";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/types/route";
 
@@ -27,9 +30,19 @@ interface WaitingRoomPageProps {
 
 const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
   const router = useRouter();
-  const verifyDiscordGuildMembership = useAtomSet(
-    verifyDiscordGuildMembershipAtom,
-    { mode: "promise" }
+  const { atomRegistry } = useRouteContext({ from: "__root__" });
+  const queryClient = useQueryClient();
+  const verifyDiscordGuildMembership = useMutation(
+    verifyDiscordGuildMembershipMutationOptions(queryClient, undefined, {
+      onRefreshError: () => {
+        toast.error(
+          "Przynależność została sprawdzona, ale nie udało się odświeżyć sesji."
+        );
+      },
+      onRouteContextRefresh: async () => {
+        await router.invalidate();
+      },
+    })
   );
   const isValidatingRef = useRef(false);
   const hasValidated = useRef(false);
@@ -43,9 +56,8 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
       hasValidated.current = true;
       isValidatingRef.current = true;
       try {
-        const result = await verifyDiscordGuildMembership();
-        if (result?.valid) {
-          await router.invalidate();
+        const result = await verifyDiscordGuildMembership.mutateAsync();
+        if (result.valid) {
           await router.navigate({ to: "/dashboard" });
         }
       } catch {
@@ -65,9 +77,11 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
         onError: (error) => {
           toast.error(error.error.message ?? error.error.statusText);
         },
-        onSuccess: () => {
+        onSuccess: async () => {
+          await clearPrivateQueryCache(queryClient);
+          atomRegistry.reset();
           toast.success("Wylogowano pomyślnie");
-          void router.navigate({ to: "/" });
+          await router.navigate({ to: "/" });
         },
       },
     });

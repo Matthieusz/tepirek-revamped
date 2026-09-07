@@ -1,9 +1,9 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import {
   getFieldErrorId,
   getFieldId,
 } from "@/components/forms/form-field-utils";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -25,7 +26,8 @@ import {
 import { editBetAtom } from "@/features/events/bets/bet-atoms";
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
-import { verifiedUsersAtom } from "@/features/users/user-atoms";
+import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
+import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -68,11 +70,10 @@ const EditBetModalContent = ({
     () => currentMembers.map((member) => member.userId),
     [currentMembers]
   );
-  const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
-  const verifiedUsers = AsyncResult.isSuccess(verifiedUsersResult)
-    ? [...verifiedUsersResult.value]
-    : [];
-  const usersLoading = !AsyncResult.isSuccess(verifiedUsersResult);
+  const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
+  const verifiedUsers =
+    verifiedUsersQuery.data === undefined ? [] : [...verifiedUsersQuery.data];
+  const usersLoading = verifiedUsersQuery.isPending;
   const form = useAppForm({
     defaultValues: { userIds: currentMemberIds },
     onSubmit: async ({ value }) => {
@@ -114,6 +115,21 @@ const EditBetModalContent = ({
     }
     setOpen(nextOpen);
   };
+
+  if (verifiedUsersQuery.isError && verifiedUsersQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          verifiedUsersQuery.error,
+          "Nie udało się wczytać zweryfikowanych graczy. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void verifiedUsersQuery.refetch();
+        }}
+      />
+    );
+  }
+
   let submitLabel = "Zapisz zmiany";
   if (usersLoading) {
     submitLabel = "Ładowanie...";

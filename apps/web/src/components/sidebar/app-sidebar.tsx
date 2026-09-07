@@ -1,6 +1,7 @@
 import { LogOutIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import type * as React from "react";
 import { toast } from "sonner";
 
@@ -19,6 +20,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { clearPrivateQueryCache } from "@/features/users/user-queries";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/types/route";
 
@@ -28,6 +30,8 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
   const navigate = useNavigate();
+  const { atomRegistry } = useRouteContext({ from: "__root__" });
+  const queryClient = useQueryClient();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -85,6 +89,8 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
                     toast.error(error.error.message || error.error.statusText);
                   },
                   onSuccess: async () => {
+                    await clearPrivateQueryCache(queryClient);
+                    atomRegistry.reset();
                     toast.success("Wylogowano pomyślnie");
                     await navigate({
                       to: "/",
