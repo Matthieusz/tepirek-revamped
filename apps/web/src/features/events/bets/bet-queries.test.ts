@@ -93,14 +93,9 @@ describe("bet queries", () => {
     for (const queryKey of queryKeys) {
       testClient.queryClient.setQueryData(queryKey, []);
     }
-    const derivedInputs: unknown[] = [];
     const mutation = new MutationObserver(
       testClient.queryClient,
-      createBetMutationOptions(testClient.queryClient, makeRunner(), {
-        onDerivedDataChanged: (input) => {
-          derivedInputs.push(input);
-        },
-      })
+      createBetMutationOptions(testClient.queryClient, makeRunner())
     );
 
     try {
@@ -115,7 +110,6 @@ describe("bet queries", () => {
           testClient.queryClient.getQueryState(queryKey)?.isInvalidated
         ).toBe(true);
       }
-      expect(derivedInputs).toEqual([{ eventId: 5, heroId: 2 }]);
       mutation.reset();
     } finally {
       testClient.cleanup();

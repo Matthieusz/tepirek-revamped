@@ -78,6 +78,13 @@ const responseBodies = {
     sourceIconKey: "/obrazki/itemy/test.gif",
     version: 1,
   },
+  "ranking/getHeroStats": {
+    currentPointWorth: 1,
+    heroId: 1,
+    heroName: "Test hero",
+    totalBets: 0,
+    totalPoints: 0,
+  },
   "ranking/getOldestUnpaidEvent": null,
   "ranking/getRanking": { pointWorth: null, ranking: [], totalBets: 0 },
   "skills/getRangeBySlug": null,

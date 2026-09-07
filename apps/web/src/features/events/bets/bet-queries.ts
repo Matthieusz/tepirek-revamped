@@ -15,6 +15,12 @@ import type {
   EditBetInput,
   PaginatedBetsInput,
 } from "@/features/events/bets/bet-api";
+import {
+  heroStatsQueryKeyPrefix,
+  oldestUnpaidEventQueryKey,
+  rankingQueryKeyPrefix,
+} from "@/features/events/ranking/ranking-queries";
+import { vaultQueryKey } from "@/features/events/vault/vault-queries";
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all bet data. */
@@ -42,19 +48,7 @@ export const latestBetForCopyQueryKey = [
   "latest-for-copy",
 ] as const;
 
-const rankingQueryKey = ["ranking"] as const;
-const heroStatsQueryKey = ["hero-stats"] as const;
-const oldestUnpaidEventQueryKey = ["oldest-unpaid-event"] as const;
-const vaultQueryKey = ["vault"] as const;
-
-/** Data needed to refresh derived event views after a bet mutation. */
-export interface BetDerivedDataInput {
-  readonly eventId: number | undefined;
-  readonly heroId: number;
-}
-
 interface BetMutationCallbacks {
-  readonly onDerivedDataChanged?: (input: BetDerivedDataInput) => void;
   readonly onRefreshError?: (error: Error) => void;
 }
 
@@ -66,8 +60,8 @@ const invalidateQueries = async (
     [
       paginatedBetsQueryKeyPrefix,
       latestBetForCopyQueryKey,
-      rankingQueryKey,
-      heroStatsQueryKey,
+      rankingQueryKeyPrefix,
+      heroStatsQueryKeyPrefix,
       oldestUnpaidEventQueryKey,
       vaultQueryKey,
     ].map(async (queryKey) => {
@@ -88,11 +82,9 @@ const invalidateQueries = async (
 
 const invalidateAfterMutation = async (
   queryClient: QueryClient,
-  input: BetDerivedDataInput,
   callbacks: BetMutationCallbacks
 ): Promise<void> => {
   await invalidateQueries(queryClient, callbacks);
-  callbacks.onDerivedDataChanged?.(input);
 };
 
 /** Returns Query options for one page of bets. */
@@ -125,12 +117,8 @@ export const createBetMutationOptions = (
   mutationOptions({
     mutationFn: async (input: CreateBetInput) => await runner(createBet(input)),
     mutationKey: [...betsQueryKey, "mutation", "create"],
-    onSuccess: async (_result, input) => {
-      await invalidateAfterMutation(
-        queryClient,
-        { eventId: input.eventId, heroId: input.heroId },
-        callbacks
-      );
+    onSuccess: async () => {
+      await invalidateAfterMutation(queryClient, callbacks);
     },
     retry: false,
   });
@@ -144,12 +132,8 @@ export const deleteBetMutationOptions = (
   mutationOptions({
     mutationFn: async (input: DeleteBetInput) => await runner(deleteBet(input)),
     mutationKey: [...betsQueryKey, "mutation", "delete"],
-    onSuccess: async (_result, input) => {
-      await invalidateAfterMutation(
-        queryClient,
-        { eventId: input.eventId, heroId: input.heroId },
-        callbacks
-      );
+    onSuccess: async () => {
+      await invalidateAfterMutation(queryClient, callbacks);
     },
     retry: false,
   });
@@ -163,12 +147,8 @@ export const editBetMutationOptions = (
   mutationOptions({
     mutationFn: async (input: EditBetInput) => await runner(editBet(input)),
     mutationKey: [...betsQueryKey, "mutation", "edit"],
-    onSuccess: async (_result, input) => {
-      await invalidateAfterMutation(
-        queryClient,
-        { eventId: input.eventId, heroId: input.heroId },
-        callbacks
-      );
+    onSuccess: async () => {
+      await invalidateAfterMutation(queryClient, callbacks);
     },
     retry: false,
   });

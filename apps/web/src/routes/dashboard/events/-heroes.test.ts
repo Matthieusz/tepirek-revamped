@@ -81,11 +81,11 @@ describe("event route loaders preload their data", () => {
     expect(query).toHaveBeenCalledOnce();
   });
 
-  it("preloads events and the atom-owned vault data", async () => {
+  it("preloads events and oldest-unpaid data for the vault route", async () => {
     const { query } = await loadEventRoute("/dashboard/events/vault");
 
-    expect(query).toHaveBeenCalledOnce();
-    expect(preloadAtomResults).toHaveBeenCalledOnce();
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(preloadAtomResults).not.toHaveBeenCalled();
   });
 
   it("keeps filter changes out of the event data route loaders", () => {

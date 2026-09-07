@@ -3,7 +3,7 @@ import * as Schema from "effect/Schema";
 
 import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
-import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
+import { oldestUnpaidEventQueryOptions } from "@/features/events/ranking/ranking-queries";
 import {
   EventsRouteError,
   EventsRoutePending,
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.query(eventsQueryOptions()),
-      context.preloadAtomResults(context.atomRegistry, [oldestUnpaidEventAtom]),
+      context.queryClient.query(oldestUnpaidEventQueryOptions()),
     ]);
   },
   pendingComponent: EventsRoutePending,

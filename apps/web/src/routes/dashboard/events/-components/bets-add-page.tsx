@@ -1,9 +1,7 @@
-import { useAtomSet } from "@effect/atom-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { refreshBetDerivedDataAtom } from "@/features/events/bets/bet-derived-data-atoms";
 import { latestBetForCopyQueryOptions } from "@/features/events/bets/bet-queries";
 import type { LastBetState } from "@/features/events/bets/member-selection";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
@@ -25,7 +23,6 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const heroesQuery = useQuery(heroesQueryOptions());
   const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
   const latestBetQuery = useQuery(latestBetForCopyQueryOptions());
-  const refreshDerivedData = useAtomSet(refreshBetDerivedDataAtom);
 
   const events = isAdminUser ? [...(eventsQuery.data ?? [])] : [];
   const heroes = isAdminUser ? [...(heroesQuery.data ?? [])] : [];
@@ -122,7 +119,6 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
         lastBet={lastBet}
         users={users}
         usersLoading={verifiedUsersQuery.isFetching}
-        onDerivedDataChanged={refreshDerivedData}
       />
     </div>
   );

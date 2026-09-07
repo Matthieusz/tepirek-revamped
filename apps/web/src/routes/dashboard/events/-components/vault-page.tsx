@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   CheckIcon,
   Coins02Icon,
@@ -6,19 +5,15 @@ import {
   VaultIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  AsyncResultBoundary,
-  AsyncResultFailure,
-} from "@/components/ui/async-result-boundary";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,14 +32,15 @@ import {
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { EventSelectItems } from "@/features/events/core/select-utils";
-import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
+import { oldestUnpaidEventQueryOptions } from "@/features/events/ranking/ranking-queries";
+import type { VaultInput } from "@/features/events/vault/vault-api";
 import {
-  optimisticVaultAtom,
-  togglePaidOutInVaultAtom,
-  vaultAtom,
-} from "@/features/events/vault/vault-atoms";
+  togglePaidOutMutationOptions,
+  vaultQueryOptions,
+} from "@/features/events/vault/vault-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatVaultEarnings } from "@/lib/gold";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { VaultUserCard } from "@/routes/dashboard/events/-components/vault/vault-user-card";
 import type { AuthSession } from "@/types/route";
@@ -61,38 +57,33 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const hasInitializedRef = useRef(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const eventsQuery = useQuery(eventsQueryOptions());
-  const oldestUnpaidResult = useAtomValue(oldestUnpaidEventAtom);
+  const oldestUnpaidQuery = useQuery(oldestUnpaidEventQueryOptions());
   const effectiveEventId = urlEventId ?? ALL_FILTER;
   const eventQueryInput = toQueryInput(effectiveEventId);
-  const vaultInput =
-    eventQueryInput === undefined ? {} : { eventId: eventQueryInput };
+  const hasSpecificEvent = eventQueryInput !== undefined;
   const refreshEvents = () => {
     void eventsQuery.refetch();
   };
-  const refreshOldestUnpaid = useAtomRefresh(oldestUnpaidEventAtom);
-  const refreshVault = useAtomRefresh(vaultAtom(vaultInput));
-  const hasSpecificEvent = eventQueryInput !== undefined;
   useEffect(() => {
-    if (
-      hasInitializedRef.current ||
-      !AsyncResult.isSuccess(oldestUnpaidResult)
-    ) {
+    if (hasInitializedRef.current || oldestUnpaidQuery.data === undefined) {
       return;
     }
 
-    const oldestUnpaidEventId = oldestUnpaidResult.value;
+    const oldestUnpaidEventId = oldestUnpaidQuery.data;
     hasInitializedRef.current = true;
     setHasInitialized(true);
     if (urlEventId === undefined && oldestUnpaidEventId !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      navigate({
+      void navigate({
         replace: true,
         search: { eventId: oldestUnpaidEventId.toString() },
       });
     }
-  }, [oldestUnpaidResult, urlEventId, navigate]);
+  }, [oldestUnpaidQuery.data, urlEventId, navigate]);
 
-  if (eventsQuery.isPending && eventsQuery.data === undefined) {
+  if (
+    (eventsQuery.isPending && eventsQuery.data === undefined) ||
+    (oldestUnpaidQuery.isPending && oldestUnpaidQuery.data === undefined)
+  ) {
     return <LoadingSpinner />;
   }
 
@@ -108,34 +99,34 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
     );
   }
 
-  return (
-    <AsyncResultBoundary
-      onRetry={refreshOldestUnpaid}
-      result={oldestUnpaidResult}
-    >
-      {() =>
-        hasInitialized ? (
-          // oxlint-disable-next-line no-use-before-define
-          <VaultContent
-            effectiveEventId={effectiveEventId}
-            events={[...(eventsQuery.data ?? [])]}
-            hasSpecificEvent={hasSpecificEvent}
-            onEventChange={(eventId) => {
-              void navigate({
-                search: {
-                  eventId,
-                },
-              });
-            }}
-            onRetryVault={refreshVault}
-            session={session}
-            vaultInput={vaultInput}
-          />
-        ) : (
-          <LoadingSpinner />
-        )
-      }
-    </AsyncResultBoundary>
+  if (oldestUnpaidQuery.isError && oldestUnpaidQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          oldestUnpaidQuery.error,
+          "Nie udało się ustalić najstarszego niewypłaconego eventu. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void oldestUnpaidQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  return hasInitialized ? (
+    // oxlint-disable-next-line no-use-before-define
+    <VaultContent
+      effectiveEventId={effectiveEventId}
+      events={[...(eventsQuery.data ?? [])]}
+      hasSpecificEvent={hasSpecificEvent}
+      onEventChange={(eventId) => {
+        void navigate({ search: { eventId } });
+      }}
+      session={session}
+      vaultEventId={eventQueryInput}
+    />
+  ) : (
+    <LoadingSpinner />
   );
 };
 
@@ -150,8 +141,7 @@ interface VaultContentProps extends EventsVaultPageProps {
   }[];
   readonly hasSpecificEvent: boolean;
   readonly onEventChange: (eventId: string | undefined) => void;
-  readonly onRetryVault: () => void;
-  readonly vaultInput: { readonly eventId?: number };
+  readonly vaultEventId: number | undefined;
 }
 
 const VaultContent = ({
@@ -159,29 +149,30 @@ const VaultContent = ({
   events,
   hasSpecificEvent,
   onEventChange,
-  onRetryVault,
   session,
-  vaultInput,
+  vaultEventId,
 }: VaultContentProps) => {
-  const optimisticVaultResult = useAtomValue(optimisticVaultAtom(vaultInput));
-  const vault = AsyncResult.isSuccess(optimisticVaultResult)
-    ? optimisticVaultResult.value
-    : [];
-  const vaultLoading = !AsyncResult.isSuccess(optimisticVaultResult);
-  const togglePaidOut = useAtomSet(togglePaidOutInVaultAtom(vaultInput), {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  let vaultInput: VaultInput = {};
+  if (vaultEventId !== undefined) {
+    vaultInput = { eventId: vaultEventId };
+  }
+  const vaultQuery = useQuery(vaultQueryOptions(vaultInput));
+  const togglePaidOut = useMutation(
+    togglePaidOutMutationOptions(queryClient, vaultEventId ?? 0, runAppHttpApi)
+  );
+  const vault = vaultQuery.data ?? [];
   const toggleMutation = {
-    isPending: false,
+    isPending: togglePaidOut.isPending,
     mutate: ({ userId, paidOut }: { userId: string; paidOut: boolean }) => {
-      const run = async () => {
-        if (!hasSpecificEvent || vaultInput.eventId === undefined) {
-          toast.error("Wybierz konkretny event przed zmianą statusu wypłaty");
-          return;
-        }
+      if (!hasSpecificEvent || vaultEventId === undefined) {
+        toast.error("Wybierz konkretny event przed zmianą statusu wypłaty");
+        return;
+      }
+      void (async () => {
         try {
-          await togglePaidOut({
-            eventId: vaultInput.eventId,
+          await togglePaidOut.mutateAsync({
+            eventId: vaultEventId,
             paidOut,
             userId,
           });
@@ -189,10 +180,26 @@ const VaultContent = ({
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
         }
-      };
-      void run();
+      })();
     },
   };
+
+  if (vaultQuery.isPending && vaultQuery.data === undefined) {
+    return <LoadingSpinner />;
+  }
+  if (vaultQuery.isError && vaultQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          vaultQuery.error,
+          "Nie udało się wczytać skarbca. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void vaultQuery.refetch();
+        }}
+      />
+    );
+  }
 
   const isAdminUser = isAdmin(session);
   const nextToPay = Arr.findFirst(vault, (entry) => !entry.paidOut);
@@ -236,199 +243,193 @@ const VaultContent = ({
         </Select>
       </div>
 
-      {vaultLoading ? (
-        <AsyncResultBoundary
-          onRetry={onRetryVault}
-          result={optimisticVaultResult}
-        >
-          {() => null}
-        </AsyncResultBoundary>
-      ) : (
-        <>
-          {isAdminUser && !hasSpecificEvent && (
-            <p className="text-muted-foreground text-center text-sm">
-              Wybierz konkretny event, aby oznaczać wypłaty.
-            </p>
-          )}
+      {vaultQuery.isFetching && (
+        <p className="text-muted-foreground text-center text-xs">
+          Odświeżanie…
+        </p>
+      )}
+      <div className="space-y-6">
+        {isAdminUser && !hasSpecificEvent && (
+          <p className="text-muted-foreground text-center text-sm">
+            Wybierz konkretny event, aby oznaczać wypłaty.
+          </p>
+        )}
 
-          {/* Next to receive payment - highlighted */}
-          {Option.isSome(nextToPay) && (
-            <div className="border-primary/50 bg-primary/5 rounded-xl border-2 p-6">
-              <div className="mb-2 flex items-center justify-center gap-2">
-                <span className="text-primary text-sm font-semibold">
-                  Następny do wypłaty
-                </span>
+        {/* Next to receive payment - highlighted */}
+        {Option.isSome(nextToPay) && (
+          <div className="border-primary/50 bg-primary/5 rounded-xl border-2 p-6">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <span className="text-primary text-sm font-semibold">
+                Następny do wypłaty
+              </span>
+            </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar className="border-primary size-12 border-2">
+                  <AvatarImage
+                    alt={nextToPay.value.userName ?? ""}
+                    src={nextToPay.value.userImage ?? undefined}
+                  />
+                  <AvatarFallback>
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={UserIcon}
+                      className="size-6"
+                    />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-lg font-bold">
+                    {nextToPay.value.userName}
+                  </p>
+                  <p className="text-muted-foreground font-mono">
+                    {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="border-primary size-12 border-2">
+              {isAdminUser && hasSpecificEvent && (
+                <Button
+                  disabled={toggleMutation.isPending}
+                  onClick={() => {
+                    toggleMutation.mutate({
+                      paidOut: true,
+                      userId: nextToPay.value.userId,
+                    });
+                  }}
+                  size="sm"
+                  variant="default"
+                >
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={CheckIcon}
+                    className="size-4 sm:mr-2"
+                  />
+                  <span className="hidden sm:inline">
+                    Oznacz jako wypłacone
+                  </span>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {vault.length === 0 && (
+          <EmptyState
+            icon={<HugeiconsIcon aria-hidden="true" icon={VaultIcon} />}
+            message="Brak graczy z zarobkami powyżej 100 000 000 złota"
+          />
+        )}
+
+        {/* Unpaid users list */}
+        {unpaidUsers.length > 1 && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">
+              Do wypłaty ({unpaidUsers.length})
+            </h2>
+            {unpaidUsers.slice(1).map((player, index) => (
+              <div
+                className="border-border bg-card hover:bg-accent/50 rounded-xl border transition-colors"
+                key={player.userId}
+              >
+                <div className="flex items-center gap-4 px-4 py-3">
+                  {/* Position */}
+                  <div className="flex w-8 shrink-0 items-center justify-center">
+                    <span className="text-muted-foreground font-medium">
+                      {index + 2}
+                    </span>
+                  </div>
+                  {/* Avatar */}
+                  <Avatar className="border-border size-10 shrink-0 border">
                     <AvatarImage
-                      alt={nextToPay.value.userName ?? ""}
-                      src={nextToPay.value.userImage ?? undefined}
+                      alt={player.userName ?? ""}
+                      src={player.userImage ?? undefined}
                     />
                     <AvatarFallback>
                       <HugeiconsIcon
                         aria-hidden="true"
                         icon={UserIcon}
-                        className="size-6"
+                        className="size-5"
                       />
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="text-lg font-bold">
-                      {nextToPay.value.userName}
-                    </p>
-                    <p className="text-muted-foreground font-mono">
-                      {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
-                    </p>
+                  {/* Name */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{player.userName}</p>
                   </div>
-                </div>
-                {isAdminUser && hasSpecificEvent && (
-                  <Button
-                    disabled={toggleMutation.isPending}
-                    onClick={() => {
-                      toggleMutation.mutate({
-                        paidOut: true,
-                        userId: nextToPay.value.userId,
-                      });
-                    }}
-                    size="sm"
-                    variant="default"
-                  >
+                  {/* Earnings */}
+                  <div className="flex items-center gap-2">
                     <HugeiconsIcon
                       aria-hidden="true"
-                      icon={CheckIcon}
-                      className="size-4 sm:mr-2"
+                      icon={Coins02Icon}
+                      className="text-muted-foreground size-4"
                     />
-                    <span className="hidden sm:inline">
-                      Oznacz jako wypłacone
-                    </span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {vault.length === 0 && (
-            <EmptyState
-              icon={<HugeiconsIcon aria-hidden="true" icon={VaultIcon} />}
-              message="Brak graczy z zarobkami powyżej 100 000 000 złota"
-            />
-          )}
-
-          {/* Unpaid users list */}
-          {unpaidUsers.length > 1 && (
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold">
-                Do wypłaty ({unpaidUsers.length})
-              </h2>
-              {unpaidUsers.slice(1).map((player, index) => (
-                <div
-                  className="border-border bg-card hover:bg-accent/50 rounded-xl border transition-colors"
-                  key={player.userId}
-                >
-                  <div className="flex items-center gap-4 px-4 py-3">
-                    {/* Position */}
-                    <div className="flex w-8 shrink-0 items-center justify-center">
-                      <span className="text-muted-foreground font-medium">
-                        {index + 2}
-                      </span>
-                    </div>
-                    {/* Avatar */}
-                    <Avatar className="border-border size-10 shrink-0 border">
-                      <AvatarImage
-                        alt={player.userName ?? ""}
-                        src={player.userImage ?? undefined}
-                      />
-                      <AvatarFallback>
-                        <HugeiconsIcon
-                          aria-hidden="true"
-                          icon={UserIcon}
-                          className="size-5"
-                        />
-                      </AvatarFallback>
-                    </Avatar>
-                    {/* Name */}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">
-                        {player.userName}
-                      </p>
-                    </div>
-                    {/* Earnings */}
-                    <div className="flex items-center gap-2">
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={Coins02Icon}
-                        className="text-muted-foreground size-4"
-                      />
-                      <p className="font-mono font-semibold">
-                        {formatVaultEarnings(player.totalEarnings)}
-                      </p>
-                    </div>
-                    {/* Checkbox for admin */}
-                    {isAdminUser && hasSpecificEvent && (
-                      <Checkbox
-                        checked={player.paidOut}
-                        disabled={toggleMutation.isPending}
-                        onClick={(event) => {
-                          event.preventDefault();
-                        }}
-                        onCheckedChange={(checked) => {
-                          if (Predicate.isBoolean(checked)) {
-                            toggleMutation.mutate({
-                              paidOut: checked,
-                              userId: player.userId,
-                            });
-                          }
-                        }}
-                      />
-                    )}
+                    <p className="font-mono font-semibold">
+                      {formatVaultEarnings(player.totalEarnings)}
+                    </p>
                   </div>
+                  {/* Checkbox for admin */}
+                  {isAdminUser && hasSpecificEvent && (
+                    <Checkbox
+                      checked={player.paidOut}
+                      disabled={toggleMutation.isPending}
+                      onClick={(event) => {
+                        event.preventDefault();
+                      }}
+                      onCheckedChange={(checked) => {
+                        if (Predicate.isBoolean(checked)) {
+                          toggleMutation.mutate({
+                            paidOut: checked,
+                            userId: player.userId,
+                          });
+                        }
+                      }}
+                    />
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
 
-          {/* Paid users list */}
-          {paidUsers.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold">
-                Wypłacone ({paidUsers.length})
-              </h2>
-              {paidUsers.map((player) => (
-                <VaultUserCard
-                  className="hover:bg-accent/50 opacity-60 transition-colors"
-                  key={player.userId}
-                  rightSlot={
-                    isAdminUser &&
-                    hasSpecificEvent && (
-                      <Checkbox
-                        checked={player.paidOut}
-                        disabled={toggleMutation.isPending}
-                        onClick={(event) => {
-                          event.preventDefault();
-                        }}
-                        onCheckedChange={(checked) => {
-                          if (Predicate.isBoolean(checked)) {
-                            toggleMutation.mutate({
-                              paidOut: checked,
-                              userId: player.userId,
-                            });
-                          }
-                        }}
-                      />
-                    )
-                  }
-                  totalEarnings={player.totalEarnings}
-                  userImage={player.userImage}
-                  userName={player.userName ?? ""}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+        {/* Paid users list */}
+        {paidUsers.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">
+              Wypłacone ({paidUsers.length})
+            </h2>
+            {paidUsers.map((player) => (
+              <VaultUserCard
+                className="hover:bg-accent/50 opacity-60 transition-colors"
+                key={player.userId}
+                rightSlot={
+                  isAdminUser &&
+                  hasSpecificEvent && (
+                    <Checkbox
+                      checked={player.paidOut}
+                      disabled={toggleMutation.isPending}
+                      onClick={(event) => {
+                        event.preventDefault();
+                      }}
+                      onCheckedChange={(checked) => {
+                        if (Predicate.isBoolean(checked)) {
+                          toggleMutation.mutate({
+                            paidOut: checked,
+                            userId: player.userId,
+                          });
+                        }
+                      }}
+                    />
+                  )
+                }
+                totalEarnings={player.totalEarnings}
+                userImage={player.userImage}
+                userName={player.userName ?? ""}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

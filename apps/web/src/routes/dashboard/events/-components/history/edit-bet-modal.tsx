@@ -23,7 +23,6 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { editBetMutationOptions } from "@/features/events/bets/bet-queries";
-import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
@@ -43,7 +42,6 @@ interface EditBetModalProps {
   readonly memberCount: number;
   readonly eventId: number | undefined;
   readonly heroId: number;
-  readonly onDerivedDataChanged: (input: BetDerivedDataInput) => void;
   readonly trigger?: React.ReactNode;
 }
 
@@ -59,7 +57,6 @@ const EditBetModalContent = ({
   memberCount,
   eventId,
   heroId,
-  onDerivedDataChanged,
   trigger,
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
@@ -67,9 +64,7 @@ const EditBetModalContent = ({
     useState<FormSubmissionError>();
   const queryClient = useQueryClient();
   const editBet = useMutation(
-    editBetMutationOptions(queryClient, runAppHttpApi, {
-      onDerivedDataChanged,
-    })
+    editBetMutationOptions(queryClient, runAppHttpApi)
   );
   const currentMemberIds: readonly string[] = useMemo(
     () => currentMembers.map((member) => member.userId),

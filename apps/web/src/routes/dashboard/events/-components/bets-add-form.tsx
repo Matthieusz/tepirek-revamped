@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
 import { createBetMutationOptions } from "@/features/events/bets/bet-queries";
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
@@ -82,7 +81,6 @@ interface BetsAddFormProps {
   readonly lastBet: LastBetState;
   readonly users: readonly VerifiedMember[];
   readonly usersLoading: boolean;
-  readonly onDerivedDataChanged: (input: BetDerivedDataInput) => void;
 }
 
 const BETS_ADD_DEFAULT_VALUES: BetsAddFormValues = {
@@ -99,15 +97,12 @@ export const BetsAddForm = ({
   lastBet,
   users,
   usersLoading,
-  onDerivedDataChanged,
 }: BetsAddFormProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
   const queryClient = useQueryClient();
   const createBet = useMutation(
-    createBetMutationOptions(queryClient, runAppHttpApi, {
-      onDerivedDataChanged,
-    })
+    createBetMutationOptions(queryClient, runAppHttpApi)
   );
   const form = useAppForm({
     defaultValues: BETS_ADD_DEFAULT_VALUES,

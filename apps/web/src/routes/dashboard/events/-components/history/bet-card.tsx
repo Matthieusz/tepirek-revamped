@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
 import { EditBetModal } from "@/routes/dashboard/events/-components/history/edit-bet-modal";
 
 interface BetCardMember {
@@ -42,7 +41,6 @@ interface BetCardProps {
     readonly id: number;
     readonly heroName: string;
   }) => void;
-  onDerivedDataChanged: (input: BetDerivedDataInput) => void;
   pointsPerMember: number;
   formattedCreatedAt: string;
   eventId: number | undefined;
@@ -52,7 +50,6 @@ export const BetCard = ({
   bet,
   isAdminUser,
   onDeleteClick,
-  onDerivedDataChanged,
   pointsPerMember,
   eventId,
   formattedCreatedAt,
@@ -81,7 +78,6 @@ export const BetCard = ({
                 memberCount={bet.memberCount}
                 eventId={eventId}
                 heroId={bet.heroId}
-                onDerivedDataChanged={onDerivedDataChanged}
                 trigger={
                   <Button
                     aria-label={`Edytuj obstawienie na herosa ${bet.heroName}`}

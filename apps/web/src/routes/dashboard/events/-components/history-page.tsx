@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import { HistoryIcon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,8 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { refreshBetDerivedDataAtom } from "@/features/events/bets/bet-derived-data-atoms";
-import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
 import {
   deleteBetMutationOptions,
   paginatedBetsQueryOptions,
@@ -123,14 +120,8 @@ const HistoryContent = ({
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const [loadedPages, setLoadedPages] = useState<readonly number[]>([1]);
   const queryClient = useQueryClient();
-  const refreshDerivedDataAtom = useAtomSet(refreshBetDerivedDataAtom);
-  const refreshDerivedData = (input: BetDerivedDataInput): void => {
-    refreshDerivedDataAtom(input);
-  };
   const deleteBet = useMutation(
-    deleteBetMutationOptions(queryClient, runAppHttpApi, {
-      onDerivedDataChanged: refreshDerivedData,
-    })
+    deleteBetMutationOptions(queryClient, runAppHttpApi)
   );
   const betsData = betsQuery.data;
   const isAdminUser = isAdmin(session);
@@ -207,7 +198,6 @@ const HistoryContent = ({
                 id: input.id,
               });
             }}
-            onDerivedDataChanged={refreshDerivedData}
             pointsPerMember={calculatePointsPerMember(bet.memberCount)}
             eventId={betPageInput.eventId}
           />
@@ -228,7 +218,6 @@ const HistoryContent = ({
             isAdminUser={isAdminUser}
             key={page}
             onDelete={setBetToDelete}
-            onDerivedDataChanged={refreshDerivedData}
             onLoadPage={loadPage}
             page={page}
           />
@@ -352,10 +341,6 @@ interface HistoryPageChunkProps {
   readonly baseInput: HistoryContentProps["betPageInput"];
   readonly isAdminUser: boolean;
   readonly onDelete: (bet: Exclude<BetToDelete, null>) => void;
-  readonly onDerivedDataChanged: (input: {
-    readonly eventId: number | undefined;
-    readonly heroId: number;
-  }) => void;
   readonly onLoadPage: (page: number) => void;
   readonly page: number;
 }
@@ -397,7 +382,6 @@ const LoadedHistoryPageChunk = ({
   input,
   isAdminUser,
   onDelete,
-  onDerivedDataChanged,
   onLoadPage,
   page,
 }: LoadedHistoryPageChunkProps) => (
@@ -417,7 +401,6 @@ const LoadedHistoryPageChunk = ({
         isAdminUser={isAdminUser}
         key={bet.id}
         onDeleteClick={onDelete}
-        onDerivedDataChanged={onDerivedDataChanged}
         pointsPerMember={calculatePointsPerMember(bet.memberCount)}
         eventId={input.eventId}
       />
