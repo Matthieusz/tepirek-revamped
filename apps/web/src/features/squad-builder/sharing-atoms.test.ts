@@ -7,11 +7,6 @@ import {
   sendAccountAccessInviteAtom,
 } from "@/features/squad-builder/account-sharing-atoms";
 import {
-  revokeSquadGroupEditorAtom,
-  squadEditorInviteTargetsAtom,
-  squadGroupEditorGrantsAtom,
-} from "@/features/squad-builder/squad-group-sharing-atoms";
-import {
   makeTestLayer,
   waitForAtomResults,
 } from "@/lib/test-utils/atom-test-utils";
@@ -71,39 +66,6 @@ describe("sharing atom families", () => {
 
     expect(
       calls.filter((call) => call.method === "listAccountAccessGrants")
-    ).toHaveLength(callsBefore + 1);
-  });
-
-  it("does not mount squad-sharing resources for invalid group IDs", () => {
-    const { calls, makeRegistry } = makeTestLayer();
-    const registry = makeRegistry();
-
-    registry.mount(squadGroupEditorGrantsAtom({ groupId: 0 }));
-    registry.mount(
-      squadEditorInviteTargetsAtom({ groupId: -1, query: "query" })
-    );
-    expect(calls).toHaveLength(0);
-  });
-
-  it("refreshes editor grants for the revoked squad group", async () => {
-    const { calls, makeRegistry } = makeTestLayer();
-    const registry = makeRegistry();
-
-    const grants = squadGroupEditorGrantsAtom({ groupId: 7 });
-    registry.mount(grants);
-    await waitForAtomResults(registry, [grants]);
-    const callsBefore = calls.filter(
-      (call) => call.method === "listSquadGroupEditorGrants"
-    ).length;
-
-    registry.set(revokeSquadGroupEditorAtom, {
-      groupId: 7,
-      invitationId: 11,
-    });
-    await waitForAtomResults(registry, [revokeSquadGroupEditorAtom]);
-
-    expect(
-      calls.filter((call) => call.method === "listSquadGroupEditorGrants")
     ).toHaveLength(callsBefore + 1);
   });
 });

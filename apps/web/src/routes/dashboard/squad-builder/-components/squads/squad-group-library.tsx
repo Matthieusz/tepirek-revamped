@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import {
   ChevronRightIcon,
   Rotate01Icon,
@@ -13,7 +12,6 @@ import { Link } from "@tanstack/react-router";
 import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -44,7 +42,7 @@ import {
   globalSquadGroupsQueryOptions,
   ownedSquadGroupsQueryOptions,
 } from "@/features/squad-builder/squad-group-queries";
-import { sharedSquadGroupsAtom } from "@/features/squad-builder/squad-group-sharing-atoms";
+import { sharedSquadGroupsQueryOptions } from "@/features/squad-builder/squad-group-sharing-queries";
 import { formatDateTime } from "@/lib/utils";
 
 import { userInitials } from "../user-presenters";
@@ -408,7 +406,7 @@ export const SquadGroupLibrary = ({
   const [activeTab, setActiveTab] = useState<SquadListTab>("mine");
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
   const ownedResult = useQuery(ownedSquadGroupsQueryOptions());
-  const sharedResult = useAtomValue(sharedSquadGroupsAtom);
+  const sharedResult = useQuery(sharedSquadGroupsQueryOptions());
   const publicFilters = {
     maxLevel:
       appliedFilters.maxLevel.length > 0
@@ -426,25 +424,24 @@ export const SquadGroupLibrary = ({
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     ownedResult.refetch();
   };
-  const refreshShared = useAtomRefresh(sharedSquadGroupsAtom);
+  const refreshShared = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    sharedResult.refetch();
+  };
   const refreshPublic = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     publicResult.refetch();
   };
   const activeFilters = hasActiveFilters(appliedFilters);
   const ownedGroups = ownedResult.data ?? [];
-  const sharedGroups = AsyncResult.isSuccess(sharedResult)
-    ? sharedResult.value
-    : [];
+  const sharedGroups = sharedResult.data ?? [];
   const publicGroups = publicResult.data ?? [];
   const sharedCollectionResult: CollectionResult<
     readonly SharedSquadGroupSummary[]
   > = {
-    data: AsyncResult.isSuccess(sharedResult) ? sharedResult.value : undefined,
-    isError: AsyncResult.isFailure(sharedResult),
-    isPending:
-      !AsyncResult.isSuccess(sharedResult) &&
-      !AsyncResult.isFailure(sharedResult),
+    data: sharedResult.data,
+    isError: sharedResult.isError,
+    isPending: sharedResult.isPending,
   };
 
   return (

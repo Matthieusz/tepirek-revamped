@@ -5,9 +5,9 @@ import {
   ownedSquadGroupsQueryOptions,
 } from "@/features/squad-builder/squad-group-queries";
 import {
-  incomingSquadGroupInvitesAtom,
-  sharedSquadGroupsAtom,
-} from "@/features/squad-builder/squad-group-sharing-atoms";
+  incomingSquadGroupInvitesQueryOptions,
+  sharedSquadGroupsQueryOptions,
+} from "@/features/squad-builder/squad-group-sharing-queries";
 
 export const Route = createFileRoute("/dashboard/squad-builder/squads")({
   loader: async ({ context }) => {
@@ -20,10 +20,14 @@ export const Route = createFileRoute("/dashboard/squad-builder/squads")({
         ...globalSquadGroupsQueryOptions(),
         staleTime: 0,
       }),
-      context.preloadAtomResults(context.atomRegistry, [
-        incomingSquadGroupInvitesAtom,
-        sharedSquadGroupsAtom,
-      ]),
+      context.queryClient.query({
+        ...incomingSquadGroupInvitesQueryOptions(),
+        staleTime: 0,
+      }),
+      context.queryClient.query({
+        ...sharedSquadGroupsQueryOptions(),
+        staleTime: 0,
+      }),
     ]);
   },
   staticData: {

@@ -89,7 +89,8 @@ const invalidateSquadGroupLists = async (
   await queryClient.invalidateQueries({ queryKey: squadGroupsQueryKey });
 };
 
-const invalidateSquadGroupResources = async (
+/** Invalidates list and group-specific data after a group change. */
+export const invalidateSquadGroupResources = async (
   queryClient: QueryClient,
   groupId: number
 ): Promise<void> => {

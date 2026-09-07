@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Cancel01Icon,
   CheckIcon,
@@ -6,7 +5,7 @@ import {
   TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,25 +21,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
-  incomingSquadGroupInvitesAtom,
-  respondToSquadGroupInviteAtom,
-} from "@/features/squad-builder/squad-group-sharing-atoms";
+  incomingSquadGroupInvitesQueryOptions,
+  respondToSquadGroupInviteMutationOptions,
+} from "@/features/squad-builder/squad-group-sharing-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 
 import { userInitials } from "../user-presenters";
 
 export const SquadGroupInvitations = () => {
-  const result = useAtomValue(incomingSquadGroupInvitesAtom);
-  const refresh = useAtomRefresh(incomingSquadGroupInvitesAtom);
-  const respond = useAtomSet(respondToSquadGroupInviteAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const result = useQuery(incomingSquadGroupInvitesQueryOptions());
+  const respond = useMutation(
+    respondToSquadGroupInviteMutationOptions(queryClient)
+  );
+  const refresh = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    result.refetch();
+  };
   const [respondingInvitationId, setRespondingInvitationId] = useState<
     number | null
   >(null);
 
-  if (AsyncResult.isFailure(result)) {
+  if (result.isError) {
     return (
       <Alert variant="destructive">
         <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
@@ -63,7 +66,7 @@ export const SquadGroupInvitations = () => {
     );
   }
 
-  if (!AsyncResult.isSuccess(result)) {
+  if (result.isPending || result.data === undefined) {
     return (
       <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
         <FramePanel className="p-0 shadow-none">
@@ -73,7 +76,7 @@ export const SquadGroupInvitations = () => {
     );
   }
 
-  if (result.value.length === 0) {
+  if (result.data.length === 0) {
     return null;
   }
 
@@ -83,7 +86,7 @@ export const SquadGroupInvitations = () => {
   ) => {
     setRespondingInvitationId(invitationId);
     try {
-      await respond({ invitationId, response });
+      await respond.mutateAsync({ invitationId, response });
       toast.success(
         response === "accept"
           ? "Zaproszenie zostało przyjęte"
@@ -105,12 +108,10 @@ export const SquadGroupInvitations = () => {
               Grupy, do których możesz dołączyć jako edytor.
             </p>
           </div>
-          <Badge variant="warning-light">
-            {result.value.length} oczekujące
-          </Badge>
+          <Badge variant="warning-light">{result.data.length} oczekujące</Badge>
         </header>
         <ul className="divide-border divide-y">
-          {result.value.map((invite) => {
+          {result.data.map((invite) => {
             const isResponding = respondingInvitationId === invite.invitationId;
             return (
               <li
