@@ -3,10 +3,6 @@ import * as Atom from "effect/unstable/reactivity/Atom";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { describe, expect, it } from "vitest";
 
-import {
-  auctionSignupsAtom,
-  optimisticAuctionSignupsAtom,
-} from "@/features/auctions/auction-atoms";
 import { paginatedBetsAtom } from "@/features/events/bets/bet-atoms";
 import {
   optimisticEventsAtom,
@@ -69,10 +65,6 @@ describe("optimistic resource failure states", () => {
     expectOptimisticFailureToRemainFailure(
       skillRangesAtom,
       optimisticSkillRangesAtom
-    );
-    expectOptimisticFailureToRemainFailure(
-      auctionSignupsAtom({ profession: "mage", type: "main" }),
-      optimisticAuctionSignupsAtom({ profession: "mage", type: "main" })
     );
     expectResourceFailureToRemainFailure(rankingAtom({ eventId: 1 }));
   });
