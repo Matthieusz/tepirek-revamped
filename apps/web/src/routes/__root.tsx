@@ -1,4 +1,5 @@
 import { RegistryContext } from "@effect/atom-react";
+import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -84,6 +85,7 @@ export interface RouterAppContext {
   readonly atomRegistry: AtomRegistry.AtomRegistry;
   readonly getUser: typeof getUserDependency;
   readonly preloadAtomResults: typeof preloadAtomResultsDependency;
+  readonly queryClient: QueryClient;
 }
 
 const evlogMiddleware = createMiddleware().server(evlogErrorHandler);
