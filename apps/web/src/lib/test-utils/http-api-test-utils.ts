@@ -28,6 +28,7 @@ interface EndpointIdentity {
 }
 
 const responseBodies = {
+  "announcement/listAnnouncements": [],
   "auction/getAuctionSignups": [],
   "auction/getAuctionStats": { totalSignups: 0, uniqueUsers: 0 },
   "auction/removeAuctionSignup": { success: true },
@@ -218,7 +219,10 @@ const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
       // SAFETY: Effect HttpApi exposes its runtime group and endpoint objects
       // through an untyped reflection API. The contract supplies string paths.
       // oxlint-disable-next-line typescript/no-unsafe-argument, typescript/no-unsafe-member-access
-      endpoints.set(endpoint.path, { group: groupName, method });
+      endpoints.set(`${endpoint.method} ${endpoint.path}`, {
+        group: groupName,
+        method,
+      });
     }
   }
 
@@ -258,7 +262,7 @@ export const makeHttpApiTestLayer = () => {
   const endpoints = makeEndpointLookup();
 
   const httpClient = HttpClient.make((request, url) => {
-    const endpoint = endpoints.get(url.pathname);
+    const endpoint = endpoints.get(`${request.method} ${url.pathname}`);
     if (endpoint === undefined) {
       return Effect.die(new Error(`Unhandled test endpoint: ${url.pathname}`));
     }

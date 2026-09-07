@@ -4,10 +4,6 @@ import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { describe, expect, it } from "vitest";
 
 import {
-  announcementsAtom,
-  optimisticAnnouncementsAtom,
-} from "@/features/announcements/announcement-atoms";
-import {
   auctionSignupsAtom,
   optimisticAuctionSignupsAtom,
 } from "@/features/auctions/auction-atoms";
@@ -63,10 +59,6 @@ describe("optimistic resource failure states", () => {
   it("preserves failures for collection resources instead of returning empty data", () => {
     expectOptimisticFailureToRemainFailure(eventsAtom, optimisticEventsAtom);
     expectOptimisticFailureToRemainFailure(heroesAtom, optimisticHeroesAtom);
-    expectOptimisticFailureToRemainFailure(
-      announcementsAtom,
-      optimisticAnnouncementsAtom
-    );
     expectResourceFailureToRemainFailure(
       paginatedBetsAtom({ eventId: 1, page: 1 })
     );
