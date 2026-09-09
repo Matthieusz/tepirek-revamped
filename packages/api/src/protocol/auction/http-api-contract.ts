@@ -77,6 +77,12 @@ export const RemoveAuctionSignupSuccess = Schema.Struct({
 export interface RemoveAuctionSignupSuccess extends Schema.Schema.Type<
   typeof RemoveAuctionSignupSuccess
 > {}
+export const ClearAuctionSignupsSuccess = Schema.Struct({
+  success: Schema.Literal(true),
+});
+export interface ClearAuctionSignupsSuccess extends Schema.Schema.Type<
+  typeof ClearAuctionSignupsSuccess
+> {}
 
 export class AuctionUnauthorized extends Schema.TaggedErrorClass<AuctionUnauthorized>()(
   "AuctionUnauthorized",
@@ -128,6 +134,11 @@ export const AuctionHttpApiGroup = HttpApiGroup.make("auction")
       error: AuctionError,
       payload: RemoveAuctionSignupPayload,
       success: RemoveAuctionSignupSuccess,
+    }),
+    HttpApiEndpoint.post("clearAuctionSignups", "/signups/clear", {
+      error: AuctionError,
+      payload: AuctionGroupPayload,
+      success: ClearAuctionSignupsSuccess,
     }),
     HttpApiEndpoint.post("toggleAuctionSignup", "/signups/toggle", {
       error: AuctionError,
