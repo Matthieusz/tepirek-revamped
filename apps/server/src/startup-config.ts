@@ -2,10 +2,12 @@ import { readFirecrawlConfig } from "@tepirek-revamped/api/adapters/squad-builde
 import { readDiscordVerificationConfig } from "@tepirek-revamped/api/adapters/user/discord-verification-config";
 import type { ObservabilityConfig } from "@tepirek-revamped/api/observability";
 import type { FirecrawlConfig } from "@tepirek-revamped/api/services/squad-builder/firecrawl-config";
-import { AuthConfig } from "@tepirek-revamped/auth";
+import { AuthConfig, AuthConfigLiveLayer } from "@tepirek-revamped/auth";
 import type { AuthEnv } from "@tepirek-revamped/auth";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
@@ -16,6 +18,24 @@ class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigura
     variable: Schema.String,
   }
 ) {}
+
+/**
+ * Compose the config provider with the auth config layer.
+ *
+ * The provider must be supplied to `AuthConfigLiveLayer` itself; merging the
+ * two independent layers would leave auth config reading Effect's default
+ * environment provider instead.
+ */
+export const makeStartupConfigLayer = (
+  provider: ConfigProvider.ConfigProvider
+) => {
+  const configProviderLayer = ConfigProvider.layer(provider);
+
+  return Layer.merge(
+    AuthConfigLiveLayer.pipe(Layer.provide(configProviderLayer)),
+    configProviderLayer
+  );
+};
 
 /** Values parsed at the executable boundary and required to build the server. */
 export interface StartupConfig {

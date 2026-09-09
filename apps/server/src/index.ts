@@ -12,7 +12,6 @@ import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
 import {
   AuthConfig,
-  AuthConfigLiveLayer,
   BetterAuthService,
   BetterAuthServiceLiveLayer,
 } from "@tepirek-revamped/auth";
@@ -42,7 +41,7 @@ import type { Context as HonoContext, Input as HonoInput } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import { readStartupConfig } from "./startup-config.js";
+import { makeStartupConfigLayer, readStartupConfig } from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
 
 /** Scoped Hono application value used by tests and the Node.js host. */
@@ -308,9 +307,8 @@ const startupConfigProvider = dotEnvProvider.pipe(
   )
 );
 
-const startupConfigLayer = Layer.merge(
-  AuthConfigLiveLayer,
-  ConfigProvider.layer(startupConfigProvider)
+const startupConfigLayer = Layer.unwrap(
+  startupConfigProvider.pipe(Effect.map(makeStartupConfigLayer))
 );
 
 const main = readStartupConfig.pipe(

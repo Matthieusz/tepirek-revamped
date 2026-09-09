@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { AuthConfigLiveLayer } from "@tepirek-revamped/auth";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
 import {
+  makeStartupConfigLayer,
   readLegendCatalogSyncConfig,
   readStartupConfig,
 } from "./startup-config.js";
@@ -34,8 +34,9 @@ const provideEnvironment = (environment: Record<string, string>) =>
 
 const configuredStartup = (environment: Record<string, string>) =>
   readStartupConfig.pipe(
-    Effect.provide(AuthConfigLiveLayer),
-    provideEnvironment(environment)
+    Effect.provide(
+      makeStartupConfigLayer(ConfigProvider.fromUnknown(environment))
+    )
   );
 
 const configuredLegendCatalogSync = (environment: Record<string, string>) =>
