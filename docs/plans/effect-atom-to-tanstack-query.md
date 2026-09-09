@@ -1,6 +1,6 @@
 # Migracja Effect Atom do TanStack Query
 
-Status: karty 00–01 zakończone. Następna jest karta 02: QueryClient, provider i wsparcie testów.
+Status: karty 00–04 zakończone. Następna jest karta 05: Users, sesja i reset prywatnego cache.
 
 ## Cel i zakres
 
@@ -194,6 +194,14 @@ Wspólna instrukcja wykonania każdego zadania feature'owego:
 W okresie przejściowym oba providery mogą istnieć, ale obsługują rozłączne zasoby. Jeżeli stara mutacja zmienia zasób już przeniesiony do Query, w tej samej karcie przenieś tę mutację albo dodaj minimalny, jawnie opisany refresh drugiego cache w warstwie integracji. Taki tymczasowy kod musi mieć wskazaną kartę usunięcia. Nie buduj ogólnego mostu Atom ↔ Query.
 
 Pliki współdzielone, manifest, lockfile, router i root mają jednego właściciela. Nie edytuj ich równolegle z kilku zadań.
+
+### Wzorzec zatwierdzony w karcie 04: todos
+
+- Adapter feature'a (`features/todos/todo-api.ts`) definiuje nazwane efekty API i dekoduje identyfikatory z wejścia UI przez istniejące schematy. Nie wykonuje I/O przy imporcie.
+- Moduł Query (`features/todos/todo-queries.ts`) eksportuje wspólny klucz `todosQueryKey = ["todos"]`, `todosQueryOptions` oraz fabryki `mutationOptions`. Loader i komponent używają tych samych options; runner Promise jest parametrem testowym, a produkcyjnie wskazuje `runAppHttpApi`.
+- Każda mutacja ma `retry: false`. Po zapisie invaliduje `todosQueryKey` i czeka na odświeżenie, ale przechwytuje błąd odczytu jako `onRefreshError`, więc udany zapis nie staje się nieudanym zapisem.
+- Toggle i delete najpierw anulują odczyty, zapisują optymistycznie tylko dotknięty rekord, a przy błędzie przywracają ten rekord. Invalidacja czeka z końcowym odświeżeniem do ostatniej współbieżnej mutacji, aby rollback jednej operacji nie nadpisał drugiej.
+- Testy składają prawdziwy `HttpApiClient` nad kontrolowanym `HttpClient`, a następnie sprawdzają invalidację, osobny błąd refreshu, rollback, szybkie mutacje, opóźniony odczyt, odmontowanie obserwatora i izolację `QueryClient`ów.
 
 ## Karty wykonawcze
 

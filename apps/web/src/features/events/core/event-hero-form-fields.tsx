@@ -55,7 +55,7 @@ const getSelectFieldState = (field: SelectFieldApi) => {
 };
 
 interface EventFormFieldProps {
-  readonly events: EventSelectOption[];
+  readonly events: readonly EventSelectOption[];
   readonly eventsLoading: boolean;
   readonly field: SelectFieldApi;
   readonly onChange: (eventId: string) => void;
@@ -119,7 +119,7 @@ export const EventFormField = ({
 interface HeroFormFieldProps {
   readonly eventId: string;
   readonly field: SelectFieldApi;
-  readonly heroes: HeroSelectOption[];
+  readonly heroes: readonly HeroSelectOption[];
   readonly heroesLoading: boolean;
 }
 

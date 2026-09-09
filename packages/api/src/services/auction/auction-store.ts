@@ -53,6 +53,12 @@ export class AuctionStore extends Context.Service<
       { readonly totalSignups: number; readonly uniqueUsers: number },
       ApplicationDependencyUnavailable
     >;
+    readonly clearSignups: (
+      input: AuctionGroupInput
+    ) => Effect.Effect<
+      { readonly success: true },
+      ApplicationDependencyUnavailable
+    >;
     readonly removeSignup: (
       input: RemoveSignupInput
     ) => Effect.Effect<

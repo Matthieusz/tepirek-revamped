@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Add01Icon,
   Calendar04Icon,
@@ -6,8 +5,8 @@ import {
   PowerIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns/format";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -21,10 +20,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Table,
   TableBody,
@@ -33,14 +33,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { Event } from "@/features/events/core/event-api";
 import {
-  deleteEventAtom,
-  eventsAtom,
-  optimisticEventsAtom,
-  toggleEventActiveAtom,
-} from "@/features/events/core/event-atoms";
+  deleteEventMutationOptions,
+  eventsQueryOptions,
+  toggleEventActiveMutationOptions,
+} from "@/features/events/core/event-queries";
 import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { AddEventModal } from "@/routes/dashboard/events/-components/list/add-event-modal";
 import type { AuthSession } from "@/types/route";
@@ -56,34 +57,65 @@ interface EventsListPageProps {
   session: AuthSession;
 }
 
+interface EventsListContentProps extends EventsListPageProps {
+  readonly events: readonly Event[];
+  readonly isRefreshing: boolean;
+  readonly refreshError: unknown;
+}
+
 const EventsListPage = ({ session }: EventsListPageProps) => {
-  const eventsResult = useAtomValue(eventsAtom);
-  const refreshEvents = useAtomRefresh(eventsAtom);
+  const eventsQuery = useQuery(eventsQueryOptions());
+
+  if (eventsQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (eventsQuery.isError && eventsQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          eventsQuery.error,
+          "Nie udało się wczytać eventów. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void eventsQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <EventsListContent session={session} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define
+    <EventsListContent
+      events={eventsQuery.data ?? []}
+      isRefreshing={eventsQuery.isFetching}
+      refreshError={eventsQuery.isError ? eventsQuery.error : undefined}
+      session={session}
+    />
   );
 };
 
 export default EventsListPage;
 
-const EventsListContent = ({ session }: EventsListPageProps) => {
+// oxlint-disable-next-line complexity
+const EventsListContent = ({
+  events,
+  isRefreshing,
+  refreshError,
+  session,
+}: EventsListContentProps) => {
+  const queryClient = useQueryClient();
   const [eventAction, setEventAction] = useState<EventAction>(null);
-  const optimisticEventsResult = useAtomValue(optimisticEventsAtom);
-  const events = AsyncResult.getOrThrow(optimisticEventsResult);
-  const deleteEvent = useAtomSet(deleteEventAtom, { mode: "promise" });
-  const toggleEventActive = useAtomSet(toggleEventActiveAtom, {
-    mode: "promise",
-  });
+  const deleteEvent = useMutation(
+    deleteEventMutationOptions(queryClient, runAppHttpApi)
+  );
+  const toggleEventActive = useMutation(
+    toggleEventActiveMutationOptions(queryClient, runAppHttpApi)
+  );
+  const actionPending = deleteEvent.isPending || toggleEventActive.isPending;
 
   const isAdminUser = isAdmin(session);
 
-  const [actionPending, setActionPending] = useState(false);
   let actionButtonLabel =
     eventAction?.active === true ? "Dezaktywuj" : "Aktywuj";
   if (actionPending) {
@@ -96,15 +128,13 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
     isPending: actionPending,
     mutate: (id: number) => {
       void (async () => {
-        setActionPending(true);
         try {
-          await deleteEvent({ id });
+          await deleteEvent.mutateAsync({ id });
           toast.success("Event został usunięty");
           setEventAction(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
         }
-        setActionPending(false);
       })();
     },
   };
@@ -112,21 +142,29 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
     isPending: actionPending,
     mutate: (input: { id: number; active: boolean }) => {
       void (async () => {
-        setActionPending(true);
         try {
-          await toggleEventActive(input);
+          await toggleEventActive.mutateAsync(input);
           toast.success("Status eventu został zmieniony");
           setEventAction(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
         }
-        setActionPending(false);
       })();
     },
   };
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
+      {isRefreshing && (
+        <p className="text-muted-foreground text-center text-xs">
+          Odświeżanie…
+        </p>
+      )}
+      {refreshError !== undefined && (
+        <p className="text-destructive text-center text-sm">
+          {getErrorMessage(refreshError, "Nie udało się odświeżyć eventów.")}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">

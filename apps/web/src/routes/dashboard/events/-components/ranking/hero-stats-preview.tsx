@@ -1,4 +1,4 @@
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 
 import type { HeroStatsPreviewState } from "./hero-stats-preview-utils";
 
@@ -10,7 +10,7 @@ const HeroStatsPreview = ({
   if (state._tag === "failure") {
     const handleRetry = state.onRetry;
     return (
-      <AsyncResultFailure
+      <QueryErrorState
         message="Nie udało się wczytać statystyk herosa."
         onRetry={handleRetry}
       />

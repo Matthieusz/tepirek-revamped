@@ -1,15 +1,14 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Delete01Icon,
   LoaderCircleIcon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AccountAccessGrantSummarySchema,
   AccountInviteTargetSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,12 +27,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  accountAccessGrantsAtom,
-  accountInviteTargetsAtom,
-  revokeAccountAccessAtom,
-  sendAccountAccessInviteAtom,
-} from "@/features/squad-builder/account-sharing-atoms";
-import { sessionAtom } from "@/features/users/user-atoms";
+  accountAccessGrantsQueryOptions,
+  accountInviteTargetsQueryOptions,
+  revokeAccountAccessMutationOptions,
+  sendAccountAccessInviteMutationOptions,
+} from "@/features/squad-builder/account-queries";
+import { sessionQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
@@ -57,8 +56,8 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
 };
 
 const useActorUserId = (): string => {
-  const sessionResult = useAtomValue(sessionAtom);
-  return sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
+  const sessionQuery = useQuery(sessionQueryOptions());
+  return sessionQuery.data?.user.id ?? "";
 };
 
 const getAutocompleteStatus = (
@@ -93,6 +92,7 @@ export const AccountSharingPanel = ({
   accountId,
   accountDisplayName,
 }: AccountSharingPanelProps) => {
+  const queryClient = useQueryClient();
   const actorUserId = useActorUserId();
   const [query, setQuery] = useState("");
   const [sendingUserId, setSendingUserId] = useState<string | null>(null);
@@ -100,43 +100,44 @@ export const AccountSharingPanel = ({
   const debouncedQuery = useDebouncedValue(query, 250);
   const trimmedQuery = debouncedQuery.trim();
 
-  const grantsAtom = accountAccessGrantsAtom(accountId, actorUserId);
-  const searchAtom = accountInviteTargetsAtom(accountId, trimmedQuery);
-  const grantsResult = useAtomValue(grantsAtom);
-  const searchResult = useAtomValue(searchAtom);
-  const refreshGrants = useAtomRefresh(grantsAtom);
-  const refreshSearch = useAtomRefresh(searchAtom);
-  const sendInvite = useAtomSet(sendAccountAccessInviteAtom, {
-    mode: "promise",
-  });
-  const revokeAccess = useAtomSet(revokeAccountAccessAtom, {
-    mode: "promise",
-  });
+  const grantsQuery = useQuery(
+    accountAccessGrantsQueryOptions(accountId, actorUserId)
+  );
+  const searchQuery = useQuery(
+    accountInviteTargetsQueryOptions(accountId, actorUserId, trimmedQuery)
+  );
+  const sendInvite = useMutation(
+    sendAccountAccessInviteMutationOptions(queryClient)
+  );
+  const revokeAccess = useMutation(
+    revokeAccountAccessMutationOptions(queryClient)
+  );
 
-  const targets =
-    trimmedQuery.length >= 2 && AsyncResult.isSuccess(searchResult)
-      ? searchResult.value
-      : [];
-  const grants: readonly AccountAccessGrant[] = AsyncResult.isSuccess(
-    grantsResult
-  )
-    ? grantsResult.value
-    : [];
+  const targets = searchQuery.data ?? [];
+  const grants: readonly AccountAccessGrant[] = grantsQuery.data ?? [];
 
-  if (AsyncResult.isFailure(grantsResult)) {
+  if (grantsQuery.isError && grantsQuery.data === undefined) {
     return (
       <SectionFailure
         message="Nie udało się wczytać udostępnionych użytkowników."
-        onRetry={refreshGrants}
+        onRetry={() => {
+          void grantsQuery.refetch();
+        }}
       />
     );
   }
 
-  if (trimmedQuery.length >= 2 && AsyncResult.isFailure(searchResult)) {
+  if (
+    trimmedQuery.length >= 2 &&
+    searchQuery.isError &&
+    searchQuery.data === undefined
+  ) {
     return (
       <SectionFailure
         message="Nie udało się wyszukać użytkowników."
-        onRetry={refreshSearch}
+        onRetry={() => {
+          void searchQuery.refetch();
+        }}
       />
     );
   }
@@ -166,11 +167,11 @@ export const AccountSharingPanel = ({
             <AutocompleteStatus>
               {getAutocompleteStatus(
                 trimmedQuery.length,
-                AsyncResult.isSuccess(searchResult)
+                searchQuery.isSuccess
               )}
             </AutocompleteStatus>
             <AutocompleteEmpty>
-              {trimmedQuery.length >= 2 && AsyncResult.isSuccess(searchResult)
+              {trimmedQuery.length >= 2 && searchQuery.isSuccess
                 ? "Brak pasujących zweryfikowanych użytkowników."
                 : null}
             </AutocompleteEmpty>
@@ -196,9 +197,8 @@ export const AccountSharingPanel = ({
                       const send = async () => {
                         setSendingUserId(target.userId);
                         try {
-                          await sendInvite({
+                          await sendInvite.mutateAsync({
                             accountId,
-                            actorUserId,
                             invitedUserId: target.userId,
                           });
                           toast.success(
@@ -236,7 +236,7 @@ export const AccountSharingPanel = ({
         <p aria-live="polite" className="sr-only">
           {getAutocompleteAnnouncement(
             trimmedQuery.length,
-            AsyncResult.isSuccess(searchResult),
+            searchQuery.isSuccess,
             targets.length
           )}
         </p>
@@ -248,7 +248,7 @@ export const AccountSharingPanel = ({
         <h3 className="text-muted-foreground text-xs">
           Udostępnieni użytkownicy
         </h3>
-        {!AsyncResult.isSuccess(grantsResult) && (
+        {grantsQuery.isPending && (
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <HugeiconsIcon
               aria-hidden="true"
@@ -258,7 +258,7 @@ export const AccountSharingPanel = ({
             Wczytywanie…
           </div>
         )}
-        {AsyncResult.isSuccess(grantsResult) && grants.length === 0 && (
+        {grantsQuery.isSuccess && grants.length === 0 && (
           <p className="text-muted-foreground text-xs">
             Nikt nie ma jeszcze dostępu do konta {accountDisplayName}.
           </p>
@@ -301,10 +301,8 @@ export const AccountSharingPanel = ({
                     const revoke = async () => {
                       setRevokingAccessId(grant.accessId);
                       try {
-                        const response = await revokeAccess({
+                        const response = await revokeAccess.mutateAsync({
                           accessId: grant.accessId,
-                          accountId,
-                          actorUserId,
                         });
                         toast.success(
                           response.removedSquadCharacterCount > 0

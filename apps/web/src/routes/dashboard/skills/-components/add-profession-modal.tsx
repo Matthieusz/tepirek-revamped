@@ -1,5 +1,5 @@
-import { useAtomSet } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateProfessionPayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { createSkillProfessionAtom } from "@/features/skills/skill-atoms";
+import { createSkillProfessionMutationOptions } from "@/features/skills/skill-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -31,9 +31,16 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createSkillProfession = useAtomSet(createSkillProfessionAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const createSkillProfession = useMutation(
+    createSkillProfessionMutationOptions(queryClient, undefined, {
+      onRefreshError: () => {
+        toast.error(
+          "Profesja została utworzona, ale lista nie została odświeżona."
+        );
+      },
+    })
+  );
   const form = useAppForm({
     defaultValues: { name: "" },
     onSubmit: async ({ value }) => {
@@ -45,7 +52,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       }
 
       const result = await runFormSubmission(async () => {
-        await createSkillProfession(decoded.value);
+        await createSkillProfession.mutateAsync(decoded.value);
       });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

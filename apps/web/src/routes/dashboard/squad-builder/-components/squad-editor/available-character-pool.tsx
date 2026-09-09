@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import {
   ChevronDownIcon,
   Rotate01Icon,
@@ -7,12 +6,12 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useMemo, useReducer } from "react";
 
 import {
@@ -35,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { availableSquadCharactersAtom } from "@/features/squad-builder/squad-group-atoms";
+import { availableSquadCharactersQueryOptions } from "@/features/squad-builder/squad-group-queries";
 import { cn } from "@/lib/utils";
 import {
   filterAvailableCharacters,
@@ -387,13 +386,15 @@ const useCharacterPoolModel = ({
   readonly levelFromInput: string;
   readonly levelToInput: string;
 }) => {
-  const atom = availableSquadCharactersAtom({ groupId });
-  const result = useAtomValue(atom);
-  const refresh = useAtomRefresh(atom);
+  const result = useQuery(availableSquadCharactersQueryOptions(groupId));
+  const refresh = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    result.refetch();
+  };
   const allCharacterById = useMemo(() => {
     let merged = characterById;
-    if (AsyncResult.isSuccess(result)) {
-      for (const character of result.value) {
+    if (result.data !== undefined) {
+      for (const character of result.data) {
         merged = HashMap.set(
           merged,
           character.characterId,
@@ -590,7 +591,7 @@ export const AvailableCharacterPool = ({
               unassignedCount={unassignedCharacters.length}
             />
 
-            {AsyncResult.isFailure(result) && (
+            {result.isError && (
               <Alert className="m-4" variant="destructive">
                 <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
                 <AlertTitle>Nie udało się wczytać puli postaci</AlertTitle>
@@ -615,9 +616,10 @@ export const AvailableCharacterPool = ({
                 </AlertAction>
               </Alert>
             )}
-            {!AsyncResult.isSuccess(result) &&
-              !AsyncResult.isFailure(result) && <LoadingSpinner />}
-            {AsyncResult.isSuccess(result) && characters.length === 0 && (
+            {(result.isPending || result.data === undefined) && (
+              <LoadingSpinner />
+            )}
+            {result.data !== undefined && characters.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
                 <IconStack aria-hidden="true">
                   <HugeiconsIcon
@@ -638,7 +640,7 @@ export const AvailableCharacterPool = ({
                 </Link>
               </div>
             )}
-            {AsyncResult.isSuccess(result) &&
+            {result.data !== undefined &&
               characters.length > 0 &&
               unassignedCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
@@ -654,7 +656,7 @@ export const AvailableCharacterPool = ({
                   </p>
                 </div>
               )}
-            {AsyncResult.isSuccess(result) &&
+            {result.data !== undefined &&
               unassignedCharacters.length > 0 &&
               filteredCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">

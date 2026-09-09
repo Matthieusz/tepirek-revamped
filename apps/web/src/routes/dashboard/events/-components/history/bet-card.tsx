@@ -21,6 +21,7 @@ interface BetCardMember {
 
 interface BetCardData {
   id: number;
+  heroId: number;
   heroName: string;
   heroLevel: number;
   heroImage: string | null;
@@ -34,15 +35,15 @@ interface BetCardData {
 interface BetCardProps {
   bet: BetCardData;
   isAdminUser: boolean;
-  onDeleteClick: (params: { id: number; heroName: string }) => void;
+  onDeleteClick: (params: {
+    readonly eventId: number | undefined;
+    readonly heroId: number;
+    readonly id: number;
+    readonly heroName: string;
+  }) => void;
   pointsPerMember: number;
   formattedCreatedAt: string;
-  refreshInput: {
-    readonly eventId?: number;
-    readonly heroId?: number;
-    readonly limit?: number;
-    readonly page?: number;
-  };
+  eventId: number | undefined;
 }
 
 export const BetCard = ({
@@ -50,8 +51,8 @@ export const BetCard = ({
   isAdminUser,
   onDeleteClick,
   pointsPerMember,
+  eventId,
   formattedCreatedAt,
-  refreshInput,
 }: BetCardProps) => (
   <Card className="overflow-hidden p-0">
     <CardContent className="p-4">
@@ -75,7 +76,8 @@ export const BetCard = ({
                 }))}
                 heroName={bet.heroName}
                 memberCount={bet.memberCount}
-                refreshInput={refreshInput}
+                eventId={eventId}
+                heroId={bet.heroId}
                 trigger={
                   <Button
                     aria-label={`Edytuj obstawienie na herosa ${bet.heroName}`}
@@ -95,6 +97,8 @@ export const BetCard = ({
                 aria-label={`Usuń obstawienie na herosa ${bet.heroName}`}
                 onClick={() => {
                   onDeleteClick({
+                    eventId,
+                    heroId: bet.heroId,
                     heroName: bet.heroName,
                     id: bet.id,
                   });

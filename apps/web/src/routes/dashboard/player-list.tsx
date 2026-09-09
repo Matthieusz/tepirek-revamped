@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import { usersAtom } from "@/features/users/user-atoms";
+import { usersQueryOptions } from "@/features/users/user-queries";
 
 import PlayerListPage from "./-components/player-list-page";
 
@@ -14,7 +14,7 @@ const PlayerListRoute = () => {
 export const Route = createFileRoute("/dashboard/player-list")({
   component: PlayerListRoute,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [usersAtom]);
+    await context.queryClient.query(usersQueryOptions());
   },
   staticData: {
     crumb: "Lista graczy",

@@ -1,13 +1,13 @@
-import { useAtomRefresh } from "@effect/atom-react";
 import { Coins02Icon, Medal06Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -24,8 +24,8 @@ import {
   HeroSelectItems,
 } from "@/features/events/core/select-utils";
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
-import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
 import type { RankingSort } from "@/features/events/ranking/ranking-sort";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { DistributeGoldModal } from "@/routes/dashboard/events/-components/ranking/distribute-gold-modal";
 import { RankingList } from "@/routes/dashboard/events/-components/ranking/ranking-list";
@@ -61,15 +61,12 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
     routeId: "/dashboard/events/ranking",
   });
 
-  const { pointWorth, rankingResult, sortedRanking, totalBets } =
-    useRankingData({
+  const { pointWorth, rankingQuery, sortedRanking, totalBets } = useRankingData(
+    {
       currentSortBy,
       queryInputs: filter.queryInputs,
-    });
-
-  const isAdminUser = isAdmin(session);
-  const refreshRanking = useAtomRefresh(rankingAtom(filter.queryInputs));
-  const rankingContent = buildRankingContent({ sortedRanking });
+    }
+  );
 
   const navigateSort = useCallback(
     (updates: { sortBy: RankingSort | undefined }) => {
@@ -79,6 +76,27 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
     },
     [navigate]
   );
+
+  if (rankingQuery.isPending && rankingQuery.data === undefined) {
+    return <LoadingSpinner />;
+  }
+
+  if (rankingQuery.isError && rankingQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          rankingQuery.error,
+          "Nie udało się wczytać rankingu. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void rankingQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  const isAdminUser = isAdmin(session);
+  const rankingContent = buildRankingContent({ sortedRanking });
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -202,9 +220,17 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
       </div>
 
       {/* Ranking List */}
-      <AsyncResultBoundary onRetry={refreshRanking} result={rankingResult}>
-        {() => rankingContent}
-      </AsyncResultBoundary>
+      {rankingQuery.isFetching && (
+        <p className="text-muted-foreground text-center text-xs">
+          Odświeżanie…
+        </p>
+      )}
+      {rankingQuery.isError && rankingQuery.data !== undefined && (
+        <p className="text-destructive text-center text-sm">
+          Nie udało się odświeżyć rankingu.
+        </p>
+      )}
+      {rankingContent}
     </div>
   );
 };

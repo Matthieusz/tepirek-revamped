@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Add01Icon,
   Calendar04Icon,
@@ -6,7 +5,7 @@ import {
   Megaphone02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,16 +19,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { Separator } from "@/components/ui/separator";
+import type { Announcement } from "@/features/announcements/announcement-api";
 import {
-  announcementsAtom,
-  deleteAnnouncementAtom,
-  optimisticAnnouncementsAtom,
-} from "@/features/announcements/announcement-atoms";
+  announcementsQueryOptions,
+  deleteAnnouncementMutationOptions,
+} from "@/features/announcements/announcement-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
@@ -46,54 +46,66 @@ interface DashboardHomePageProps {
 }
 
 const DashboardHomePage = ({ session }: DashboardHomePageProps) => {
-  const announcementsResult = useAtomValue(announcementsAtom);
-  const refreshAnnouncements = useAtomRefresh(announcementsAtom);
+  const announcementsQuery = useQuery(announcementsQueryOptions());
+
+  if (announcementsQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (announcementsQuery.isError && announcementsQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          announcementsQuery.error,
+          "Nie udało się wczytać ogłoszeń. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void announcementsQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary
-      onRetry={refreshAnnouncements}
-      result={announcementsResult}
-    >
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <DashboardHomeContent session={session} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define -- the page boundary keeps the query lifecycle separate from the content UI
+    <DashboardHomeContent
+      announcements={announcementsQuery.data ?? []}
+      isRefreshing={announcementsQuery.isFetching}
+      onRetry={() => {
+        void announcementsQuery.refetch();
+      }}
+      refreshError={
+        announcementsQuery.isError ? announcementsQuery.error : undefined
+      }
+      session={session}
+    />
   );
 };
 
 export default DashboardHomePage;
 
-const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
+interface DashboardHomeContentProps extends DashboardHomePageProps {
+  readonly announcements: readonly Announcement[];
+  readonly isRefreshing: boolean;
+  readonly onRetry: () => void;
+  readonly refreshError: unknown;
+}
+
+const DashboardHomeContent = ({
+  announcements,
+  isRefreshing,
+  onRetry,
+  refreshError,
+  session,
+}: DashboardHomeContentProps) => {
+  const queryClient = useQueryClient();
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
-  const optimisticAnnouncementsResult = useAtomValue(
-    optimisticAnnouncementsAtom
+  const deleteMutation = useMutation(
+    deleteAnnouncementMutationOptions(queryClient)
   );
-  const announcements = AsyncResult.getOrThrow(optimisticAnnouncementsResult);
-  const deleteAnnouncement = useAtomSet(deleteAnnouncementAtom, {
-    mode: "promise",
-  });
 
   const isAdminUser = isAdmin(session);
-
-  const [isDeleting, setIsDeleting] = useState(false);
-  const deleteMutation = {
-    isPending: isDeleting,
-    mutate: (id: number) => {
-      void (async () => {
-        setIsDeleting(true);
-        try {
-          await deleteAnnouncement({ id });
-          toast.success("Ogłoszenie zostało usunięte");
-          setAnnouncementToDelete(null);
-        } catch (error: unknown) {
-          toast.error(getErrorMessage(error));
-        }
-        setIsDeleting(false);
-      })();
-    },
-  };
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -117,6 +129,29 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
           />
         )}
       </div>
+
+      {isRefreshing && (
+        <p
+          aria-live="polite"
+          className="text-muted-foreground text-center text-xs"
+        >
+          Odświeżanie…
+        </p>
+      )}
+      {refreshError !== undefined && (
+        <div
+          aria-live="assertive"
+          className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">
+            {getErrorMessage(refreshError, "Nie udało się odświeżyć ogłoszeń.")}
+          </p>
+          <Button onClick={onRetry} size="sm" variant="outline">
+            Spróbuj ponownie
+          </Button>
+        </div>
+      )}
 
       {announcements.length === 0 && (
         <EmptyState
@@ -220,7 +255,18 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
               disabled={deleteMutation.isPending}
               onClick={() => {
                 if (announcementToDelete) {
-                  deleteMutation.mutate(announcementToDelete.id);
+                  deleteMutation.mutate(
+                    { id: announcementToDelete.id },
+                    {
+                      onError: (error) => {
+                        toast.error(getErrorMessage(error));
+                      },
+                      onSuccess: () => {
+                        toast.success("Ogłoszenie zostało usunięte");
+                        setAnnouncementToDelete(null);
+                      },
+                    }
+                  );
                 }
               }}
             >

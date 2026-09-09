@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   CheckIcon,
   LoaderCircleIcon,
@@ -6,6 +5,7 @@ import {
   TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -15,9 +15,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge as ReuiBadge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  applyAccountRefetchAtom,
-  previewAccountRefetchAtom,
-} from "@/features/squad-builder/account-refetch-atoms";
+  applyAccountRefetchMutationOptions,
+  previewAccountRefetchMutationOptions,
+} from "@/features/squad-builder/account-queries";
 import { getErrorMessage } from "@/lib/errors";
 import {
   changeFieldLabel,
@@ -101,15 +101,12 @@ export const AccountRefetchWorkflow = ({
   accountId,
   children,
 }: AccountRefetchWorkflowProps) => {
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
+  const queryClient = useQueryClient();
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
-  const previewRefetch = useAtomSet(previewAccountRefetchAtom, {
-    mode: "promise",
-  });
-  const applyRefetch = useAtomSet(applyAccountRefetchAtom, {
-    mode: "promise",
-  });
+  const previewRefetch = useMutation(previewAccountRefetchMutationOptions());
+  const applyRefetch = useMutation(
+    applyAccountRefetchMutationOptions(queryClient)
+  );
 
   const hasDiff =
     preview !== null &&
@@ -117,55 +114,57 @@ export const AccountRefetchWorkflow = ({
       preview.diff.removed.length > 0 ||
       preview.diff.changed.length > 0);
 
-  const handlePreview = async () => {
-    setIsPreviewing(true);
-    try {
-      const response = await previewRefetch({ accountId });
-      setPreview(toAccountRefetchPreview(response));
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Nie udało się przygotować odświeżenia")
-      );
-    }
-    setIsPreviewing(false);
+  const handlePreview = () => {
+    previewRefetch.mutate(
+      { accountId },
+      {
+        onError: (error) => {
+          toast.error(
+            getErrorMessage(error, "Nie udało się przygotować odświeżenia")
+          );
+        },
+        onSuccess: (response) => {
+          setPreview(toAccountRefetchPreview(response));
+        },
+      }
+    );
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (preview === null) {
       return;
     }
 
-    setIsApplying(true);
-    try {
-      const response = await applyRefetch({
-        refetchPreviewId: preview.refetchPreviewId,
-      });
-      toast.success(
-        response.removedSquadCharacterCount > 0
-          ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
-          : "Postacie zostały odświeżone."
-      );
-      setPreview(null);
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Nie udało się zastosować odświeżenia")
-      );
-    }
-    setIsApplying(false);
+    applyRefetch.mutate(
+      { refetchPreviewId: preview.refetchPreviewId },
+      {
+        onError: (error) => {
+          toast.error(
+            getErrorMessage(error, "Nie udało się zastosować odświeżenia")
+          );
+        },
+        onSuccess: (response) => {
+          toast.success(
+            response.removedSquadCharacterCount > 0
+              ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
+              : "Postacie zostały odświeżone."
+          );
+          setPreview(null);
+        },
+      }
+    );
   };
 
   return (
     <>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Button
-          disabled={isPreviewing}
-          onClick={() => {
-            void handlePreview();
-          }}
+          disabled={previewRefetch.isPending}
+          onClick={handlePreview}
           size="sm"
           variant="outline"
         >
-          {isPreviewing ? (
+          {previewRefetch.isPending ? (
             <HugeiconsIcon
               aria-hidden="true"
               icon={LoaderCircleIcon}
@@ -274,13 +273,11 @@ export const AccountRefetchWorkflow = ({
 
           <div className="flex flex-wrap gap-2">
             <Button
-              disabled={isApplying}
-              onClick={() => {
-                void handleApply();
-              }}
+              disabled={applyRefetch.isPending}
+              onClick={handleApply}
               size="sm"
             >
-              {isApplying ? (
+              {applyRefetch.isPending ? (
                 <HugeiconsIcon
                   aria-hidden="true"
                   icon={LoaderCircleIcon}
@@ -296,7 +293,7 @@ export const AccountRefetchWorkflow = ({
               Zastosuj zmiany
             </Button>
             <Button
-              disabled={isApplying}
+              disabled={applyRefetch.isPending}
               onClick={() => {
                 setPreview(null);
               }}

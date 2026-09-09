@@ -1,11 +1,13 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useQuery } from "@tanstack/react-query";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
-import { skillRangesAtom } from "@/features/skills/skill-atoms";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
+import type { SkillRange } from "@/features/skills/skill-api";
+import { skillRangesQueryOptions } from "@/features/skills/skill-queries";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { AddProfessionModal } from "@/routes/dashboard/skills/-components/add-profession-modal";
 import { AddRangeModal } from "@/routes/dashboard/skills/-components/add-range-modal";
@@ -17,24 +19,56 @@ interface SkillsIndexPageProps {
 }
 
 const SkillsIndexPage = ({ session }: SkillsIndexPageProps) => {
-  const rangesResult = useAtomValue(skillRangesAtom);
-  const refreshRanges = useAtomRefresh(skillRangesAtom);
+  const rangesQuery = useQuery(skillRangesQueryOptions());
+
+  if (rangesQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (rangesQuery.isError && rangesQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          rangesQuery.error,
+          "Nie udało się wczytać przedziałów. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void rangesQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshRanges} result={rangesResult}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <SkillsIndexContent session={session} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define -- the page boundary keeps query lifecycle separate from content UI
+    <SkillsIndexContent
+      isRefreshing={rangesQuery.isFetching}
+      onRetry={() => {
+        void rangesQuery.refetch();
+      }}
+      ranges={rangesQuery.data ?? []}
+      refreshError={rangesQuery.isError ? rangesQuery.error : undefined}
+      session={session}
+    />
   );
 };
 
 export default SkillsIndexPage;
 
-const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
-  const rangesResult = useAtomValue(skillRangesAtom);
-  const ranges = AsyncResult.getOrThrow(rangesResult);
+interface SkillsIndexContentProps extends SkillsIndexPageProps {
+  readonly isRefreshing: boolean;
+  readonly onRetry: () => void;
+  readonly ranges: readonly SkillRange[];
+  readonly refreshError: unknown;
+}
+
+const SkillsIndexContent = ({
+  isRefreshing,
+  onRetry,
+  ranges,
+  refreshError,
+  session,
+}: SkillsIndexContentProps) => {
   const isAdminUser = isAdmin(session);
 
   return (
@@ -79,6 +113,31 @@ const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
           </div>
         )}
       </div>
+      {isRefreshing && (
+        <p
+          aria-live="polite"
+          className="text-muted-foreground text-center text-xs"
+        >
+          Odświeżanie…
+        </p>
+      )}
+      {refreshError !== undefined && (
+        <div
+          aria-live="assertive"
+          className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">
+            {getErrorMessage(
+              refreshError,
+              "Nie udało się odświeżyć przedziałów."
+            )}
+          </p>
+          <Button onClick={onRetry} size="sm" variant="outline">
+            Spróbuj ponownie
+          </Button>
+        </div>
+      )}
       {ranges.length === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">

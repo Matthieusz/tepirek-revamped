@@ -1,6 +1,6 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Delete01Icon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,
@@ -9,15 +9,14 @@ import {
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
-import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import React, { useState } from "react";
+import React from "react";
 import { toast } from "sonner";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Table,
   TableBody,
@@ -26,41 +25,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { AuctionSignup } from "@/features/auctions/auction-api";
 import {
-  auctionSignupsAtom,
-  optimisticAuctionSignupsAtom,
-  removeAuctionSignupFromGroupAtom,
-  toggleAuctionSignupAtom,
-} from "@/features/auctions/auction-atoms";
+  auctionSignupsQueryOptions,
+  removeAuctionSignupMutationOptions,
+  toggleAuctionSignupMutationOptions,
+} from "@/features/auctions/auction-queries";
 import { getErrorMessage } from "@/lib/errors";
-
-interface SignupData {
-  id: number;
-  userId: string;
-  level: number;
-  round: number;
-  column: number;
-  createdAt: string | Date;
-  userName: string | null;
-  userImage: string | null;
-}
 
 const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
 interface CellContentProps {
-  signup: SignupData | undefined;
+  signup: AuctionSignup | undefined;
   isOwnSignup: boolean;
   isMutating: boolean;
   onSignup: () => void;
   onRemove: () => void;
 }
 
-const formatSignupDate = (createdAt: string | Date) => {
-  const date = Predicate.isDate(createdAt) ? createdAt : new Date(createdAt);
-  if (!isValidDate(date)) {
+const formatSignupDate = (createdAt: Date) => {
+  if (!isValidDate(createdAt)) {
     return "";
   }
-  return date.toLocaleString("pl-PL", {
+  return createdAt.toLocaleString("pl-PL", {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
@@ -75,7 +62,7 @@ const CellContent: React.FC<CellContentProps> = ({
   onSignup,
   onRemove,
 }) => {
-  if (!signup) {
+  if (signup === undefined) {
     return (
       <Button
         className="w-full"
@@ -102,6 +89,7 @@ const CellContent: React.FC<CellContentProps> = ({
     return (
       <button
         className="group/signup bg-primary/10 hover:bg-destructive/10 flex w-full min-w-0 items-center gap-2 rounded-full px-2 py-1 transition-colors"
+        disabled={isMutating}
         onClick={onRemove}
         type="button"
       >
@@ -164,194 +152,233 @@ interface AuctionTableProps {
   currentUserId: string;
 }
 
+interface AuctionTableContentProps extends AuctionTableProps {
+  readonly onRetry: () => void;
+  readonly refreshError: unknown;
+  readonly signups: readonly AuctionSignup[];
+}
+
 const rounds = AUCTION_SLOT_ROUNDS;
 const rowValues = AUCTION_SLOT_LEVELS;
 
-const AuctionTableContent: React.FC<AuctionTableProps> = ({
-  profession,
-  type,
+const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
   currentUserId,
+  onRetry,
+  profession,
+  refreshError,
+  signups,
+  type,
 }) => {
   const columns = getAuctionSlotColumns(profession, type);
-  const signupsResult = useAtomValue(
-    optimisticAuctionSignupsAtom({ profession, type })
+  const queryClient = useQueryClient();
+  const group = { profession, type };
+  const toggleMutation = useMutation(
+    toggleAuctionSignupMutationOptions(queryClient, group, undefined, {
+      onRefreshError: () => {
+        toast.error("Nie udało się odświeżyć danych licytacji.");
+      },
+    })
   );
-  const signups = AsyncResult.getOrThrow(signupsResult);
-  const toggleAuctionSignup = useAtomSet(toggleAuctionSignupAtom, {
-    mode: "promise",
-  });
-  const removeAuctionSignup = useAtomSet(
-    removeAuctionSignupFromGroupAtom({ profession, type }),
-    { mode: "promise" }
+  const removeMutation = useMutation(
+    removeAuctionSignupMutationOptions(queryClient, group, undefined, {
+      onRefreshError: () => {
+        toast.error("Nie udało się odświeżyć danych licytacji.");
+      },
+    })
   );
-  const [isMutating, setIsMutating] = useState(false);
-  const [mutatingCell, setMutatingCell] = useState<{
+  const handleToggle = async (params: {
     readonly column: number;
     readonly level: number;
     readonly round: number;
-  } | null>(null);
-  const toggleMutation = {
-    isPending: isMutating,
-    mutate: (params: { level: number; round: number; column: number }) => {
-      void (async () => {
-        setIsMutating(true);
-        setMutatingCell(params);
-        try {
-          const result = await toggleAuctionSignup({
-            profession,
-            type,
-            ...params,
-          });
-          toast.success(
-            result.action === "added"
-              ? "Zapisano na licytację"
-              : "Wypisano z licytacji"
-          );
-        } catch {
-          toast.error("Wystąpił błąd");
-        }
-        setIsMutating(false);
-        setMutatingCell(null);
-      })();
-    },
-    variables: mutatingCell,
-  };
-  const removeMutation = {
-    isPending: isMutating,
-    mutate: (id: number) => {
-      void (async () => {
-        setIsMutating(true);
-        try {
-          await removeAuctionSignup({ id });
-          toast.success("Wypisano z licytacji");
-        } catch (error: unknown) {
-          toast.error(getErrorMessage(error));
-        }
-        setIsMutating(false);
-      })();
-    },
+  }) => {
+    try {
+      const result = await toggleMutation.mutateAsync({
+        ...params,
+        profession,
+        type,
+      });
+      toast.success(
+        result.action === "added"
+          ? "Zapisano na licytację"
+          : "Wypisano z licytacji"
+      );
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Wystąpił błąd"));
+    }
   };
 
-  // Group signups by level-round-column for quick lookup
+  const handleRemove = async (id: number) => {
+    try {
+      await removeMutation.mutateAsync({ id });
+      toast.success("Wypisano z licytacji");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
   const signupMap = Arr.groupBy(
-    signups ?? [],
+    signups,
     (signup) => `${signup.level}-${signup.round}-${signup.column}`
   );
 
-  // Get single signup for cell (only one allowed)
   const getSignupForCell = (
     level: number,
     round: number,
     column: number
-  ): SignupData | undefined => {
+  ): AuctionSignup | undefined => {
     const cellSignups = signupMap[`${level}-${round}-${column}`];
-    if (!cellSignups || cellSignups.length === 0) {
-      return undefined;
+    if (cellSignups && cellSignups.length > 0) {
+      const own = cellSignups.find((signup) => signup.userId === currentUserId);
+      return own ?? cellSignups[0];
     }
 
-    // If duplicates exist (historical data), prefer showing current user's signup
-    const own = cellSignups.find((s) => s.userId === currentUserId);
-    return own ?? cellSignups[0];
+    return undefined;
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table className="w-full min-w-max table-fixed border-collapse rounded-md border">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-20 border text-center">Level</TableHead>
-            <TableHead className="w-40 border text-center">Tura</TableHead>
-            {columns.map((col: string) => (
-              <TableHead className="w-64 border text-center" key={col}>
-                {col}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        {rowValues.map((value) => (
-          <TableBody className="group border-t" key={value}>
-            {rounds.map((round, roundIdx) => (
-              <TableRow
-                className="hover:bg-muted/70 text-center transition-colors"
-                key={`${value}-${round}`}
-              >
-                {roundIdx === 0 ? (
-                  <TableCell
-                    className="bg-card group-hover:bg-accent/60 w-20 border-r text-xl font-semibold transition-colors"
-                    rowSpan={4}
-                  >
-                    {value}
-                  </TableCell>
-                ) : null}
-                <TableCell className="border px-4 py-2 text-center whitespace-nowrap">
-                  {AUCTION_SLOT_ROUND_LABELS[round]}
-                </TableCell>
-                {columns.map((col: string, colIdx: number) => {
-                  const column = colIdx + 1;
-                  const signup = getSignupForCell(value, round, column);
-                  const isOwnSignup = signup?.userId === currentUserId;
-                  const isCellMutating =
-                    toggleMutation.isPending &&
-                    toggleMutation.variables?.level === value &&
-                    toggleMutation.variables?.round === round &&
-                    toggleMutation.variables?.column === column;
-
-                  return (
+    <div className="space-y-4">
+      {refreshError === undefined ? null : (
+        <div
+          aria-live="assertive"
+          className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">
+            {getErrorMessage(
+              refreshError,
+              "Nie udało się odświeżyć danych licytacji."
+            )}
+          </p>
+          <Button onClick={onRetry} size="sm" variant="outline">
+            Spróbuj ponownie
+          </Button>
+        </div>
+      )}
+      <div className="overflow-x-auto">
+        <Table className="w-full min-w-max table-fixed border-collapse rounded-md border">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-20 border text-center">Level</TableHead>
+              <TableHead className="w-40 border text-center">Tura</TableHead>
+              {columns.map((column) => (
+                <TableHead className="w-64 border text-center" key={column}>
+                  {column}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          {rowValues.map((value) => (
+            <TableBody className="group border-t" key={value}>
+              {rounds.map((round, roundIdx) => (
+                <TableRow
+                  className="hover:bg-muted/70 text-center transition-colors"
+                  key={`${value}-${round}`}
+                >
+                  {roundIdx === 0 ? (
                     <TableCell
-                      className="w-64 border px-2 py-2 text-center"
-                      key={`${value}-${round}-${col}`}
+                      className="bg-card group-hover:bg-accent/60 w-20 border-r text-xl font-semibold transition-colors"
+                      rowSpan={4}
                     >
-                      <div className="flex min-h-8 w-full items-center justify-center">
-                        <CellContent
-                          isMutating={isCellMutating}
-                          isOwnSignup={isOwnSignup ?? false}
-                          onRemove={() => {
-                            if (signup !== undefined) {
-                              removeMutation.mutate(signup.id);
-                            }
-                          }}
-                          onSignup={() => {
-                            toggleMutation.mutate({
-                              column,
-                              level: value,
-                              round,
-                            });
-                          }}
-                          signup={signup}
-                        />
-                      </div>
+                      {value}
                     </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        ))}
-      </Table>
+                  ) : null}
+                  <TableCell className="border px-4 py-2 text-center whitespace-nowrap">
+                    {AUCTION_SLOT_ROUND_LABELS[round]}
+                  </TableCell>
+                  {columns.map((columnName, colIdx) => {
+                    const column = colIdx + 1;
+                    const signup = getSignupForCell(value, round, column);
+                    const isOwnSignup = signup?.userId === currentUserId;
+                    const isTogglingCell =
+                      toggleMutation.isPending &&
+                      toggleMutation.variables?.level === value &&
+                      toggleMutation.variables?.round === round &&
+                      toggleMutation.variables?.column === column;
+                    const isRemovingSignup =
+                      removeMutation.isPending &&
+                      removeMutation.variables?.id === signup?.id;
+
+                    return (
+                      <TableCell
+                        className="w-64 border px-2 py-2 text-center"
+                        key={`${value}-${round}-${columnName}`}
+                      >
+                        <div className="flex min-h-8 w-full items-center justify-center">
+                          <CellContent
+                            isMutating={isTogglingCell || isRemovingSignup}
+                            isOwnSignup={isOwnSignup ?? false}
+                            onRemove={() => {
+                              if (signup !== undefined) {
+                                void handleRemove(signup.id);
+                              }
+                            }}
+                            onSignup={() => {
+                              void handleToggle({
+                                column,
+                                level: value,
+                                round,
+                              });
+                            }}
+                            signup={signup}
+                          />
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          ))}
+        </Table>
+      </div>
     </div>
   );
 };
 
-const AuctionTable: React.FC<AuctionTableProps> = ({
-  profession,
-  type,
-  currentUserId,
-}) => {
-  const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
-  const refreshSignups = useAtomRefresh(
-    auctionSignupsAtom({ profession, type })
+const AuctionTable: React.FC<AuctionTableProps> = (props) => {
+  const signupsQuery = useQuery(
+    auctionSignupsQueryOptions({
+      profession: props.profession,
+      type: props.type,
+    })
   );
 
+  if (signupsQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (signupsQuery.isError && signupsQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          signupsQuery.error,
+          "Nie udało się wczytać zapisów licytacji. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void signupsQuery.refetch();
+        }}
+      />
+    );
+  }
+
   return (
-    <AsyncResultBoundary onRetry={refreshSignups} result={signupsResult}>
-      {() => (
+    <div className="space-y-2">
+      <div className="text-muted-foreground h-4 text-center text-xs">
+        {signupsQuery.isFetching ? (
+          <p aria-live="polite">Odświeżanie…</p>
+        ) : null}
+      </div>
+      <div className="border-border bg-card rounded-xl border p-6">
         <AuctionTableContent
-          currentUserId={currentUserId}
-          profession={profession}
-          type={type}
+          {...props}
+          onRetry={() => {
+            void signupsQuery.refetch();
+          }}
+          refreshError={signupsQuery.isError ? signupsQuery.error : undefined}
+          signups={signupsQuery.data ?? []}
         />
-      )}
-    </AsyncResultBoundary>
+      </div>
+    </div>
   );
 };
 

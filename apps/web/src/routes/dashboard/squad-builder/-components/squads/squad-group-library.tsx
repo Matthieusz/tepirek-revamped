@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import {
   ChevronRightIcon,
   Rotate01Icon,
@@ -8,11 +7,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -35,15 +34,15 @@ import {
   SquadFilterNameSchema,
   validateSquadFilterLevelOrder,
 } from "@/features/squad-builder/squad-filter-form-schemas";
-import {
-  globalSquadGroupsAtom,
-  ownedSquadGroupsAtom,
-} from "@/features/squad-builder/squad-group-atoms";
 import type {
   GlobalSquadGroupSummary,
   SquadGroupSummary,
-} from "@/features/squad-builder/squad-group-atoms";
-import { sharedSquadGroupsAtom } from "@/features/squad-builder/squad-group-sharing-atoms";
+} from "@/features/squad-builder/squad-group-api";
+import {
+  globalSquadGroupsQueryOptions,
+  ownedSquadGroupsQueryOptions,
+} from "@/features/squad-builder/squad-group-queries";
+import { sharedSquadGroupsQueryOptions } from "@/features/squad-builder/squad-group-sharing-queries";
 import { formatDateTime } from "@/lib/utils";
 
 import { userInitials } from "../user-presenters";
@@ -310,44 +309,41 @@ const assertNever = (value: never): never => {
   throw new Error(`Unhandled squad group list kind: ${String(value)}`);
 };
 
+interface CollectionResult<T> {
+  readonly data: T | undefined;
+  readonly isError: boolean;
+  readonly isPending: boolean;
+}
+
 type CollectionPanelProps =
   | {
       readonly filtered: boolean;
       readonly kind: "mine";
       readonly onCreateGroup: () => void;
       readonly onRetry: () => void;
-      readonly result: AsyncResult.AsyncResult<
-        readonly SquadGroupSummary[],
-        unknown
-      >;
+      readonly result: CollectionResult<readonly SquadGroupSummary[]>;
     }
   | {
       readonly filtered: boolean;
       readonly kind: "shared";
       readonly onRetry: () => void;
-      readonly result: AsyncResult.AsyncResult<
-        readonly SharedSquadGroupSummary[],
-        unknown
-      >;
+      readonly result: CollectionResult<readonly SharedSquadGroupSummary[]>;
     }
   | {
       readonly filtered: boolean;
       readonly kind: "public";
       readonly onRetry: () => void;
-      readonly result: AsyncResult.AsyncResult<
-        readonly GlobalSquadGroupSummary[],
-        unknown
-      >;
+      readonly result: CollectionResult<readonly GlobalSquadGroupSummary[]>;
     };
 
 const CollectionPanel = (props: CollectionPanelProps) => {
-  if (AsyncResult.isFailure(props.result)) {
+  if (props.result.isError) {
     return <CollectionFailure onRetry={props.onRetry} />;
   }
-  if (!AsyncResult.isSuccess(props.result)) {
+  if (props.result.isPending || props.result.data === undefined) {
     return <LoadingSpinner />;
   }
-  if (props.result.value.length === 0) {
+  if (props.result.data.length === 0) {
     return (
       <CollectionEmpty
         filtered={props.filtered}
@@ -364,7 +360,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
           className="divide-border divide-y"
           aria-label={`Lista: ${props.kind}`}
         >
-          {props.result.value.map((group) => (
+          {props.result.data.map((group) => (
             <GroupRow group={group} key={group.groupId} kind="mine" />
           ))}
         </ul>
@@ -376,7 +372,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
           className="divide-border divide-y"
           aria-label={`Lista: ${props.kind}`}
         >
-          {props.result.value.map((group) => (
+          {props.result.data.map((group) => (
             <GroupRow group={group} key={group.groupId} kind="shared" />
           ))}
         </ul>
@@ -388,7 +384,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
           className="divide-border divide-y"
           aria-label={`Lista: ${props.kind}`}
         >
-          {props.result.value.map((group) => (
+          {props.result.data.map((group) => (
             <GroupRow group={group} key={group.groupId} kind="public" />
           ))}
         </ul>
@@ -409,9 +405,9 @@ export const SquadGroupLibrary = ({
 }: SquadGroupLibraryProps) => {
   const [activeTab, setActiveTab] = useState<SquadListTab>("mine");
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
-  const ownedResult = useAtomValue(ownedSquadGroupsAtom);
-  const sharedResult = useAtomValue(sharedSquadGroupsAtom);
-  const publicAtom = globalSquadGroupsAtom({
+  const ownedResult = useQuery(ownedSquadGroupsQueryOptions());
+  const sharedResult = useQuery(sharedSquadGroupsQueryOptions());
+  const publicFilters = {
     maxLevel:
       appliedFilters.maxLevel.length > 0
         ? decodeOptionalLevel(appliedFilters.maxLevel)
@@ -422,21 +418,31 @@ export const SquadGroupLibrary = ({
         : null,
     nameQuery:
       appliedFilters.nameQuery.length > 0 ? appliedFilters.nameQuery : null,
-  });
-  const publicResult = useAtomValue(publicAtom);
-  const refreshOwned = useAtomRefresh(ownedSquadGroupsAtom);
-  const refreshShared = useAtomRefresh(sharedSquadGroupsAtom);
-  const refreshPublic = useAtomRefresh(publicAtom);
+  };
+  const publicResult = useQuery(globalSquadGroupsQueryOptions(publicFilters));
+  const refreshOwned = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    ownedResult.refetch();
+  };
+  const refreshShared = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    sharedResult.refetch();
+  };
+  const refreshPublic = () => {
+    // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
+    publicResult.refetch();
+  };
   const activeFilters = hasActiveFilters(appliedFilters);
-  const ownedGroups = AsyncResult.isSuccess(ownedResult)
-    ? ownedResult.value
-    : [];
-  const sharedGroups = AsyncResult.isSuccess(sharedResult)
-    ? sharedResult.value
-    : [];
-  const publicGroups = AsyncResult.isSuccess(publicResult)
-    ? publicResult.value
-    : [];
+  const ownedGroups = ownedResult.data ?? [];
+  const sharedGroups = sharedResult.data ?? [];
+  const publicGroups = publicResult.data ?? [];
+  const sharedCollectionResult: CollectionResult<
+    readonly SharedSquadGroupSummary[]
+  > = {
+    data: sharedResult.data,
+    isError: sharedResult.isError,
+    isPending: sharedResult.isPending,
+  };
 
   return (
     <Tabs
@@ -490,7 +496,7 @@ export const SquadGroupLibrary = ({
               filtered={false}
               kind="shared"
               onRetry={refreshShared}
-              result={sharedResult}
+              result={sharedCollectionResult}
             />
           </TabsContent>
           <TabsContent aria-label="Publiczne grupy składów" value="public">

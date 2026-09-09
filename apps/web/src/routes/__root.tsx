@@ -1,15 +1,12 @@
-import { RegistryContext } from "@effect/atom-react";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
-  useRouteContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createMiddleware } from "@tanstack/react-start";
-import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 import type { ReactElement } from "react";
 
@@ -17,7 +14,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import type { getUser as getUserDependency } from "@/functions/get-user";
-import type { preloadAtomResults as preloadAtomResultsDependency } from "@/lib/atom-preload";
 import { getErrorMessage } from "@/lib/errors";
 
 import appCss from "@/index.css?url";
@@ -26,38 +22,32 @@ const showDevtools = import.meta.env.DEV;
 const applicationDescription =
   "Narzędzia Gildii Złodziei do organizacji wydarzeń, aukcji i wspólnych zadań w Margonem.";
 
-const RootDocument = () => {
-  const { atomRegistry } = useRouteContext({ from: "__root__" });
-
-  return (
-    <html lang="pl" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          disableTransitionOnChange
-          storageKey="theme"
-          enableColorScheme
-          enableSystem
-        >
-          <RegistryContext value={atomRegistry}>
-            <div className="grid h-svh min-w-0 grid-rows-[auto_1fr]">
-              <Outlet />
-            </div>
-            <Toaster richColors />
-            {showDevtools ? (
-              <TanStackRouterDevtools position="bottom-right" />
-            ) : null}
-          </RegistryContext>
-        </ThemeProvider>
-        <Scripts />
-      </body>
-    </html>
-  );
-};
+const RootDocument = () => (
+  <html lang="pl" suppressHydrationWarning>
+    <head>
+      <HeadContent />
+    </head>
+    <body>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        disableTransitionOnChange
+        storageKey="theme"
+        enableColorScheme
+        enableSystem
+      >
+        <div className="grid h-svh min-w-0 grid-rows-[auto_1fr]">
+          <Outlet />
+        </div>
+        <Toaster richColors />
+        {showDevtools ? (
+          <TanStackRouterDevtools position="bottom-right" />
+        ) : null}
+      </ThemeProvider>
+      <Scripts />
+    </body>
+  </html>
+);
 
 export const RootErrorBoundary = ({
   error,
@@ -82,9 +72,7 @@ export const RootErrorBoundary = ({
 );
 
 export interface RouterAppContext {
-  readonly atomRegistry: AtomRegistry.AtomRegistry;
   readonly getUser: typeof getUserDependency;
-  readonly preloadAtomResults: typeof preloadAtomResultsDependency;
   readonly queryClient: QueryClient;
 }
 

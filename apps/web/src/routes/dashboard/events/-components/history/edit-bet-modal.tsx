@@ -1,9 +1,8 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,18 +15,21 @@ import {
   getFieldId,
 } from "@/components/forms/form-field-utils";
 import { Button } from "@/components/ui/button";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { editBetAtom } from "@/features/events/bets/bet-atoms";
+import { editBetMutationOptions } from "@/features/events/bets/bet-queries";
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
-import { verifiedUsersAtom } from "@/features/users/user-atoms";
+import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
+import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 interface EditBetModalProps {
   readonly betId: number;
@@ -38,12 +40,8 @@ interface EditBetModalProps {
   }[];
   readonly heroName: string;
   readonly memberCount: number;
-  readonly refreshInput: {
-    readonly eventId?: number;
-    readonly heroId?: number;
-    readonly limit?: number;
-    readonly page?: number;
-  };
+  readonly eventId: number | undefined;
+  readonly heroId: number;
   readonly trigger?: React.ReactNode;
 }
 
@@ -57,22 +55,25 @@ const EditBetModalContent = ({
   currentMembers,
   heroName,
   memberCount,
-  refreshInput,
+  eventId,
+  heroId,
   trigger,
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const editBet = useAtomSet(editBetAtom, { mode: "promise" });
+  const queryClient = useQueryClient();
+  const editBet = useMutation(
+    editBetMutationOptions(queryClient, runAppHttpApi)
+  );
   const currentMemberIds: readonly string[] = useMemo(
     () => currentMembers.map((member) => member.userId),
     [currentMembers]
   );
-  const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
-  const verifiedUsers = AsyncResult.isSuccess(verifiedUsersResult)
-    ? [...verifiedUsersResult.value]
-    : [];
-  const usersLoading = !AsyncResult.isSuccess(verifiedUsersResult);
+  const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
+  const verifiedUsers =
+    verifiedUsersQuery.data === undefined ? [] : [...verifiedUsersQuery.data];
+  const usersLoading = verifiedUsersQuery.isPending;
   const form = useAppForm({
     defaultValues: { userIds: currentMemberIds },
     onSubmit: async ({ value }) => {
@@ -84,10 +85,11 @@ const EditBetModalContent = ({
 
       const result = await runFormSubmission(
         async () =>
-          await editBet({
+          await editBet.mutateAsync({
             betId,
+            eventId,
+            heroId,
             newUserIds: decoded.value.userIds,
-            refreshInput,
           })
       );
       if (result._tag === "failure") {
@@ -114,6 +116,21 @@ const EditBetModalContent = ({
     }
     setOpen(nextOpen);
   };
+
+  if (verifiedUsersQuery.isError && verifiedUsersQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          verifiedUsersQuery.error,
+          "Nie udało się wczytać zweryfikowanych graczy. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void verifiedUsersQuery.refetch();
+        }}
+      />
+    );
+  }
+
   let submitLabel = "Zapisz zmiany";
   if (usersLoading) {
     submitLabel = "Ładowanie...";

@@ -1,8 +1,8 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import { EventHeroFilterSearchSchema } from "@/features/events/core/event-hero-filter";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { RankingSortSchema } from "@/features/events/ranking/ranking-sort";
 import { RankingPage } from "@/routes/dashboard/events/-components/ranking-page";
 import {
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   component: RankingRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [eventsAtom]);
+    await context.queryClient.query(eventsQueryOptions());
   },
   pendingComponent: EventsRoutePending,
   staticData: {

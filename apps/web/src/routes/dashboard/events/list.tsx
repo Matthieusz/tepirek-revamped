@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import EventsListPage from "@/routes/dashboard/events/-components/list-page";
 import {
   EventsRouteError,
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/dashboard/events/list")({
   component: EventsListRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [eventsAtom]);
+    await context.queryClient.query(eventsQueryOptions());
   },
   pendingComponent: EventsRoutePending,
   staticData: {

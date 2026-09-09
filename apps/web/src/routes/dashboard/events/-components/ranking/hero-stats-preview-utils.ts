@@ -1,5 +1,3 @@
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-
 export interface HeroStats {
   readonly heroId: number;
   readonly heroName: string;
@@ -16,21 +14,23 @@ export type HeroStatsPreviewState =
   | { readonly _tag: "success"; readonly heroStats: HeroStats };
 
 export const getHeroStatsPreviewState = (params: {
+  readonly data: HeroStats | undefined;
   readonly enabled: boolean;
+  readonly isError: boolean;
+  readonly isLoading: boolean;
   readonly onRetry: () => void;
-  readonly result: AsyncResult.AsyncResult<HeroStats | undefined, unknown>;
 }): HeroStatsPreviewState => {
   if (!params.enabled) {
     return { _tag: "hidden" };
   }
-  if (AsyncResult.isFailure(params.result)) {
+  if (params.isError) {
     return { _tag: "failure", onRetry: params.onRetry };
   }
-  if (!AsyncResult.isSuccess(params.result)) {
+  if (params.isLoading) {
     return { _tag: "loading" };
   }
-  if (params.result.value === undefined) {
+  if (params.data === undefined) {
     return { _tag: "empty" };
   }
-  return { _tag: "success", heroStats: params.result.value };
+  return { _tag: "success", heroStats: params.data };
 };

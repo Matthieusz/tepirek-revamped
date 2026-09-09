@@ -1,18 +1,14 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useQuery } from "@tanstack/react-query";
 
-import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
+import { ownedAccountsQueryOptions } from "@/features/squad-builder/account-queries";
 import { AccountAccessFrame } from "@/routes/dashboard/squad-builder/-components/accounts/account-access-frame";
 import { AccountImportFrame } from "@/routes/dashboard/squad-builder/-components/accounts/account-import-frame";
 import { OwnedAccountsGrid } from "@/routes/dashboard/squad-builder/-components/accounts/owned-accounts-grid";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 
 const SquadBuilderAccountsPage = () => {
-  const ownedAccountsResult = useAtomValue(ownedAccountsAtom);
-  const refreshOwnedAccounts = useAtomRefresh(ownedAccountsAtom);
-  const ownedAccounts = AsyncResult.isSuccess(ownedAccountsResult)
-    ? ownedAccountsResult.value
-    : [];
+  const ownedAccountsQuery = useQuery(ownedAccountsQueryOptions());
+  const ownedAccounts = ownedAccountsQuery.data ?? [];
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -29,15 +25,18 @@ const SquadBuilderAccountsPage = () => {
       <div className="space-y-6">
         <div className="space-y-6">
           <AccountImportFrame />
-          {AsyncResult.isFailure(ownedAccountsResult) ? (
+          {ownedAccountsQuery.isError &&
+          ownedAccountsQuery.data === undefined ? (
             <SectionFailure
               message="Nie udało się wczytać zapisanych kont."
-              onRetry={refreshOwnedAccounts}
+              onRetry={() => {
+                void ownedAccountsQuery.refetch();
+              }}
             />
           ) : (
             <OwnedAccountsGrid
               accounts={ownedAccounts}
-              isLoading={!AsyncResult.isSuccess(ownedAccountsResult)}
+              isLoading={ownedAccountsQuery.isPending}
               onAddAccount={() => {
                 requestAnimationFrame(() => {
                   const field = document.querySelector<HTMLTextAreaElement>(

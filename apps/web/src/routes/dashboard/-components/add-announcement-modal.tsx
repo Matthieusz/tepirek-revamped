@@ -1,5 +1,5 @@
-import { useAtomSet } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateAnnouncementPayload } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { createAnnouncementAtom } from "@/features/announcements/announcement-atoms";
+import { createAnnouncementMutationOptions } from "@/features/announcements/announcement-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -36,9 +36,10 @@ export const AddAnnouncementModal = ({
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createAnnouncement = useAtomSet(createAnnouncementAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const createAnnouncement = useMutation(
+    createAnnouncementMutationOptions(queryClient)
+  );
   const form = useAppForm({
     defaultValues: { description: "", title: "" },
     onSubmit: async ({ value }) => {
@@ -50,7 +51,7 @@ export const AddAnnouncementModal = ({
       }
 
       const result = await runFormSubmission(async () => {
-        await createAnnouncement(decoded.value);
+        await createAnnouncement.mutateAsync(decoded.value);
       });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

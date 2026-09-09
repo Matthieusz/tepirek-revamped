@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import {
-  auctionSignupsAtom,
-  auctionStatsAtom,
-} from "@/features/auctions/auction-atoms";
+  auctionSignupsQueryOptions,
+  auctionStatsQueryOptions,
+} from "@/features/auctions/auction-queries";
 import {
   AUCTION_PROFESSION_META,
   isAuctionProfession,
@@ -34,9 +34,9 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
         profession: params.profession,
         type: params.type,
       };
-      await context.preloadAtomResults(context.atomRegistry, [
-        auctionSignupsAtom(auctionGroup),
-        auctionStatsAtom(auctionGroup),
+      await Promise.all([
+        context.queryClient.query(auctionSignupsQueryOptions(auctionGroup)),
+        context.queryClient.query(auctionStatsQueryOptions(auctionGroup)),
       ]);
     }
 

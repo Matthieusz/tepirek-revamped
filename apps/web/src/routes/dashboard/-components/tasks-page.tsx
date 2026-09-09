@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Add01Icon,
   CheckmarkCircle02Icon,
@@ -9,26 +8,29 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { TodoTextSchema } from "@/features/todos/form-schemas";
+import type { Todo } from "@/features/todos/todo-api";
 import {
-  createTodoAtom,
-  deleteTodoAtom,
-  optimisticTodosAtom,
-  todosAtom,
-  toggleTodoAtom,
-} from "@/features/todos/todo-atoms";
+  createTodoMutationOptions,
+  deleteTodoMutationOptions,
+  todosQueryOptions,
+  toggleTodoMutationOptions,
+} from "@/features/todos/todo-queries";
+import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import type { AuthSession } from "@/types/route";
 
 interface TasksPageProps {
@@ -38,35 +40,97 @@ interface TasksPageProps {
 const TodoFormSchema = Schema.Struct({ text: TodoTextSchema });
 const TodoFormValidator = Schema.toStandardSchemaV1(TodoFormSchema);
 
-const runMutation = (action: () => Promise<void>, onSuccess?: () => void) => {
-  void (async () => {
-    await action();
-    onSuccess?.();
-  })();
-};
-
 const TasksPage = ({ session }: TasksPageProps) => {
-  const todosResult = useAtomValue(todosAtom);
-  const refreshTodos = useAtomRefresh(todosAtom);
+  const todosQuery = useQuery(todosQueryOptions());
+
+  if (todosQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (todosQuery.isError && todosQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          todosQuery.error,
+          "Nie udało się wczytać zadań. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void todosQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshTodos} result={todosResult}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <TasksContent session={session} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define -- the page boundary keeps the query lifecycle separate from the form UI
+    <TasksContent
+      isRefreshing={todosQuery.isFetching}
+      onRetry={() => {
+        void todosQuery.refetch();
+      }}
+      refreshError={todosQuery.isError ? todosQuery.error : undefined}
+      session={session}
+      todosData={todosQuery.data ?? []}
+    />
   );
 };
 
 export default TasksPage;
 
-const TasksContent = ({ session }: TasksPageProps) => {
-  const optimisticTodosResult = useAtomValue(optimisticTodosAtom);
-  const todosData = AsyncResult.getOrThrow(optimisticTodosResult);
-  const createTodo = useAtomSet(createTodoAtom, { mode: "promise" });
-  const toggleTodo = useAtomSet(toggleTodoAtom, { mode: "promise" });
-  const deleteTodo = useAtomSet(deleteTodoAtom, { mode: "promise" });
+interface TasksContentProps extends TasksPageProps {
+  readonly isRefreshing: boolean;
+  readonly onRetry: () => void;
+  readonly refreshError: unknown;
+  readonly todosData: readonly Todo[];
+}
+
+const TasksContent = ({
+  isRefreshing,
+  onRetry,
+  refreshError,
+  session,
+  todosData,
+}: TasksContentProps) => {
+  const queryClient = useQueryClient();
+  const createTodoMutation = useMutation(
+    createTodoMutationOptions(queryClient, runAppHttpApi, {
+      onRefreshError: () => {
+        toast.error(
+          "Zadanie zostało dodane, ale nie udało się odświeżyć listy."
+        );
+      },
+    })
+  );
+  const toggleTodoMutation = useMutation(
+    toggleTodoMutationOptions(queryClient, runAppHttpApi, {
+      onError: (error) => {
+        toast.error(
+          getErrorMessage(
+            error,
+            "Nie udało się zmienić zadania. Spróbuj ponownie."
+          )
+        );
+      },
+      onRefreshError: () => {
+        toast.error("Nie udało się odświeżyć listy zadań.");
+      },
+    })
+  );
+  const deleteTodoMutation = useMutation(
+    deleteTodoMutationOptions(queryClient, runAppHttpApi, {
+      onError: (error) => {
+        toast.error(
+          getErrorMessage(
+            error,
+            "Nie udało się usunąć zadania. Spróbuj ponownie."
+          )
+        );
+      },
+      onRefreshError: () => {
+        toast.error("Nie udało się odświeżyć listy zadań.");
+      },
+    })
+  );
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
   const canCreateTodo = session.user.id.length > 0;
@@ -80,7 +144,7 @@ const TasksContent = ({ session }: TasksPageProps) => {
       }
 
       const result = await runFormSubmission(async () => {
-        await createTodo(decoded.value);
+        await createTodoMutation.mutateAsync(decoded.value);
       });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
@@ -94,23 +158,12 @@ const TasksContent = ({ session }: TasksPageProps) => {
   });
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
-  const toggleTodoMutation = (input: { id: number; completed: boolean }) => {
-    runMutation(async () => {
-      await toggleTodo(input);
-    });
-  };
-  const deleteTodoMutation = (input: { id: number }) => {
-    runMutation(async () => {
-      await deleteTodo(input);
-    });
-  };
-
   const handleToggleTodo = (id: number, completed: boolean) => {
-    toggleTodoMutation({ completed: !completed, id });
+    toggleTodoMutation.mutate({ completed: !completed, id });
   };
 
   const handleDeleteTodo = (id: number) => {
-    deleteTodoMutation({ id });
+    deleteTodoMutation.mutate({ id });
   };
 
   const completedCount = todosData.filter((t) => t.completed).length;
@@ -128,6 +181,32 @@ const TasksContent = ({ session }: TasksPageProps) => {
       </div>
 
       <div className="space-y-4">
+        {isRefreshing && (
+          <p
+            aria-live="polite"
+            className="text-muted-foreground text-center text-xs"
+          >
+            Odświeżanie…
+          </p>
+        )}
+        {refreshError !== undefined && (
+          <div
+            aria-live="assertive"
+            className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+            role="alert"
+          >
+            <p className="text-destructive text-sm">
+              {getErrorMessage(
+                refreshError,
+                "Nie udało się odświeżyć listy zadań."
+              )}
+            </p>
+            <Button onClick={onRetry} size="sm" variant="outline">
+              Spróbuj ponownie
+            </Button>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           <div className="border-border bg-card rounded-xl border p-4">

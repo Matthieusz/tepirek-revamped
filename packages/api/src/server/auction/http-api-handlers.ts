@@ -16,6 +16,7 @@ import type {
   ApplicationNotFound,
 } from "../../services/application-errors.ts";
 import {
+  clearAuctionSignups,
   getAuctionSignups,
   getAuctionStats,
   removeAuctionSignup,
@@ -23,12 +24,14 @@ import {
 } from "../../services/auction/auction-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireVerifiedSession } = makeAuthorizationPolicy({
-  forbidden: () => new AuctionForbidden({ message: "FORBIDDEN" }),
-  unauthorized: () => new AuctionUnauthorized({ message: "UNAUTHORIZED" }),
-  unverified: () =>
-    new AuctionForbidden({ message: "Konto oczekuje na weryfikację" }),
-});
+const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
+  {
+    forbidden: () => new AuctionForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new AuctionUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new AuctionForbidden({ message: "Konto oczekuje na weryfikację" }),
+  }
+);
 
 const mapAuctionError = (
   error:
@@ -74,6 +77,14 @@ export const AuctionHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* getAuctionStatsHandler() {
           yield* requireVerifiedSession();
           return yield* getAuctionStats(payload).pipe(
+            Effect.mapError(mapAuctionError)
+          );
+        })
+      )
+      .handle("clearAuctionSignups", ({ payload }) =>
+        Effect.gen(function* clearAuctionSignupsHandler() {
+          yield* requireAdminSession();
+          return yield* clearAuctionSignups(payload).pipe(
             Effect.mapError(mapAuctionError)
           );
         })

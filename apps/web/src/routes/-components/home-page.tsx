@@ -1,38 +1,24 @@
-import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import {
   Link02Icon,
   LogInIcon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import type { ReactNode } from "react";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
-import { healthAtom } from "@/features/health/health-atoms";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
+import { healthQueryOptions } from "@/features/health/health-queries";
+import { getErrorMessage } from "@/lib/errors";
 
-const HomePage = () => {
-  const healthResult = useAtomValue(healthAtom);
-  const refreshHealth = useAtomRefresh(healthAtom);
-
-  return (
-    <AsyncResultBoundary onRetry={refreshHealth} result={healthResult}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <HomeContent />
-      )}
-    </AsyncResultBoundary>
-  );
-};
-
-export default HomePage;
-
-const HomeContent = () => {
-  const healthResult = useAtomValue(healthAtom);
-  const healthCheckData = AsyncResult.getOrThrow(healthResult);
-  const healthCheckIsLoading = AsyncResult.isWaiting(healthResult);
-
+const HomeContent = ({
+  healthCheckIsLoading,
+}: {
+  readonly healthCheckIsLoading: boolean;
+}) => {
   let statusText: string;
   let statusColor = "text-muted-foreground";
   let statusDot = "bg-[oklch(0.76_0.10_80)]";
@@ -40,10 +26,6 @@ const HomeContent = () => {
   if (healthCheckIsLoading) {
     statusText = "Sprawdzanie...";
     statusDot = "bg-[oklch(0.76_0.10_80)]";
-  } else if (healthCheckData === undefined) {
-    statusText = "Status";
-    statusColor = "text-destructive";
-    statusDot = "bg-destructive";
   } else {
     statusText = "Status";
     statusColor = "text-primary";
@@ -142,3 +124,31 @@ const HomeContent = () => {
     </div>
   );
 };
+
+const HomePage = (): ReactNode => {
+  const healthQuery = useQuery(healthQueryOptions());
+
+  if (healthQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (healthQuery.isError) {
+    return (
+      <div className="flex min-h-svh items-center justify-center p-6">
+        <QueryErrorState
+          message={getErrorMessage(
+            healthQuery.error,
+            "Nie udało się wczytać danych. Spróbuj ponownie."
+          )}
+          onRetry={() => {
+            void healthQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
+  return <HomeContent healthCheckIsLoading={healthQuery.isFetching} />;
+};
+
+export default HomePage;

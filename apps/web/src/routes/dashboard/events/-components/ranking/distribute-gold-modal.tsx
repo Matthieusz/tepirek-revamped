@@ -1,11 +1,10 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Coins02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +17,6 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   ALL_FILTER,
   toQueryInput,
@@ -27,16 +25,18 @@ import {
   EventFormField,
   HeroFormField,
 } from "@/features/events/core/event-hero-form-fields";
-import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
+import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
 import {
   GoldAmountSchema,
   RequiredSelectionSchema,
 } from "@/features/events/ranking/form-schemas";
-import { heroStatsAtom } from "@/features/events/ranking/ranking-atoms";
-import { distributeGoldAtom } from "@/features/events/vault/vault-atoms";
+import { heroStatsQueryOptions } from "@/features/events/ranking/ranking-queries";
+import { distributeGoldMutationOptions } from "@/features/events/vault/vault-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 import { parseGoldAmount } from "@/lib/gold";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import {
   DistributionPreview,
   GoldAmountPreview,
@@ -54,41 +54,6 @@ const GoldFormSchema = Schema.Struct({
   heroId: RequiredSelectionSchema("Wybierz konkretnego herosa"),
 });
 const GoldFormValidator = Schema.toStandardSchemaV1(GoldFormSchema);
-
-const getEventsState = (
-  result: AsyncResult.AsyncResult<
-    readonly {
-      color: string | null;
-      endTime: Date;
-      icon: string;
-      id: number;
-      name: string;
-    }[],
-    unknown
-  >
-) => {
-  if (AsyncResult.isSuccess(result)) {
-    return { events: [...result.value], loading: false };
-  }
-  return { events: [], loading: true };
-};
-
-const getHeroesState = (
-  result: AsyncResult.AsyncResult<
-    readonly {
-      eventId: number | null;
-      id: number;
-      level: number;
-      name: string;
-    }[],
-    unknown
-  >
-) => {
-  if (AsyncResult.isSuccess(result)) {
-    return { heroes: result.value, loading: false };
-  }
-  return { heroes: [], loading: true };
-};
 
 const filterHeroesForEvent = (
   eventId: string,
@@ -137,11 +102,16 @@ const DistributeGoldModalContent = ({
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const distributeGold = useAtomSet(distributeGoldAtom, { mode: "promise" });
-  const eventsResult = useAtomValue(eventsAtom);
-  const { events, loading: eventsLoading } = getEventsState(eventsResult);
-  const heroesResult = useAtomValue(heroesAtom);
-  const { heroes, loading: heroesLoading } = getHeroesState(heroesResult);
+  const queryClient = useQueryClient();
+  const distributeGold = useMutation(
+    distributeGoldMutationOptions(queryClient, runAppHttpApi)
+  );
+  const eventsQuery = useQuery(eventsQueryOptions());
+  const events = eventsQuery.data ?? [];
+  const eventsLoading = eventsQuery.isPending;
+  const heroesQuery = useQuery(heroesQueryOptions());
+  const heroes = heroesQuery.data ?? [];
+  const heroesLoading = heroesQuery.isPending;
   const form = useAppForm({
     defaultValues: {
       eventId: selectedEventId,
@@ -158,7 +128,7 @@ const DistributeGoldModalContent = ({
       const goldAmount = parseGoldAmount(decoded.value.goldAmount);
       const result = await runFormSubmission(
         async () =>
-          await distributeGold({
+          await distributeGold.mutateAsync({
             eventId: decoded.value.eventId,
             goldAmount,
             heroId: decoded.value.heroId,
@@ -199,13 +169,15 @@ const DistributeGoldModalContent = ({
 
   const filteredHeroes = filterHeroesForEvent(eventId, heroes);
   const parsedHeroId = toQueryInput(heroId) ?? null;
-  const heroStatsAtomValue = heroStatsAtom({ heroId: parsedHeroId });
-  const heroStatsResult = useAtomValue(heroStatsAtomValue);
-  const refreshHeroStats = useAtomRefresh(heroStatsAtomValue);
+  const heroStatsQuery = useQuery(heroStatsQueryOptions(parsedHeroId));
   const heroStatsPreviewState = getHeroStatsPreviewState({
+    data: heroStatsQuery.data,
     enabled: heroId !== ALL_FILTER && open,
-    onRetry: refreshHeroStats,
-    result: heroStatsResult,
+    isError: heroStatsQuery.isError,
+    isLoading: heroStatsQuery.isPending,
+    onRetry: () => {
+      void heroStatsQuery.refetch();
+    },
   });
   const heroStats = getHeroStats(heroStatsPreviewState);
   const dependentDataLoading =

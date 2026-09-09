@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
-import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
+import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
 import {
   EventsRouteError,
   EventsRoutePending,
@@ -10,9 +10,9 @@ import {
 export const Route = createFileRoute("/dashboard/events/heroes")({
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [
-      heroesAtom,
-      eventsAtom,
+    await Promise.all([
+      context.queryClient.query(heroesQueryOptions()),
+      context.queryClient.query(eventsQueryOptions()),
     ]);
   },
   pendingComponent: EventsRoutePending,

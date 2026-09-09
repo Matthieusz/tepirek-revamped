@@ -1,5 +1,5 @@
-import { useAtomSet } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateRangePayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { createSkillRangeAtom } from "@/features/skills/skill-atoms";
+import { createSkillRangeMutationOptions } from "@/features/skills/skill-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -36,9 +36,16 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createSkillRange = useAtomSet(createSkillRangeAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const createSkillRange = useMutation(
+    createSkillRangeMutationOptions(queryClient, undefined, {
+      onRefreshError: () => {
+        toast.error(
+          "Przedział został utworzony, ale lista nie została odświeżona."
+        );
+      },
+    })
+  );
   const form = useAppForm({
     defaultValues: { image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
@@ -49,7 +56,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       }
 
       const result = await runFormSubmission(async () => {
-        await createSkillRange(decoded.value);
+        await createSkillRange.mutateAsync(decoded.value);
       });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

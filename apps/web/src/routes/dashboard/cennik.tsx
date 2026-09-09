@@ -1,7 +1,7 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { legendPricesAtom } from "@/features/legend-pricing/legend-pricing-atoms";
+import { legendPricesQueryOptions } from "@/features/legend-pricing/legend-pricing-queries";
 import CennikPage from "@/routes/dashboard/-components/cennik-page";
 
 const routeApi = getRouteApi("/dashboard/cennik");
@@ -24,7 +24,7 @@ export type CennikSearch = typeof CennikSearchSchema.Type;
 export const Route = createFileRoute("/dashboard/cennik")({
   component: CennikRoute,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [legendPricesAtom]);
+    await context.queryClient.query(legendPricesQueryOptions());
   },
   staticData: {
     crumb: "Cennik legend",

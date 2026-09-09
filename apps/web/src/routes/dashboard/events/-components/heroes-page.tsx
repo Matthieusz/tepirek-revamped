@@ -1,11 +1,10 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Add01Icon,
   Delete01Icon,
   Sword01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,9 +18,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import {
   Select,
   SelectContent,
@@ -36,15 +36,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { eventsAtom } from "@/features/events/core/event-atoms";
+import type { Event } from "@/features/events/core/event-api";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { EventSelectItems } from "@/features/events/core/select-utils";
+import type { Hero } from "@/features/events/heroes/hero-api";
 import {
-  deleteHeroAtom,
-  heroesAtom,
-  optimisticHeroesAtom,
-} from "@/features/events/heroes/hero-atoms";
+  deleteHeroMutationOptions,
+  heroesQueryOptions,
+} from "@/features/events/heroes/hero-queries";
 import { getErrorMessage } from "@/lib/errors";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import {
   getEventNamesById,
@@ -62,37 +64,74 @@ interface EventsHeroesPageProps {
   session: AuthSession;
 }
 
+interface EventsHeroesContentProps extends EventsHeroesPageProps {
+  readonly events: readonly Event[];
+  readonly heroes: readonly Hero[];
+  readonly isRefreshing: boolean;
+}
+
 const EventsHeroesPage = ({ session }: EventsHeroesPageProps) => {
-  const heroesResult = useAtomValue(heroesAtom);
-  const eventsResult = useAtomValue(eventsAtom);
-  const refreshHeroes = useAtomRefresh(heroesAtom);
-  const refreshEvents = useAtomRefresh(eventsAtom);
+  const heroesQuery = useQuery(heroesQueryOptions());
+  const eventsQuery = useQuery(eventsQueryOptions());
+
+  if (heroesQuery.isPending || eventsQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (heroesQuery.isError && heroesQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          heroesQuery.error,
+          "Nie udało się wczytać herosów. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void heroesQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  if (eventsQuery.isError && eventsQuery.data === undefined) {
+    return (
+      <QueryErrorState
+        message={getErrorMessage(
+          eventsQuery.error,
+          "Nie udało się wczytać eventów. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void eventsQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshHeroes} result={heroesResult}>
-      {() => (
-        <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
-          {() => (
-            // oxlint-disable-next-line no-use-before-define
-            <EventsHeroesContent session={session} />
-          )}
-        </AsyncResultBoundary>
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define
+    <EventsHeroesContent
+      events={eventsQuery.data ?? []}
+      heroes={heroesQuery.data ?? []}
+      isRefreshing={heroesQuery.isFetching || eventsQuery.isFetching}
+      session={session}
+    />
   );
 };
 
 export default EventsHeroesPage;
 
-const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
+const EventsHeroesContent = ({
+  events,
+  heroes,
+  isRefreshing,
+  session,
+}: EventsHeroesContentProps) => {
+  const queryClient = useQueryClient();
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
-  const optimisticHeroesResult = useAtomValue(optimisticHeroesAtom);
-  const heroes = AsyncResult.getOrThrow(optimisticHeroesResult);
-  const eventsResult = useAtomValue(eventsAtom);
-  const events = [...AsyncResult.getOrThrow(eventsResult)];
   const eventNamesById = getEventNamesById(events);
-  const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });
+  const deleteHero = useMutation(
+    deleteHeroMutationOptions(queryClient, runAppHttpApi)
+  );
 
   const isAdminUser = isAdmin(session);
 
@@ -101,26 +140,28 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
       ? heroes
       : heroes.filter((h) => h.eventId?.toString() === selectedEventId);
 
-  const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = {
-    isPending: isDeleting,
+    isPending: deleteHero.isPending,
     mutate: (heroId: number) => {
       void (async () => {
-        setIsDeleting(true);
         try {
-          await deleteHero({ id: heroId });
+          await deleteHero.mutateAsync({ id: heroId });
           toast.success("Heros został usunięty");
           setHeroToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
         }
-        setIsDeleting(false);
       })();
     },
   };
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
+      {isRefreshing && (
+        <p className="text-muted-foreground text-center text-xs">
+          Odświeżanie…
+        </p>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">

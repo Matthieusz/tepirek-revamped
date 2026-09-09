@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   Cancel01Icon,
   Delete01Icon,
@@ -10,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -31,9 +31,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { AccountDisplayNameSchema } from "@/features/squad-builder/account-form-schemas";
 import {
-  deleteOwnedAccountAtom,
-  updateOwnedAccountDisplayNameAtom,
-} from "@/features/squad-builder/account-import-atoms";
+  deleteOwnedAccountMutationOptions,
+  updateOwnedAccountDisplayNameMutationOptions,
+} from "@/features/squad-builder/account-queries";
 import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -63,9 +63,10 @@ const RenameAccountForm = ({
 }: RenameAccountFormProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const updateAccount = useAtomSet(updateOwnedAccountDisplayNameAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const updateAccount = useMutation(
+    updateOwnedAccountDisplayNameMutationOptions(queryClient)
+  );
   const form = useAppForm({
     defaultValues: { displayName: account.displayName },
     onSubmit: async ({ value }) => {
@@ -77,7 +78,7 @@ const RenameAccountForm = ({
       }
       const result = await runFormSubmission(
         async () =>
-          await updateAccount({
+          await updateAccount.mutateAsync({
             accountId: account.accountId,
             displayName: decoded.value.displayName.trim(),
           })
@@ -157,15 +158,18 @@ const DeleteAccountDialog = ({
   onOpenChange,
   open,
 }: DeleteAccountDialogProps) => {
+  const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
-  const deleteAccount = useAtomSet(deleteOwnedAccountAtom, {
-    mode: "promise",
-  });
+  const deleteAccount = useMutation(
+    deleteOwnedAccountMutationOptions(queryClient)
+  );
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const result = await deleteAccount({ accountId: account.accountId });
+      const result = await deleteAccount.mutateAsync({
+        accountId: account.accountId,
+      });
       onOpenChange(false);
       onDeleted();
       toast.success(

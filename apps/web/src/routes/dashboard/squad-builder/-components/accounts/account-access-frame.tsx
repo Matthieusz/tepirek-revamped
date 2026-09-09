@@ -1,4 +1,3 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   Cancel01Icon,
   CheckIcon,
@@ -8,7 +7,7 @@ import {
   UsersIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,35 +18,33 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
-  incomingAccountInvitesAtom,
-  respondToAccountAccessInviteAtom,
-  sharedAccountsAtom,
-} from "@/features/squad-builder/account-sharing-atoms";
+  incomingAccountInvitesQueryOptions,
+  respondToAccountAccessInviteMutationOptions,
+  sharedAccountsQueryOptions,
+} from "@/features/squad-builder/account-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 const InviteInboxPanel = () => {
+  const queryClient = useQueryClient();
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(
     null
   );
-  const invitesAtom = incomingAccountInvitesAtom;
-  const invitesResult = useAtomValue(invitesAtom);
-  const refreshInvites = useAtomRefresh(invitesAtom);
-  const respondToInvite = useAtomSet(respondToAccountAccessInviteAtom, {
-    mode: "promise",
-  });
+  const invitesQuery = useQuery(incomingAccountInvitesQueryOptions());
+  const respondToInvite = useMutation(
+    respondToAccountAccessInviteMutationOptions(queryClient)
+  );
+  const invites = invitesQuery.data ?? [];
 
-  const invites = AsyncResult.isSuccess(invitesResult)
-    ? invitesResult.value
-    : [];
-
-  if (AsyncResult.isFailure(invitesResult)) {
+  if (invitesQuery.isError && invitesQuery.data === undefined) {
     return (
       <SectionFailure
         message="Nie udało się wczytać zaproszeń do kont."
-        onRetry={refreshInvites}
+        onRetry={() => {
+          void invitesQuery.refetch();
+        }}
       />
     );
   }
@@ -68,9 +65,9 @@ const InviteInboxPanel = () => {
         </ReuiBadge>
       </div>
 
-      {!AsyncResult.isSuccess(invitesResult) && <LoadingSpinner />}
+      {invitesQuery.isPending && <LoadingSpinner />}
 
-      {AsyncResult.isSuccess(invitesResult) && invites.length === 0 && (
+      {!invitesQuery.isPending && invites.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">
           <IconStack aria-hidden="true">
             <HugeiconsIcon
@@ -125,7 +122,7 @@ const InviteInboxPanel = () => {
                     void (async () => {
                       setRespondingAccessId(invite.accessId);
                       try {
-                        await respondToInvite({
+                        await respondToInvite.mutateAsync({
                           accessId: invite.accessId,
                           response: "accept",
                         });
@@ -157,7 +154,7 @@ const InviteInboxPanel = () => {
                     void (async () => {
                       setRespondingAccessId(invite.accessId);
                       try {
-                        await respondToInvite({
+                        await respondToInvite.mutateAsync({
                           accessId: invite.accessId,
                           response: "decline",
                         });
@@ -193,17 +190,16 @@ const InviteInboxPanel = () => {
 };
 
 const SharedAccountsPanel = () => {
-  const sharedResult = useAtomValue(sharedAccountsAtom);
-  const refreshSharedAccounts = useAtomRefresh(sharedAccountsAtom);
-  const accounts = AsyncResult.isSuccess(sharedResult)
-    ? sharedResult.value
-    : [];
+  const sharedQuery = useQuery(sharedAccountsQueryOptions());
+  const accounts = sharedQuery.data ?? [];
 
-  if (AsyncResult.isFailure(sharedResult)) {
+  if (sharedQuery.isError && sharedQuery.data === undefined) {
     return (
       <SectionFailure
         message="Nie udało się wczytać udostępnionych kont."
-        onRetry={refreshSharedAccounts}
+        onRetry={() => {
+          void sharedQuery.refetch();
+        }}
       />
     );
   }
@@ -224,9 +220,9 @@ const SharedAccountsPanel = () => {
         </span>
       </div>
 
-      {!AsyncResult.isSuccess(sharedResult) && <LoadingSpinner />}
+      {sharedQuery.isPending && <LoadingSpinner />}
 
-      {AsyncResult.isSuccess(sharedResult) && accounts.length === 0 && (
+      {!sharedQuery.isPending && accounts.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">
           <IconStack aria-hidden="true">
             <HugeiconsIcon

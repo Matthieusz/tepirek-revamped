@@ -1,9 +1,9 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
-import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
+import { eventsQueryOptions } from "@/features/events/core/event-queries";
+import { oldestUnpaidEventQueryOptions } from "@/features/events/ranking/ranking-queries";
 import {
   EventsRouteError,
   EventsRoutePending,
@@ -29,9 +29,9 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   component: EventsVaultRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [
-      eventsAtom,
-      oldestUnpaidEventAtom,
+    await Promise.all([
+      context.queryClient.query(eventsQueryOptions()),
+      context.queryClient.query(oldestUnpaidEventQueryOptions()),
     ]);
   },
   pendingComponent: EventsRoutePending,

@@ -96,6 +96,24 @@ const getStatsWithDatabase = (database: EffectPgDatabase) =>
     return stats ?? { totalSignups: 0, uniqueUsers: 0 };
   });
 
+const clearSignupsWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* clearSignupsWithDatabase(
+    input: AuctionGroupInput
+  ) {
+    yield* persistenceQuery(
+      "clearAuctionSignups",
+      database
+        .delete(auction)
+        .where(
+          and(
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type)
+          )
+        )
+    );
+    return { success: true as const };
+  });
+
 const removeSignupWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* removeSignupWithDatabase({
     actorUserId,
@@ -193,6 +211,9 @@ export const AuctionStoreLayer: Layer.Layer<
   AuctionStore,
   getDatabaseSync((database) =>
     AuctionStore.of({
+      clearSignups: Effect.fn("AuctionStore.clearSignups")(
+        clearSignupsWithDatabase(database)
+      ),
       getSignups: Effect.fn("AuctionStore.getSignups")(
         getSignupsWithDatabase(database)
       ),

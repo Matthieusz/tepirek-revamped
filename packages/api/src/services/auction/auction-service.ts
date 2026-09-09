@@ -20,6 +20,15 @@ export const getAuctionStats = Effect.fn("Auction.getStats")(
   }
 );
 
+export const clearAuctionSignups = Effect.fn("Auction.clearSignups")(
+  function* clearAuctionSignups(
+    input: Parameters<(typeof AuctionStore.Service)["clearSignups"]>[0]
+  ) {
+    const store = yield* AuctionStore;
+    return yield* store.clearSignups(input);
+  }
+);
+
 export const removeAuctionSignup = Effect.fn("Auction.removeSignup")(
   function* removeAuctionSignup(
     input: Parameters<(typeof AuctionStore.Service)["removeSignup"]>[0]

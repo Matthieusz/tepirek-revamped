@@ -1,6 +1,6 @@
-import { useAtomSet } from "@effect/atom-react";
 import { Delete01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { deleteSkillRangeAtom } from "@/features/skills/skill-atoms";
+import { deleteSkillRangeMutationOptions } from "@/features/skills/skill-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
@@ -42,26 +42,19 @@ interface RangeCardProps {
 
 export const RangeCard = ({ range, session, className }: RangeCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const deleteSkillRange = useAtomSet(deleteSkillRangeAtom, {
-    mode: "promise",
-  });
-  const deleteMutation = {
-    isPending: isDeleting,
-    mutate: (id: number) => {
-      void (async () => {
-        setIsDeleting(true);
-        try {
-          await deleteSkillRange({ id });
-          toast.success("Przedział został usunięty");
-          setShowDeleteDialog(false);
-        } catch (error: unknown) {
-          toast.error(getErrorMessage(error));
-        }
-        setIsDeleting(false);
-      })();
-    },
-  };
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation(
+    deleteSkillRangeMutationOptions(queryClient, undefined, {
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+      },
+      onRefreshError: (error) => {
+        toast.error(
+          getErrorMessage(error, "Nie udało się odświeżyć przedziałów.")
+        );
+      },
+    })
+  );
 
   return (
     <>
@@ -133,7 +126,12 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
             <AlertDialogAction
               disabled={deleteMutation.isPending}
               onClick={() => {
-                deleteMutation.mutate(range.id);
+                deleteMutation.mutate(range.id, {
+                  onSuccess: () => {
+                    toast.success("Przedział został usunięty");
+                    setShowDeleteDialog(false);
+                  },
+                });
               }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}

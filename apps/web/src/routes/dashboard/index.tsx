@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import { announcementsAtom } from "@/features/announcements/announcement-atoms";
+import { announcementsQueryOptions } from "@/features/announcements/announcement-queries";
 import DashboardHomePage from "@/routes/dashboard/-components/announcements-page";
 
 const routeApi = getRouteApi("/dashboard/");
@@ -13,7 +13,10 @@ const DashboardHomeRoute = () => {
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHomeRoute,
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [announcementsAtom]);
+    await context.queryClient.query({
+      ...announcementsQueryOptions(),
+      staleTime: 0,
+    });
   },
   staticData: {
     crumb: "Strona główna",

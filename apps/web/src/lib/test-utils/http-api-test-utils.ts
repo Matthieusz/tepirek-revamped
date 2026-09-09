@@ -28,10 +28,18 @@ interface EndpointIdentity {
 }
 
 const responseBodies = {
+  "announcement/listAnnouncements": [],
   "auction/getAuctionSignups": [],
   "auction/getAuctionStats": { totalSignups: 0, uniqueUsers: 0 },
   "auction/removeAuctionSignup": { success: true },
   "auction/toggleAuctionSignup": { action: "added" },
+  "bet/create": {
+    createdAt: "2026-01-01T00:00:00.000Z",
+    createdBy: "user-1",
+    heroId: 2,
+    id: 3,
+    memberCount: 1,
+  },
   "bet/delete": { success: true },
   "bet/edit": { success: true },
   "bet/getAllPaginated": {
@@ -45,6 +53,38 @@ const responseBodies = {
     },
   },
   "bet/getLatestForCopy": null,
+  "legendPricing/listLegendPrices": [],
+  "legendPricing/updateLegendCost": {
+    enemies: [
+      {
+        category: "hero",
+        iconUrl: "https://micc.garmory-cdn.cloud/obrazki/npc/test.gif",
+        id: 1,
+        level: 1,
+        name: "Test enemy",
+        sourceIconKey: "/obrazki/npc/test.gif",
+      },
+    ],
+    equipmentType: "weapon",
+    iconUrl: "https://micc.garmory-cdn.cloud/obrazki/itemy/test.gif",
+    itemId: 1,
+    lastSyncedAt: "2026-01-01T00:00:00.000Z",
+    legendaryBonus: null,
+    level: 1,
+    name: "Test item",
+    priceGold: 100,
+    priceUpdatedAt: "2026-01-01T00:00:00.000Z",
+    professions: [],
+    sourceIconKey: "/obrazki/itemy/test.gif",
+    version: 1,
+  },
+  "ranking/getHeroStats": {
+    currentPointWorth: 1,
+    heroId: 1,
+    heroName: "Test hero",
+    totalBets: 0,
+    totalPoints: 0,
+  },
   "ranking/getOldestUnpaidEvent": null,
   "ranking/getRanking": { pointWorth: null, ranking: [], totalBets: 0 },
   "skills/getRangeBySlug": null,
@@ -60,7 +100,23 @@ const responseBodies = {
     lastFetchedAt: "2026-01-01T00:00:00.000Z",
     profileId: 1,
   },
+  "squadBuilderAccountImport/deleteOwnedAccount": {
+    accountId: 1,
+    removedAccessGrantCount: 0,
+    removedCharacterCount: 0,
+    removedSquadCharacterCount: 0,
+  },
   "squadBuilderAccountImport/listOwnedAccounts": [],
+  "squadBuilderAccountImport/previewOwnedAccountImports": { items: [] },
+  "squadBuilderAccountImport/updateOwnedAccountDisplayName": {
+    accountId: 1,
+    characterCount: 0,
+    characterPreviews: [],
+    displayName: "",
+    generatedProfileUrl: "",
+    lastFetchedAt: "2026-01-01T00:00:00.000Z",
+    profileId: 1,
+  },
   "squadBuilderAccountRefetch/applyAccountRefetch": {
     accountId: 1,
     addedCharacterCount: 0,
@@ -70,13 +126,46 @@ const responseBodies = {
     removedSquadCharacterCount: 0,
     updatedCharacterCount: 0,
   },
+  "squadBuilderAccountRefetch/previewAccountRefetch": {
+    accountId: 1,
+    diff: {
+      accountId: 1,
+      added: [],
+      changed: [],
+      fetchedAt: "2026-01-01T00:00:00.000Z",
+      profileId: 1,
+      removed: [],
+      unchangedCount: 0,
+    },
+    fetchedAt: "2026-01-01T00:00:00.000Z",
+    firecrawlCreditsUsed: 1,
+    generatedProfileUrl: "",
+    profileId: 1,
+    refetchPreviewId: 1,
+  },
   "squadBuilderAccountSharing/listAccountAccessGrants": [],
+  "squadBuilderAccountSharing/listIncomingAccountInvites": [],
+  "squadBuilderAccountSharing/listSharedAccounts": [],
+  "squadBuilderAccountSharing/respondToAccountAccessInvite": {
+    accessId: 1,
+    accountDisplayName: "",
+    accountId: 1,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    generatedProfileUrl: "",
+    invitedUserId: "user",
+    ownerUserId: "owner",
+    ownerUserImage: null,
+    ownerUserName: "",
+    status: "accepted",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
   "squadBuilderAccountSharing/revokeAccountAccess": {
     accessId: 1,
     accountId: 1,
     removedSquadCharacterCount: 0,
     revokedUserId: "user",
   },
+  "squadBuilderAccountSharing/searchAccountInviteTargets": [],
   "squadBuilderAccountSharing/sendAccountAccessInvite": {
     accessId: 1,
     accountDisplayName: "",
@@ -108,8 +197,20 @@ const responseBodies = {
     updatedAt: "2026-01-01T00:00:00.000Z",
     visibility: "private",
   },
-  "squadBuilderSquadGroupSharing/countPendingSquadGroupInvites": 0,
+  "squadBuilderSquadGroupSharing/listIncomingSquadGroupInvites": [],
+  "squadBuilderSquadGroupSharing/listSharedSquadGroups": [],
   "squadBuilderSquadGroupSharing/listSquadGroupEditorGrants": [],
+  "squadBuilderSquadGroupSharing/respondToSquadGroupInvite": {
+    createdAt: "2026-01-01T00:00:00.000Z",
+    invitationId: 1,
+    ownerUserId: "owner",
+    ownerUserImage: null,
+    ownerUserName: "",
+    squadGroupId: 1,
+    squadGroupName: "",
+    status: "accepted",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
   "squadBuilderSquadGroupSharing/revokeSquadGroupEditor": {
     createdAt: "2026-01-01T00:00:00.000Z",
     invitationId: 1,
@@ -119,6 +220,18 @@ const responseBodies = {
     squadGroupId: 1,
     squadGroupName: "",
     status: "declined",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  "squadBuilderSquadGroupSharing/searchSquadEditorInviteTargets": [],
+  "squadBuilderSquadGroupSharing/sendSquadGroupEditorInvite": {
+    createdAt: "2026-01-01T00:00:00.000Z",
+    invitationId: 1,
+    ownerUserId: "owner",
+    ownerUserImage: null,
+    ownerUserName: "",
+    squadGroupId: 1,
+    squadGroupName: "",
+    status: "pending",
     updatedAt: "2026-01-01T00:00:00.000Z",
   },
   "todo/listTodos": [],
@@ -145,7 +258,10 @@ const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
       // SAFETY: Effect HttpApi exposes its runtime group and endpoint objects
       // through an untyped reflection API. The contract supplies string paths.
       // oxlint-disable-next-line typescript/no-unsafe-argument, typescript/no-unsafe-member-access
-      endpoints.set(endpoint.path, { group: groupName, method });
+      endpoints.set(`${endpoint.method} ${endpoint.path}`, {
+        group: groupName,
+        method,
+      });
     }
   }
 
@@ -178,14 +294,14 @@ const decodePayload = (body: Uint8Array): HttpJsonBody =>
  * Creates a real HttpApiClient test layer and records decoded endpoint calls.
  *
  * The layer performs no I/O until a test runs an Effect through it, so it can
- * be shared by Atom and Query tests without either registry owning transport.
+ * be shared by Query tests without owning transport state.
  */
 export const makeHttpApiTestLayer = () => {
   const calls: HttpApiTestCall[] = [];
   const endpoints = makeEndpointLookup();
 
   const httpClient = HttpClient.make((request, url) => {
-    const endpoint = endpoints.get(url.pathname);
+    const endpoint = endpoints.get(`${request.method} ${url.pathname}`);
     if (endpoint === undefined) {
       return Effect.die(new Error(`Unhandled test endpoint: ${url.pathname}`));
     }
