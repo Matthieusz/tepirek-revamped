@@ -153,7 +153,6 @@ interface AuctionTableProps {
 }
 
 interface AuctionTableContentProps extends AuctionTableProps {
-  readonly isRefreshing: boolean;
   readonly onRetry: () => void;
   readonly refreshError: unknown;
   readonly signups: readonly AuctionSignup[];
@@ -164,7 +163,6 @@ const rowValues = AUCTION_SLOT_LEVELS;
 
 const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
   currentUserId,
-  isRefreshing,
   onRetry,
   profession,
   refreshError,
@@ -238,15 +236,7 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
   };
 
   return (
-    <div className="space-y-2">
-      {isRefreshing ? (
-        <p
-          aria-live="polite"
-          className="text-muted-foreground text-center text-xs"
-        >
-          Odświeżanie…
-        </p>
-      ) : null}
+    <div className="space-y-4">
       {refreshError === undefined ? null : (
         <div
           aria-live="assertive"
@@ -372,15 +362,23 @@ const AuctionTable: React.FC<AuctionTableProps> = (props) => {
   }
 
   return (
-    <AuctionTableContent
-      {...props}
-      isRefreshing={signupsQuery.isFetching}
-      onRetry={() => {
-        void signupsQuery.refetch();
-      }}
-      refreshError={signupsQuery.isError ? signupsQuery.error : undefined}
-      signups={signupsQuery.data ?? []}
-    />
+    <div className="space-y-2">
+      <div className="text-muted-foreground h-4 text-center text-xs">
+        {signupsQuery.isFetching ? (
+          <p aria-live="polite">Odświeżanie…</p>
+        ) : null}
+      </div>
+      <div className="border-border bg-card rounded-xl border p-6">
+        <AuctionTableContent
+          {...props}
+          onRetry={() => {
+            void signupsQuery.refetch();
+          }}
+          refreshError={signupsQuery.isError ? signupsQuery.error : undefined}
+          signups={signupsQuery.data ?? []}
+        />
+      </div>
+    </div>
   );
 };
 
