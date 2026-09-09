@@ -2,6 +2,7 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
+  clearAuctionSignups,
   getAuctionStats,
   listAuctionSignups,
   removeAuctionSignup,
@@ -114,6 +115,25 @@ export const auctionStatsQueryOptions = (
     queryFn: async ({ signal }) =>
       await runner(getAuctionStats(group), { signal }),
     queryKey: auctionStatsQueryKey(group),
+  });
+
+/** Returns mutation options for clearing signups and refreshing their group. */
+export const clearAuctionSignupsMutationOptions = (
+  queryClient: QueryClient,
+  group: AuctionGroupInput,
+  runner: AuctionApiRunner = runAppHttpApi,
+  callbacks: AuctionMutationCallbacks = {}
+) =>
+  mutationOptions({
+    mutationFn: async () => await runner(clearAuctionSignups(group)),
+    mutationKey: auctionMutationKey(group),
+    onError: (error: AuctionMutationError) => {
+      callbacks.onError?.(error);
+    },
+    onSettled: async () => {
+      await invalidateAuctionGroupAfterMutation(queryClient, group, callbacks);
+    },
+    retry: false,
   });
 
 /** Returns mutation options for toggling a signup and refreshing its group. */

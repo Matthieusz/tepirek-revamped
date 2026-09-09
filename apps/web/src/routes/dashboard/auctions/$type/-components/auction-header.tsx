@@ -1,13 +1,29 @@
-import { UsersIcon } from "@hugeicons/core-free-icons";
+import { Delete01Icon, UsersIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import type { ReactElement } from "react";
 import type React from "react";
+import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { QueryErrorState } from "@/components/ui/query-error-state";
-import { auctionStatsQueryOptions } from "@/features/auctions/auction-queries";
+import {
+  auctionStatsQueryOptions,
+  clearAuctionSignupsMutationOptions,
+} from "@/features/auctions/auction-queries";
 import { getErrorMessage } from "@/lib/errors";
 
 interface AuctionHeaderProps {
@@ -16,6 +32,7 @@ interface AuctionHeaderProps {
   icon: ReactElement;
   profession: AuctionProfession;
   type: AuctionType;
+  isAdmin: boolean;
 }
 
 interface AuctionHeaderContentProps {
@@ -26,11 +43,17 @@ interface AuctionHeaderContentProps {
     readonly uniqueUsers: number;
   };
   readonly title: string;
+  readonly isAdmin: boolean;
+  readonly isClearing: boolean;
+  readonly onClear: () => void;
 }
 
 const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
   description,
   icon,
+  isAdmin,
+  isClearing,
+  onClear,
   stats,
   title,
 }) => (
@@ -47,7 +70,50 @@ const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
       </div>
     </div>
 
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center justify-end gap-4">
+      {isAdmin ? (
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                disabled={isClearing || stats.totalSignups === 0}
+                size="sm"
+                variant="destructive"
+              />
+            }
+          >
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Delete01Icon}
+              className="size-4"
+            />
+            Usuń wszystkie zapisy
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Usunąć wszystkie zapisy z tej licytacji?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Wszystkie obecne zapisy zostaną trwale usunięte. Tej operacji
+                nie można cofnąć.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isClearing}>
+                Anuluj
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isClearing}
+                onClick={onClear}
+                variant="destructive"
+              >
+                {isClearing ? "Usuwanie…" : "Usuń wszystkie"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
       <div className="bg-background/50 flex items-center gap-2 rounded-lg px-3 py-2">
         <HugeiconsIcon
           aria-hidden="true"
@@ -70,6 +136,26 @@ const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
 );
 
 export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
+  const queryClient = useQueryClient();
+  const group = {
+    profession: props.profession,
+    type: props.type,
+  };
+  const clearMutation = useMutation(
+    clearAuctionSignupsMutationOptions(queryClient, group, undefined, {
+      onRefreshError: () => {
+        toast.error("Nie udało się odświeżyć danych licytacji.");
+      },
+    })
+  );
+  const handleClear = async () => {
+    try {
+      await clearMutation.mutateAsync();
+      toast.success("Usunięto wszystkie zapisy z licytacji");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
+    }
+  };
   const statsQuery = useQuery(
     auctionStatsQueryOptions({
       profession: props.profession,
@@ -99,6 +185,11 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
     <AuctionHeaderContent
       description={props.description}
       icon={props.icon}
+      isAdmin={props.isAdmin}
+      isClearing={clearMutation.isPending}
+      onClear={() => {
+        void handleClear();
+      }}
       stats={statsQuery.data}
       title={props.title}
     />

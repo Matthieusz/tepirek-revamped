@@ -39,6 +39,14 @@ export const getAuctionStats = Effect.fn("Web.Auction.getStats")(
   }
 );
 
+/** Removes all signups from one auction group. */
+export const clearAuctionSignups = Effect.fn("Web.Auction.clearSignups")(
+  function* clearAuctionSignupsEffect(payload: AuctionGroupInput) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.auction.clearAuctionSignups({ payload });
+  }
+);
+
 /** Toggles the current user's signup in one auction slot. */
 export const toggleAuctionSignup = Effect.fn("Web.Auction.toggleSignup")(
   function* toggleAuctionSignupEffect(payload: ToggleAuctionSignupInput) {
