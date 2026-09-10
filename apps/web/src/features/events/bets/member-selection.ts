@@ -1,5 +1,6 @@
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
+import * as Data from "effect/Data";
 import * as HashSet from "effect/HashSet";
 
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
@@ -17,12 +18,14 @@ import type { SelectableUser } from "@/features/events/bets/user-select-list";
 type PointsPreviewVariant = "default" | "destructive" | "secondary";
 
 /** Closed state for the add-flow copy-last-bet action. */
-export type LastBetState =
-  | {
-      readonly _tag: "available";
-      readonly members: readonly { readonly userId: string }[];
-    }
-  | { readonly _tag: "unavailable" };
+export type LastBetState = Data.TaggedEnum<{
+  readonly available: {
+    readonly members: readonly { readonly userId: string }[];
+  };
+  readonly unavailable: Record<never, never>;
+}>;
+
+export const LastBetState = Data.taggedEnum<LastBetState>();
 
 interface PointsPreview {
   currentMemberCount: number;
@@ -40,6 +43,7 @@ export const filterUsersBySearch = (
   searchQuery: string
 ): SelectableUser[] => {
   const query = searchQuery.toLowerCase();
+
   return Arr.filter<SelectableUser>((user) =>
     user.name.toLowerCase().includes(query)
   )(users);
@@ -56,7 +60,9 @@ export const getAvailableUsers = (
   if (users === undefined) {
     return [];
   }
+
   const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
+
   return Arr.filter<SelectableUser>(
     (user) => !HashSet.has(selectedUserIdSet, user.id)
   )(filterUsersBySearch(users, searchQuery));
@@ -73,7 +79,9 @@ export const getSelectedUsers = (
   if (users === undefined) {
     return [];
   }
+
   const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
+
   return Arr.filter<SelectableUser>((user) =>
     HashSet.has(selectedUserIdSet, user.id)
   )(users);
@@ -89,6 +97,7 @@ export const toggleUser = (
   if (Arr.contains(userId)(selectedUserIds)) {
     return Arr.filter<string>((id) => id !== userId)(selectedUserIds);
   }
+
   return Arr.append(userId)(selectedUserIds);
 };
 
@@ -116,9 +125,10 @@ export const restoreSelection = (
  * Copy the last bet's member IDs into the selection (add flow).
  */
 export const copyLastBet = (lastBet: LastBetState): string[] => {
-  if (lastBet._tag === "unavailable") {
+  if (LastBetState.$is("unavailable")(lastBet)) {
     return [];
   }
+
   return lastBet.members.map((member) => member.userId);
 };
 
@@ -139,12 +149,15 @@ export const getAvailableListState = (input: {
   if (input.usersLoading) {
     return "loading";
   }
+
   if (input.users === undefined || input.users.length === 0) {
     return "no-users";
   }
+
   if (input.availableUsers.length === 0) {
     return "no-search-results";
   }
+
   return "has-users";
 };
 
@@ -159,6 +172,7 @@ export const getPointsPreview = (
   const currentPointsPerMember = calculatePointsPerMember(currentMemberCount);
 
   let variant: PointsPreviewVariant = "secondary";
+
   if (newPointsPerMember > currentPointsPerMember) {
     variant = "default";
   } else if (newPointsPerMember < currentPointsPerMember) {

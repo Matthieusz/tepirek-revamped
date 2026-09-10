@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
+import { LastBetState } from "@/features/events/bets/member-selection";
 
 const users = [
   { id: "u1", image: null, name: "Ala" },
@@ -38,7 +39,7 @@ describe("custom picker fields", () => {
       <HeroBetMemberPicker
         fieldName="userIds"
         idPrefix="members"
-        lastBet={{ _tag: "unavailable" }}
+        lastBet={LastBetState.unavailable()}
         onBlur={() => {}}
         onChange={() => {}}
         selectedUserIds={["u1"]}

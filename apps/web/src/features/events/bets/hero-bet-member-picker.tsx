@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import * as HashSet from "effect/HashSet";
+import * as Predicate from "effect/Predicate";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -64,6 +65,7 @@ const AvailableListEmptyState = ({
   if (state === "loading") {
     return <p className="text-muted-foreground text-sm">Ładowanie...</p>;
   }
+
   if (state === "no-users") {
     return (
       <p className="text-muted-foreground text-sm">
@@ -71,6 +73,7 @@ const AvailableListEmptyState = ({
       </p>
     );
   }
+
   if (state === "no-search-results") {
     return (
       <p className="text-muted-foreground text-sm">
@@ -78,6 +81,7 @@ const AvailableListEmptyState = ({
       </p>
     );
   }
+
   return null;
 };
 
@@ -144,7 +148,7 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
         </Button>
       ) : (
         <Button
-          disabled={props.lastBet._tag === "unavailable"}
+          disabled={Predicate.isTagged("unavailable")(props.lastBet)}
           onClick={() => {
             onChange(copyLastBet(props.lastBet));
           }}
@@ -384,20 +388,25 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const idPrefix = props.idPrefix ?? "user";
   const selectedUserIdSet = HashSet.fromIterable(props.selectedUserIds);
+
   const availableUsers = getAvailableUsers(
     props.users,
     props.selectedUserIds,
     searchQuery
   );
+
   const selectedUsers = getSelectedUsers(props.users, props.selectedUserIds);
+
   const availableCount =
     props.users?.filter((user) => !HashSet.has(selectedUserIdSet, user.id))
       .length ?? 0;
+
   const listState = getAvailableListState({
     availableUsers,
     users: props.users,
     usersLoading: props.usersLoading,
   });
+
   const preview =
     props.variant === "edit"
       ? getPointsPreview(
