@@ -31,17 +31,6 @@ export type UnsafeDictionary = {
 	readonly unsafeValue: "any" | "empty-object" | "object" | "union" | "unknown";
 };
 
-export type WideningTargetKind =
-	| "anonymous object"
-	| "generic container"
-	| "object"
-	| "open dictionary"
-	| "unknown";
-
-export type WideningTarget = {
-	readonly kind: WideningTargetKind;
-};
-
 export type TypeEnvironment = {
 	readonly interfaces: ReadonlyMap<string, readonly ESTree.TSInterfaceDeclaration[]>;
 	readonly typeAliases: LexicalTypeAliasEnvironment;
@@ -475,19 +464,6 @@ function classifyAliasBroadTarget(
 		nextSubstitutions,
 		nextResolving,
 	);
-}
-
-export function isPopulatedObjectExpression(expression: ESTree.Expression): boolean {
-	let current = expression;
-	while (
-		current.type === "ParenthesizedExpression" ||
-		current.type === "TSAsExpression" ||
-		current.type === "TSTypeAssertion" ||
-		current.type === "TSNonNullExpression"
-	) {
-		current = current.expression;
-	}
-	return current.type === "ObjectExpression" && current.properties.length > 0;
 }
 
 export function isKnownEvidenceExpression(expression: ESTree.Expression): boolean {
