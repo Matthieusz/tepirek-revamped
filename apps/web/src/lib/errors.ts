@@ -1,3 +1,4 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import {
   HttpApiBadRequestError,
   HttpApiConflictError,
@@ -11,14 +12,20 @@ import {
 } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { HttpApiError as HttpApiErrorType } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 
 const fallbackErrorMessage = "Wystąpił błąd. Spróbuj ponownie później.";
+
 const forbiddenMessage = "Nie masz uprawnień do wykonania tej akcji.";
+
 const unauthorizedMessage = "Zaloguj się ponownie, aby kontynuować.";
+
 const notFoundMessage = "Nie znaleziono zasobu.";
+
 const conflictMessage =
   "Nie można zapisać zmian, bo zasób został już zmieniony.";
+
 const validationMessage = "Sprawdź dane i spróbuj ponownie.";
 
 type PreviewOwnedAccountImportFailure = Extract<
@@ -29,15 +36,23 @@ type PreviewOwnedAccountImportFailure = Extract<
 type SquadBuilderLineError = PreviewOwnedAccountImportFailure["error"];
 
 const isUnauthorizedApiError = Schema.is(HttpApiUnauthorizedError);
+
 const isForbiddenApiError = Schema.is(HttpApiForbiddenError);
+
 const isBadRequestApiError = Schema.is(HttpApiBadRequestError);
+
 const isConflictApiError = Schema.is(HttpApiConflictError);
+
 const isNotFoundApiError = Schema.is(HttpApiNotFoundError);
+
 const isPersistenceApiError = Schema.is(HttpApiPersistenceUnavailableError);
+
 const isRateLimitedApiError = Schema.is(HttpApiRateLimitedError);
+
 const isUpstreamUnavailableApiError = Schema.is(
   HttpApiUpstreamUnavailableError
 );
+
 const isApiError = Schema.is(HttpApiError);
 
 /** Values accepted at the JavaScript exception boundary and narrowed below. */
@@ -86,54 +101,65 @@ export const getApiErrorMessage = (error: HttpApiErrorType): string => {
 /** Maps typed line failures returned inside a squad-builder success payload. */
 export const getSquadBuilderLineErrorMessage = (
   error: SquadBuilderLineError
-): string => {
-  switch (error._tag) {
-    case "DuplicateProfileInBatch": {
-      return "Ten profil występuje na liście więcej niż raz.";
-    }
-    case "FirecrawlMonthlyBudgetExhausted":
-    case "FirecrawlUserMonthlyBudgetExhausted": {
-      return "Limit pobierania profili został wyczerpany. Spróbuj ponownie później.";
-    }
-    case "FirecrawlRequestFailed": {
-      return "Nie udało się pobrać profilu Margonem.";
-    }
-    case "FirecrawlResponseNotParseable": {
-      return "Nie udało się odczytać danych z profilu Margonem.";
-    }
-    case "InvalidMargonemProfileUrl": {
-      return "Podaj poprawny link do profilu Margonem.";
-    }
-    case "MargonemAccountAlreadyOwnedByActor": {
-      return "Możesz zarządzać tylko własnymi kontami.";
-    }
-    case "MargonemAccountAlreadySharedWithActor": {
-      return "To konto jest już z Tobą współdzielone.";
-    }
-    case "MargonemAccountOwnedByAnotherUser": {
-      return "To konto należy do innego użytkownika.";
-    }
-    case "MargonemCharacterRowInvalid": {
-      return "Profil zawiera nieprawidłowe dane postaci.";
-    }
-    case "MargonemCharacterRowsNotFound": {
-      return "Nie znaleziono postaci na tym profilu.";
-    }
-    case "MargonemProfileNameNotFound": {
-      return "Nie znaleziono nazwy profilu Margonem.";
-    }
-    case "MissingMargonemProfileId": {
-      return "Link nie zawiera identyfikatora profilu Margonem.";
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później.";
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
-};
+): string =>
+  Match.value(error).pipe(
+    Match.tag(
+      "DuplicateProfileInBatch",
+      () => "Ten profil występuje na liście więcej niż raz."
+    ),
+    Match.tag(
+      "FirecrawlMonthlyBudgetExhausted",
+      "FirecrawlUserMonthlyBudgetExhausted",
+      () =>
+        "Limit pobierania profili został wyczerpany. Spróbuj ponownie później."
+    ),
+    Match.tag(
+      "FirecrawlRequestFailed",
+      () => "Nie udało się pobrać profilu Margonem."
+    ),
+    Match.tag(
+      "FirecrawlResponseNotParseable",
+      () => "Nie udało się odczytać danych z profilu Margonem."
+    ),
+    Match.tag(
+      "InvalidMargonemProfileUrl",
+      () => "Podaj poprawny link do profilu Margonem."
+    ),
+    Match.tag(
+      "MargonemAccountAlreadyOwnedByActor",
+      () => "Możesz zarządzać tylko własnymi kontami."
+    ),
+    Match.tag(
+      "MargonemAccountAlreadySharedWithActor",
+      () => "To konto jest już z Tobą współdzielone."
+    ),
+    Match.tag(
+      "MargonemAccountOwnedByAnotherUser",
+      () => "To konto należy do innego użytkownika."
+    ),
+    Match.tag(
+      "MargonemCharacterRowInvalid",
+      () => "Profil zawiera nieprawidłowe dane postaci."
+    ),
+    Match.tag(
+      "MargonemCharacterRowsNotFound",
+      () => "Nie znaleziono postaci na tym profilu."
+    ),
+    Match.tag(
+      "MargonemProfileNameNotFound",
+      () => "Nie znaleziono nazwy profilu Margonem."
+    ),
+    Match.tag(
+      "MissingMargonemProfileId",
+      () => "Link nie zawiera identyfikatora profilu Margonem."
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      () =>
+        "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później."
+    ),
+    Match.exhaustive
+  );
 
 /**
  * Converts errors at JavaScript and Promise boundaries into safe UI copy.
