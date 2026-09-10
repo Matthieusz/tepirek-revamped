@@ -328,7 +328,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
 
         let removedSquadCharacterCount = 0;
 
-        if (Predicate.isTagged("accepted")(transitioned)) {
+        if (transitioned.previousStatus === "accepted") {
           const characterSelect = tx
             .select({ id: margonemCharacter.id })
             .from(margonemCharacter)
