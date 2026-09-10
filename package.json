@@ -34,16 +34,17 @@
   },
   "devDependencies": {
     "@effect/tsgo": "^0.41.0",
+    "@oxlint/plugins": "1.82.0",
     "@tepirek-revamped/config": "workspace:*",
-    "@types/node": "^26.4.1",
-    "knip": "^6.34.0",
+    "@types/node": "^26.5.0",
+    "knip": "^6.35.1",
     "lefthook": "latest",
     "oxfmt": "^0.66.0",
-    "oxlint": "1.81.0",
+    "oxlint": "1.82.0",
     "oxlint-tsgolint": "^7.0.2001",
     "turbo": "^2.10.12",
     "typescript": "catalog:",
-    "ultracite": "7.10.7"
+    "ultracite": "7.11.1"
   },
   "devEngines": {
     "packageManager": {
