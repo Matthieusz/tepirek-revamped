@@ -51,6 +51,7 @@ describe("legend catalog synchronization", () => {
     "records a safe failure summary without publishing a catalog",
     () => {
       const failures: LegendCatalogSyncFailure[] = [];
+
       const forum = MargonemForumClientService.of({
         fetchTopic: (category) => Effect.succeed(emptyTopic(category)),
       });
@@ -64,6 +65,7 @@ describe("legend catalog synchronization", () => {
             errorTag: "MargonemForumGuideNotParseable",
             sourcePosts: [],
           });
+
           return error;
         }),
         Effect.provide(provideSync(forum, makeStore(failures)))
@@ -79,6 +81,7 @@ describe("legend catalog synchronization", () => {
       let activeRequests = 0;
       let maximumActiveRequests = 0;
       let requestCount = 0;
+
       const forum = MargonemForumClientService.of({
         fetchTopic: (category) =>
           Effect.gen(function* controlledFetch() {
@@ -88,24 +91,31 @@ describe("legend catalog synchronization", () => {
               maximumActiveRequests,
               activeRequests
             );
+
             if (requestCount === 2) {
               yield* Deferred.succeed(entered, null);
             }
+
             yield* Deferred.await(release);
             activeRequests -= 1;
+
             return emptyTopic(category);
           }),
       });
 
       return yield* Effect.gen(function* runWithSynchronizationLayer() {
         const sync = yield* LegendCatalogSyncService;
+
         const first = yield* sync
           .synchronize()
           .pipe(Effect.exit, Effect.forkChild);
+
         yield* Deferred.await(entered);
+
         const second = yield* sync
           .synchronize()
           .pipe(Effect.exit, Effect.forkChild);
+
         yield* Effect.yieldNow;
 
         expect(maximumActiveRequests).toBe(2);

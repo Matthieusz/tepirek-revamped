@@ -83,12 +83,15 @@ const HistoryPage = ({ session }: HistoryPageProps) => {
     limit: ITEMS_PER_PAGE,
     page: 1,
   };
+
   if (filter.queryInputs.eventId !== undefined) {
     betPageInput.eventId = filter.queryInputs.eventId;
   }
+
   if (filter.queryInputs.heroId !== undefined) {
     betPageInput.heroId = filter.queryInputs.heroId;
   }
+
   const betsQuery = useQuery(paginatedBetsQueryOptions(betPageInput));
 
   return (
@@ -120,9 +123,11 @@ const HistoryContent = ({
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const [loadedPages, setLoadedPages] = useState<readonly number[]>([1]);
   const queryClient = useQueryClient();
+
   const deleteBet = useMutation(
     deleteBetMutationOptions(queryClient, runAppHttpApi)
   );
+
   const betsData = betsQuery.data;
   const isAdminUser = isAdmin(session);
   const allBets = betsData?.items ?? [];
@@ -152,6 +157,7 @@ const HistoryContent = ({
   };
 
   let betsContent: ReactNode;
+
   if (betsQuery.isPending && betsData === undefined) {
     betsContent = <LoadingSpinner />;
   } else if (betsQuery.isError && betsData === undefined) {
@@ -352,6 +358,7 @@ const HistoryPageChunk = (props: HistoryPageChunkProps) => {
   if (query.isPending && query.data === undefined) {
     return <LoadingSpinner />;
   }
+
   if (query.isError && query.data === undefined) {
     return (
       <QueryErrorState
@@ -424,6 +431,7 @@ const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
   useEffect(() => {
     const trigger = triggerRef.current;
     let observer: IntersectionObserver | undefined;
+
     if (trigger) {
       observer = new IntersectionObserver(
         ([entry]) => {

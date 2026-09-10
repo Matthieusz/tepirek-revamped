@@ -6,6 +6,7 @@ const routeApi = getRouteApi("/dashboard/events/heroes");
 
 const EventsHeroesRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <EventsHeroesPage session={session} />;
 };
 

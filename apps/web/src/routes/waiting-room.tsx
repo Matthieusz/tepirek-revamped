@@ -9,12 +9,14 @@ const routeApi = getRouteApi("/waiting-room");
 
 const WaitingRoomRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <WaitingRoomPage session={session} />;
 };
 
 export const Route = createFileRoute("/waiting-room")({
   beforeLoad: async ({ context }) => {
     const session = await requireUnverified(context.getUser);
+
     return { session };
   },
   component: WaitingRoomRoute,

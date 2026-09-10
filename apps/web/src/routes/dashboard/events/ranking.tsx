@@ -14,6 +14,7 @@ const routeApi = getRouteApi("/dashboard/events/ranking");
 
 const RankingRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <RankingPage session={session} />;
 };
 

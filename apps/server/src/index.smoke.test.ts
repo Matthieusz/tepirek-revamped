@@ -40,6 +40,7 @@ const withServerApplication = <A>(
   Effect.scoped(
     Effect.gen(function* scopedServerApplication() {
       const context = yield* Layer.build(serverApplicationLayer);
+
       return yield* runWith(Context.get(context, ServerApplication));
     })
   );
@@ -50,6 +51,7 @@ it.effect("responds to the Effect HttpApi health endpoint", () =>
       const response = yield* Effect.promise(
         async () => await app.request("/health")
       );
+
       const body = yield* Effect.promise(async () => await response.json());
 
       expect(body).toBe("OK");
@@ -64,6 +66,7 @@ it.effect("forwards application API routes to the Effect handler", () =>
       const response = yield* Effect.promise(
         async () => await app.request("/announcements")
       );
+
       const body = yield* Effect.promise(async () => await response.text());
 
       expect(body).toContain("AnnouncementUnauthorized");

@@ -1,7 +1,9 @@
 import * as HashMap from "effect/HashMap";
+import * as Predicate from "effect/Predicate";
 import { describe, expect, it } from "vitest";
 
 import {
+  PlacementError,
   applyPlacement,
   getPlacementError,
   isDraftEqual,
@@ -31,7 +33,9 @@ const draft: SquadGroupDraft = {
     },
   ],
 };
+
 const [firstSquad, secondSquad] = draft.squads;
+
 if (firstSquad === undefined || secondSquad === undefined) {
   throw new Error("Test draft must include two squads");
 }
@@ -48,7 +52,8 @@ describe("squad group draft", () => {
     const result = applyPlacement(draft, 1, "new-squad", characters, true);
 
     expect(result._tag).toBe("success");
-    if (result._tag === "success") {
+
+    if (Predicate.isTagged("success")(result)) {
       expect(result.draft.squads[0]?.characters).toEqual([]);
       expect(result.draft.squads[1]?.characters).toEqual([
         { characterId: 2 },
@@ -58,11 +63,12 @@ describe("squad group draft", () => {
   });
 
   it("rejects a duplicate account and a full roster", () => {
-    expect(getPlacementError(draft, 4, "new-squad", characters, true)).toEqual({
-      _tag: "accountAlreadyRepresented",
-      accountDisplayName: "Konto B",
-      squadName: "Drugi",
-    });
+    expect(getPlacementError(draft, 4, "new-squad", characters, true)).toEqual(
+      PlacementError.accountAlreadyRepresented({
+        accountDisplayName: "Konto B",
+        squadName: "Drugi",
+      })
+    );
 
     const fullDraft: SquadGroupDraft = {
       ...draft,
@@ -76,16 +82,19 @@ describe("squad group draft", () => {
         secondSquad,
       ],
     };
+
     let fullCharacters = characters;
+
     for (let index = 10; index < 20; index += 1) {
       fullCharacters = HashMap.set(fullCharacters, index, {
         accountDisplayName: `Konto ${index}`,
         accountId: `account-${index}`,
       });
     }
+
     expect(
       getPlacementError(fullDraft, 3, "saved-11", fullCharacters, true)
-    ).toEqual({ _tag: "squadFull", squadName: "Pierwszy" });
+    ).toEqual(PlacementError.squadFull({ squadName: "Pierwszy" }));
   });
 
   it("removes characters without changing other squads", () => {

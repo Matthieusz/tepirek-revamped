@@ -25,6 +25,7 @@ export type Skill = SkillSummary;
 export const listSkillRanges = Effect.fn("Web.Skill.listRanges")(
   function* listSkillRangesEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.listRanges({});
   }
 );
@@ -33,6 +34,7 @@ export const listSkillRanges = Effect.fn("Web.Skill.listRanges")(
 export const listSkillProfessions = Effect.fn("Web.Skill.listProfessions")(
   function* listSkillProfessionsEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.listProfessions({});
   }
 );
@@ -41,6 +43,7 @@ export const listSkillProfessions = Effect.fn("Web.Skill.listProfessions")(
 export const getSkillRangeBySlug = Effect.fn("Web.Skill.getRangeBySlug")(
   function* getSkillRangeBySlugEffect(slug: string) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.getRangeBySlug({ payload: { slug } });
   }
 );
@@ -49,6 +52,7 @@ export const getSkillRangeBySlug = Effect.fn("Web.Skill.getRangeBySlug")(
 export const listSkillsByRange = Effect.fn("Web.Skill.listByRange")(
   function* listSkillsByRangeEffect(rangeId: number) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.listSkillsByRange({
       payload: { rangeId: yield* asSkillRangeId(rangeId) },
     });
@@ -59,6 +63,7 @@ export const listSkillsByRange = Effect.fn("Web.Skill.listByRange")(
 export const createSkillProfession = Effect.fn("Web.Skill.createProfession")(
   function* createSkillProfessionEffect(payload: CreateProfessionPayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.createProfession({ payload });
   }
 );
@@ -67,6 +72,7 @@ export const createSkillProfession = Effect.fn("Web.Skill.createProfession")(
 export const createSkillRange = Effect.fn("Web.Skill.createRange")(
   function* createSkillRangeEffect(payload: CreateRangePayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.createRange({ payload });
   }
 );
@@ -84,6 +90,7 @@ export interface CreateSkillInput extends Omit<
 export const createSkill = Effect.fn("Web.Skill.create")(
   function* createSkillEffect(payload: CreateSkillInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.createSkill({
       payload: {
         ...payload,
@@ -98,6 +105,7 @@ export const createSkill = Effect.fn("Web.Skill.create")(
 export const deleteSkillRange = Effect.fn("Web.Skill.deleteRange")(
   function* deleteSkillRangeEffect(id: number) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.deleteRange({
       payload: { id: yield* asSkillRangeId(id) },
     });
@@ -108,6 +116,7 @@ export const deleteSkillRange = Effect.fn("Web.Skill.deleteRange")(
 export const deleteSkill = Effect.fn("Web.Skill.delete")(
   function* deleteSkillEffect(id: number) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.skills.deleteSkill({
       payload: { id: yield* asSkillId(id) },
     });

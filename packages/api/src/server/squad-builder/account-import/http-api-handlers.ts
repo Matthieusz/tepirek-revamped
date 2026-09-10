@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
@@ -33,6 +35,7 @@ import { withRequestCorrelation } from "../request-correlation.ts";
 type DeleteOwnedAccountError = Effect.Error<
   ReturnType<typeof deleteOwnedAccountWorkflow>
 >;
+
 type ListOwnedAccountsError = Effect.Error<
   ReturnType<typeof listOwnedAccountsWorkflow>
 >;
@@ -51,19 +54,23 @@ type PreviewMargonemProfileImportProtocolError =
   | SquadBuilderRateLimited
   | SquadBuilderUpstreamUnavailable
   | SquadBuilderPersistenceUnavailable;
+
 type PreviewOwnedAccountImportsProtocolError =
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type ConfirmOwnedAccountImportProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderConflict
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type UpdateOwnedAccountDisplayNameProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type DeleteOwnedAccountProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
@@ -93,64 +100,74 @@ function mapAccountImportError(
   | PreviewMargonemProfileImportProtocolError
   | SquadBuilderNotFound
   | SquadBuilderForbidden {
-  switch (error._tag) {
-    case "PendingMargonemAccountImportNotFound":
-    case "MargonemAccountNotFound": {
-      return new SquadBuilderNotFound({ message: error._tag });
-    }
-    case "ActorDoesNotOwnMargonemAccount": {
-      return new SquadBuilderForbidden({ message: error._tag });
-    }
-    case "InvalidMargonemProfileUrl":
-    case "MissingMargonemProfileId":
-    case "MargonemProfileNameNotFound":
-    case "MargonemCharacterRowsNotFound":
-    case "MargonemCharacterRowInvalid":
-    case "InvalidAccountDisplayName":
-    case "EmptyProfileUrlBatch":
-    case "TooManyProfileUrlsInBatch": {
-      return new SquadBuilderInvalidInput({ message: error._tag });
-    }
-    case "MargonemAccountAlreadyOwnedByActor":
-    case "MargonemAccountAlreadySharedWithActor":
-    case "MargonemAccountOwnedByAnotherUser": {
-      return new SquadBuilderConflict({ message: error._tag });
-    }
-    case "FirecrawlUserMonthlyBudgetExhausted": {
-      return new SquadBuilderRateLimited({ message: error._tag });
-    }
-    case "FirecrawlMonthlyBudgetExhausted":
-    case "FirecrawlRequestFailed":
-    case "FirecrawlResponseNotParseable": {
-      return new SquadBuilderUpstreamUnavailable({ message: error._tag });
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return new SquadBuilderPersistenceUnavailable({
-        operation: error.operation,
-      });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
+  return Match.value(error).pipe(
+    Match.tag(
+      "PendingMargonemAccountImportNotFound",
+      "MargonemAccountNotFound",
+      (error) => new SquadBuilderNotFound({ message: error._tag })
+    ),
+    Match.tag(
+      "ActorDoesNotOwnMargonemAccount",
+      (error) => new SquadBuilderForbidden({ message: error._tag })
+    ),
+    Match.tag(
+      "InvalidMargonemProfileUrl",
+      "MissingMargonemProfileId",
+      "MargonemProfileNameNotFound",
+      "MargonemCharacterRowsNotFound",
+      "MargonemCharacterRowInvalid",
+      "InvalidAccountDisplayName",
+      "EmptyProfileUrlBatch",
+      "TooManyProfileUrlsInBatch",
+      (error) => new SquadBuilderInvalidInput({ message: error._tag })
+    ),
+    Match.tag(
+      "MargonemAccountAlreadyOwnedByActor",
+      "MargonemAccountAlreadySharedWithActor",
+      "MargonemAccountOwnedByAnotherUser",
+      (error) => new SquadBuilderConflict({ message: error._tag })
+    ),
+    Match.tag(
+      "FirecrawlUserMonthlyBudgetExhausted",
+      (error) => new SquadBuilderRateLimited({ message: error._tag })
+    ),
+    Match.tag(
+      "FirecrawlMonthlyBudgetExhausted",
+      "FirecrawlRequestFailed",
+      "FirecrawlResponseNotParseable",
+      (error) => new SquadBuilderUpstreamUnavailable({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      (error) =>
+        new SquadBuilderPersistenceUnavailable({
+          operation: error.operation,
+        })
+    ),
+    Match.exhaustive
+  );
 }
 
 const mapPreviewMargonemProfileImportError = (
   error: PreviewMargonemProfileImportError
 ): PreviewMargonemProfileImportProtocolError => mapAccountImportError(error);
+
 const mapPreviewOwnedAccountImportsError = (
   error: PreviewOwnedAccountImportsError
 ): PreviewOwnedAccountImportsProtocolError => mapAccountImportError(error);
+
 const mapConfirmOwnedAccountImportError = (
   error: ConfirmOwnedAccountImportError
 ): ConfirmOwnedAccountImportProtocolError => mapAccountImportError(error);
+
 const mapUpdateOwnedAccountDisplayNameError = (
   error: UpdateOwnedAccountDisplayNameError
 ): UpdateOwnedAccountDisplayNameProtocolError => mapAccountImportError(error);
+
 const mapDeleteOwnedAccountError = (
   error: DeleteOwnedAccountError
 ): DeleteOwnedAccountProtocolError => mapAccountImportError(error);
+
 const mapListOwnedAccountsError = (
   error: ListOwnedAccountsError
 ): SquadBuilderPersistenceUnavailable => mapAccountImportError(error);
@@ -165,6 +182,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.previewMargonemProfileImport")(
           function* previewMargonemProfileImport({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               previewMargonemProfileImportWorkflow({
@@ -180,6 +198,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.previewOwnedAccountImports")(
           function* previewOwnedAccountImports({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               previewOwnedAccountImportsWorkflow({
@@ -195,6 +214,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.confirmOwnedAccountImport")(
           function* confirmOwnedAccountImport({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               confirmOwnedAccountImportWorkflow({
@@ -211,6 +231,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.updateOwnedAccountDisplayName")(
           function* updateOwnedAccountDisplayName({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               updateOwnedAccountDisplayNameWorkflow({
@@ -227,6 +248,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.deleteOwnedAccount")(
           function* deleteOwnedAccountHandler({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               deleteOwnedAccountWorkflow({
@@ -242,6 +264,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountImport.listOwnedAccounts")(
           function* listOwnedAccountsHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listOwnedAccountsWorkflow({

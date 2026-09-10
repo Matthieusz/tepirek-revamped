@@ -21,6 +21,7 @@ interface HealthResponse {
 
 const makeHealthRunner = (responses: readonly HealthResponse[]) => {
   let calls = 0;
+
   const httpClient = HttpClient.make((request) => {
     const response = responses[Math.min(calls, responses.length - 1)];
     calls += 1;
@@ -36,6 +37,7 @@ const makeHealthRunner = (responses: readonly HealthResponse[]) => {
       )
     );
   });
+
   const client = HttpApiClient.makeWith(HealthHttpApi, {
     baseUrl: "http://localhost",
     httpClient,
@@ -59,6 +61,7 @@ describe("health query", () => {
 
     try {
       const query = healthQueryOptions(health.runner);
+
       const results = await Promise.all([
         testClient.queryClient.query(query),
         testClient.queryClient.query(query),
@@ -76,6 +79,7 @@ describe("health query", () => {
       makeHealthResponse(503),
       makeHealthResponse(),
     ]);
+
     const testClient = makeTestQueryClient();
     const query = { ...healthQueryOptions(health.runner), retry: false };
 
@@ -122,6 +126,7 @@ describe("health query", () => {
       makeHealthResponse(),
       makeHealthResponse(),
     ]);
+
     const testClient = makeTestQueryClient();
 
     try {

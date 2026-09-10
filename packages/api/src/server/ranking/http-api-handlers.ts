@@ -11,9 +11,9 @@ import {
 import type { RankingError } from "../../services/ranking/ranking-errors.ts";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { RankingService } from "../../services/ranking/ranking-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireVerifiedSession } = makeAuthorizationPolicy({
+const { requireVerifiedSession } = buildAuthorizationPolicy({
   forbidden: () => new RankingForbidden({ message: "FORBIDDEN" }),
   unauthorized: () => new RankingUnauthorized({ message: "UNAUTHORIZED" }),
   unverified: () =>
@@ -46,6 +46,7 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
           function* getHeroStats({ payload }) {
             const rankingService = yield* RankingService;
             yield* requireVerifiedSession();
+
             return yield* mapRankingError(
               "getHeroStats",
               rankingService.getHeroStats(payload.heroId)
@@ -59,6 +60,7 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
           function* getOldestUnpaidEvent() {
             const rankingService = yield* RankingService;
             yield* requireVerifiedSession();
+
             return yield* mapRankingError(
               "getOldestUnpaidEvent",
               rankingService.getOldestUnpaidEvent()
@@ -73,6 +75,7 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
         }) {
           const rankingService = yield* RankingService;
           yield* requireVerifiedSession();
+
           return yield* mapRankingError(
             "getRanking",
             rankingService.getRanking(payload)

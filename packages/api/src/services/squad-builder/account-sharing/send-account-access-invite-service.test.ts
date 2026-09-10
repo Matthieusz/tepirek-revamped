@@ -29,6 +29,7 @@ it.effect("sends an account access invite for a verified target", () => {
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
   const displayName = Effect.runSync(parseAccountDisplayName("Send account"));
+
   const store = makeAccountSharingStoreServiceTestService({
     findAccountOwnerUserId: (input) => {
       expect(input).toEqual({ accountId });
@@ -67,10 +68,12 @@ it.effect("sends an account access invite for a verified target", () => {
       });
     },
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const invite = yield* send({
       accountId,
       actorUserId,
@@ -88,13 +91,16 @@ it.effect("sends an account access invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-account-self-owner");
   const accountId = parseTestAccountId();
+
   const store = makeAccountSharingStoreServiceTestService({
     findAccountOwnerUserId: () => Effect.succeed(actorUserId),
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       send({
         accountId,

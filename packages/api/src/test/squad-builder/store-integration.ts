@@ -4,12 +4,12 @@ import * as Redacted from "effect/Redacted";
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
-import { makeApiLiveLayerFromValues } from "../../server/effect-app.ts";
+import { buildApiLiveLayerFromValues } from "../../server/effect-app.ts";
 import { parseFirecrawlCreditCount } from "../../services/squad-builder/firecrawl-config.ts";
 import { defaultTestDatabaseUrl } from "../integration/database.ts";
 
 /** Live squad-builder layer backed by the integration test database. */
-export const squadBuilderIntegrationTestLayer = makeApiLiveLayerFromValues({
+export const squadBuilderIntegrationTestLayer = buildApiLiveLayerFromValues({
   databaseUrl: defaultTestDatabaseUrl,
   discordGuildId: "test-discord-server-id",
   firecrawl: {

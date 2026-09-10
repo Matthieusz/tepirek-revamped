@@ -8,6 +8,7 @@ const routeApi = getRouteApi("/dashboard/skills/");
 
 const SkillsIndexRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <SkillsIndexPage session={session} />;
 };
 

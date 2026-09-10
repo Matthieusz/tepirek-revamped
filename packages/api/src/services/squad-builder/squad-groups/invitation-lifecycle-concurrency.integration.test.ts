@@ -7,6 +7,7 @@ import {
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { and, eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
@@ -42,10 +43,12 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "concurrent-account-send-owner" })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "concurrent-account-send-target" })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -74,11 +77,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "AccountAccessTransitionNotAllowed"
           );
@@ -95,6 +103,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               )
             )
         );
+
         expect(rows).toEqual([{ status: "pending" }]);
       })
     );
@@ -107,12 +116,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               id: "concurrent-account-response-owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "concurrent-account-response-target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -133,7 +144,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           invitedUserId: parseTestUserId(target.id),
         });
+
         const responses = ["accept", "decline"] as const;
+
         const outcomes = yield* Effect.all(
           responses.map((response) =>
             respondToAccountAccessInvite({
@@ -146,11 +159,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "AccountAccessTransitionNotAllowed"
           );
@@ -162,6 +180,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, invite.accessId))
         );
+
         expect(["accepted", "declined"]).toContain(stored?.status);
       })
     );
@@ -174,12 +193,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               id: "concurrent-account-revoke-owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "concurrent-account-revoke-target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -200,6 +221,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           invitedUserId: parseTestUserId(target.id),
         });
+
         const outcomes = yield* Effect.all(
           [
             respondToAccountAccessInvite({
@@ -216,11 +238,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "AccountAccessTransitionNotAllowed"
           );
@@ -232,6 +259,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, invite.accessId))
         );
+
         expect(["declined", "revoked"]).toContain(stored?.status);
       })
     );
@@ -242,10 +270,12 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "concurrent-group-send-owner" })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "concurrent-group-send-target" })
         );
+
         const [group] = yield* Effect.promise(() =>
           testDb
             .insert(squadGroup)
@@ -274,11 +304,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "SquadGroupInvitationTransitionNotAllowed"
           );
@@ -295,6 +330,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               )
             )
         );
+
         expect(rows).toEqual([{ status: "pending" }]);
       })
     );
@@ -307,12 +343,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               id: "concurrent-group-response-owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "concurrent-group-response-target",
             })
         );
+
         const [group] = yield* Effect.promise(() =>
           testDb
             .insert(squadGroup)
@@ -333,7 +371,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           groupId: parseTestGroupId(group.id),
           invitedUserId: parseTestUserId(target.id),
         });
+
         const responses = ["accept", "decline"] as const;
+
         const outcomes = yield* Effect.all(
           responses.map((response) =>
             respondToSquadGroupInvite({
@@ -346,11 +386,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "SquadGroupInvitationTransitionNotAllowed"
           );
@@ -362,6 +407,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .from(squadGroupInvitation)
             .where(eq(squadGroupInvitation.id, invite.invitationId))
         );
+
         expect(["accepted", "declined"]).toContain(stored?.status);
       })
     );
@@ -372,10 +418,12 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "concurrent-group-revoke-owner" })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "concurrent-group-revoke-target" })
         );
+
         const [group] = yield* Effect.promise(() =>
           testDb
             .insert(squadGroup)
@@ -396,6 +444,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           groupId: parseTestGroupId(group.id),
           invitedUserId: parseTestUserId(target.id),
         });
+
         const outcomes = yield* Effect.all(
           [
             respondToSquadGroupInvite({
@@ -412,11 +461,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         );
 
         expect(
-          outcomes.filter((outcome) => outcome._tag === "Success")
+          outcomes.filter((outcome) => Predicate.isTagged("Success")(outcome))
         ).toHaveLength(1);
-        const failure = outcomes.find((outcome) => outcome._tag === "Failure");
+
+        const failure = outcomes.find((outcome) =>
+          Predicate.isTagged("Failure")(outcome)
+        );
+
         expect(failure?._tag).toBe("Failure");
-        if (failure?._tag === "Failure") {
+
+        if (Predicate.isTagged("Failure")(failure)) {
           expect(failure.failure._tag).toBe(
             "SquadGroupInvitationTransitionNotAllowed"
           );
@@ -428,6 +482,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .from(squadGroupInvitation)
             .where(eq(squadGroupInvitation.id, invite.invitationId))
         );
+
         expect(["declined", "revoked"]).toContain(stored?.status);
       })
     );

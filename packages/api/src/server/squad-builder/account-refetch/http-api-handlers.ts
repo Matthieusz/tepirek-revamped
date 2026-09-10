@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
@@ -32,6 +34,7 @@ type PreviewAccountRefetchProtocolError =
   | SquadBuilderRateLimited
   | SquadBuilderUpstreamUnavailable
   | SquadBuilderPersistenceUnavailable;
+
 type ApplyAccountRefetchProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
@@ -46,44 +49,50 @@ function mapAccountRefetchError(
 function mapAccountRefetchError(
   error: AccountRefetchHandlerError
 ): PreviewAccountRefetchProtocolError {
-  switch (error._tag) {
-    case "MargonemAccountNotFound":
-    case "PendingMargonemAccountRefetchNotFound": {
-      return new SquadBuilderNotFound({ message: error._tag });
-    }
-    case "ActorDoesNotOwnMargonemAccount": {
-      return new SquadBuilderForbidden({
-        message: "Actor does not own the account",
-      });
-    }
-    case "MargonemProfileNameNotFound":
-    case "MargonemCharacterRowsNotFound":
-    case "MargonemCharacterRowInvalid": {
-      return new SquadBuilderInvalidInput({ message: error._tag });
-    }
-    case "FirecrawlUserMonthlyBudgetExhausted": {
-      return new SquadBuilderRateLimited({ message: error._tag });
-    }
-    case "FirecrawlMonthlyBudgetExhausted":
-    case "FirecrawlRequestFailed":
-    case "FirecrawlResponseNotParseable": {
-      return new SquadBuilderUpstreamUnavailable({ message: error._tag });
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return new SquadBuilderPersistenceUnavailable({
-        operation: error.operation,
-      });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
+  return Match.value(error).pipe(
+    Match.tag(
+      "MargonemAccountNotFound",
+      "PendingMargonemAccountRefetchNotFound",
+      (error) => new SquadBuilderNotFound({ message: error._tag })
+    ),
+    Match.tag(
+      "ActorDoesNotOwnMargonemAccount",
+      () =>
+        new SquadBuilderForbidden({
+          message: "Actor does not own the account",
+        })
+    ),
+    Match.tag(
+      "MargonemProfileNameNotFound",
+      "MargonemCharacterRowsNotFound",
+      "MargonemCharacterRowInvalid",
+      (error) => new SquadBuilderInvalidInput({ message: error._tag })
+    ),
+    Match.tag(
+      "FirecrawlUserMonthlyBudgetExhausted",
+      (error) => new SquadBuilderRateLimited({ message: error._tag })
+    ),
+    Match.tag(
+      "FirecrawlMonthlyBudgetExhausted",
+      "FirecrawlRequestFailed",
+      "FirecrawlResponseNotParseable",
+      (error) => new SquadBuilderUpstreamUnavailable({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      (error) =>
+        new SquadBuilderPersistenceUnavailable({
+          operation: error.operation,
+        })
+    ),
+    Match.exhaustive
+  );
 }
 
 const mapPreviewAccountRefetchError = (
   error: PreviewAccountRefetchError
 ): PreviewAccountRefetchProtocolError => mapAccountRefetchError(error);
+
 const mapApplyAccountRefetchError = (
   error: ApplyAccountRefetchError
 ): ApplyAccountRefetchProtocolError => mapAccountRefetchError(error);
@@ -98,6 +107,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountRefetch.previewAccountRefetch")(
           function* previewAccountRefetch({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               previewAccountRefetchWorkflow({
@@ -113,6 +123,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountRefetch.applyAccountRefetch")(
           function* applyAccountRefetch({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               applyAccountRefetchWorkflow({

@@ -25,6 +25,7 @@ export interface DeleteHeroInput {
 export const listHeroes = Effect.fn("Web.Hero.list")(
   function* listHeroesEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.heroes.listHeroes({});
   }
 );
@@ -33,6 +34,7 @@ export const listHeroes = Effect.fn("Web.Hero.list")(
 export const listHeroesByEvent = Effect.fn("Web.Hero.listByEvent")(
   function* listHeroesByEventEffect(eventId: number) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.heroes.listHeroesByEvent({
       payload: { eventId: yield* asEventId(eventId) },
     });
@@ -43,6 +45,7 @@ export const listHeroesByEvent = Effect.fn("Web.Hero.listByEvent")(
 export const createHero = Effect.fn("Web.Hero.create")(
   function* createHeroEffect(payload: CreateHeroInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.heroes.createHero({
       payload: {
         ...payload,
@@ -56,6 +59,7 @@ export const createHero = Effect.fn("Web.Hero.create")(
 export const deleteHero = Effect.fn("Web.Hero.delete")(
   function* deleteHeroEffect(input: DeleteHeroInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.heroes.deleteHero({
       payload: { id: yield* asHeroId(input.id) },
     });

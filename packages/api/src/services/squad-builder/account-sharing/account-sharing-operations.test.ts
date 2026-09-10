@@ -32,9 +32,11 @@ it.effect("accepts an account access invite as the invited user", () => {
   const ownerUserId = parseTestUserId("effect-account-respond-owner");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
+
   const displayName = Effect.runSync(
     parseAccountDisplayName("Respond account")
   );
+
   const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: (input) => {
       expect(input).toMatchObject({
@@ -59,10 +61,12 @@ it.effect("accepts an account access invite as the invited user", () => {
       });
     },
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const invite = yield* respond({
       accessId,
       actorUserId,
@@ -80,13 +84,16 @@ it.effect("accepts an account access invite as the invited user", () => {
 it.effect("surfaces invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-respond-attacker");
   const accessId = parseTestAccessId();
+
   const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       respond({
         accessId,
@@ -104,6 +111,7 @@ it.effect("revokes account access as the account owner", () => {
   const revokedUserId = parseTestUserId("effect-account-revoke-recipient");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
+
   const store = makeAccountSharingStoreServiceTestService({
     revokeAccountAccess: (input) => {
       expect(input).toMatchObject({
@@ -120,10 +128,12 @@ it.effect("revokes account access as the account owner", () => {
       });
     },
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* revokeAccountAccessEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const revoked = yield* revoke({
       accessId,
       actorUserId,
@@ -141,13 +151,16 @@ it.effect("revokes account access as the account owner", () => {
 it.effect("surfaces owner authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-revoke-attacker");
   const accessId = parseTestAccessId();
+
   const store = makeAccountSharingStoreServiceTestService({
     revokeAccountAccess: () => new ActorDoesNotOwnMargonemAccount(),
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* revokeAccountAccessEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       revoke({
         accessId,

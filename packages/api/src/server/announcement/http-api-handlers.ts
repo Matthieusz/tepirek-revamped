@@ -13,17 +13,16 @@ import {
   listAnnouncements,
 } from "../../services/announcement/announcement-service.ts";
 import type { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
-  {
+const { requireAdminSession, requireVerifiedSession } =
+  buildAuthorizationPolicy({
     forbidden: () => new AnnouncementForbidden({ message: "FORBIDDEN" }),
     unauthorized: () =>
       new AnnouncementUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
       new AnnouncementForbidden({ message: "Konto oczekuje na weryfikację" }),
-  }
-);
+  });
 
 const mapAnnouncementError = (error: ApplicationDependencyUnavailable) =>
   new AnnouncementPersistenceUnavailable({ operation: error.operation });
@@ -54,6 +53,7 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
       .handle("listAnnouncements", () =>
         Effect.gen(function* listAnnouncementsHandler() {
           yield* requireVerifiedSession();
+
           return yield* listAnnouncements().pipe(
             Effect.mapError(mapAnnouncementError)
           );

@@ -53,6 +53,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
     const account = yield* store.getAccountForRefetch(input);
     const requestTime = yield* DateTime.nowAsDate;
     const yearMonth = firecrawlYearMonthFromDate(requestTime);
+
     const reservedRequest = yield* requestAccounting.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
       perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
@@ -60,6 +61,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       requestedByUserId: input.actorUserId,
       yearMonth,
     });
+
     const finalizedRequest = yield* EffectRuntime.gen(
       function* finalizeReservedRequest() {
         const scrapedProfile = yield* firecrawl
@@ -73,10 +75,12 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
                   errorTag: error._tag,
                   requestId: reservedRequest.requestId,
                 });
+
                 return yield* error;
               })
             )
           );
+
         const creditsUsed = yield* parseFirecrawlCreditCount(
           scrapedProfile.metadata.creditsUsed ?? 1
         ).pipe(
@@ -88,6 +92,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
                 errorTag: "FirecrawlResponseNotParseable",
                 requestId: reservedRequest.requestId,
               });
+
               return yield* new FirecrawlResponseNotParseable({
                 cause: new Error("Invalid Firecrawl creditsUsed"),
                 profileId: account.profileId,
@@ -95,6 +100,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
             })
           )
         );
+
         const completedAt = yield* currentDate;
         yield* requestAccounting.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
@@ -103,6 +109,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
           firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
           requestId: reservedRequest.requestId,
         });
+
         return { creditsUsed, scrapedProfile };
       }
     ).pipe(
@@ -117,6 +124,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
         })
       )
     );
+
     const { creditsUsed, scrapedProfile } = finalizedRequest;
 
     const parsedHtml = yield* parseMargonemProfileHtml({
@@ -126,6 +134,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
 
     const fetchedDateTime = yield* DateTime.now;
     const fetchedAt = DateTime.toDate(fetchedDateTime);
+
     const diff = computeMargonemAccountRefetchDiff({
       accountId: account.accountId,
       currentCharacters: account.currentCharacters,
@@ -133,6 +142,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       latestCharacters: parsedHtml.jarunaCharacters,
       profileId: account.profileId,
     });
+
     const pending = yield* store.createPendingRefetch({
       accountId: account.accountId,
       actorUserId: input.actorUserId,

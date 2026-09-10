@@ -78,6 +78,7 @@ export const squadEditorInviteTargetsQueryOptions = (
   runner: SquadGroupSharingApiRunner = runAppHttpApi
 ) => {
   const normalizedQuery = query.trim();
+
   return queryOptions({
     enabled: groupId > 0 && normalizedQuery.length >= 2,
     queryFn: async ({ signal }) =>

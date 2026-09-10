@@ -25,6 +25,7 @@ export type ProfileAccessState = Data.TaggedEnum<{
   readonly OwnedByAnotherUser: Record<never, never>;
   readonly SharedWithActor: Record<never, never>;
 }>;
+
 export const ProfileAccessState = Data.taggedEnum<ProfileAccessState>();
 
 /** Input for checking whether a profile can be imported. */

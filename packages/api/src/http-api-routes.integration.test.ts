@@ -1,5 +1,5 @@
 import { describe, expect, it as effectIt } from "@effect/vitest";
-import { makeBetterAuthServiceLayer } from "@tepirek-revamped/auth";
+import { buildBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -7,7 +7,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { HttpServer } from "effect/unstable/http";
 
-import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
+import { buildApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { AnnouncementStore } from "./services/announcement/announcement-store.ts";
 import { ApplicationDependencyUnavailable } from "./services/application-errors.ts";
@@ -24,7 +24,7 @@ import { testDatabaseUrl, testDb } from "./test/integration/database.ts";
 import { integrationHandler } from "./test/integration/http-handler.ts";
 import type { IntegrationHandler } from "./test/integration/http-handler.ts";
 
-const apiLiveLayer = makeApiLiveLayerFromValues({
+const apiLiveLayer = buildApiLiveLayerFromValues({
   databaseUrl: testDatabaseUrl,
   discordGuildId: "test-discord-server-id",
   firecrawl: {
@@ -36,7 +36,7 @@ const apiLiveLayer = makeApiLiveLayerFromValues({
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(apiLiveLayer),
-  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
+  Layer.provideMerge(buildBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 
@@ -45,6 +45,7 @@ const withAppHttpApi = <A>(
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
+
     return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
@@ -58,6 +59,7 @@ const requestHttpApi = async (
 const sensitivePersistenceCause = new Error(
   "DatabaseError: relation users does not exist at postgres://admin:secret@database.internal/app"
 );
+
 const failingAnnouncementStoreLayer = Layer.succeed(
   AnnouncementStore,
   AnnouncementStore.of({
@@ -84,6 +86,7 @@ const failingAnnouncementStoreLayer = Layer.succeed(
       ),
   })
 );
+
 const failingProfilePreviewLayer = Layer.succeed(
   FirecrawlClientService,
   FirecrawlClientService.of({
@@ -100,16 +103,17 @@ const failingProfilePreviewLayer = Layer.succeed(
       Effect.die(new Error("URL scraping is not used by this test")),
   })
 );
+
 const failingAnnouncementHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(
     Layer.merge(failingAnnouncementStoreLayer, failingProfilePreviewLayer)
   ),
   Layer.provideMerge(apiLiveLayer),
-  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
+  Layer.provideMerge(buildBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 
-const perUserBudgetApiLiveLayer = makeApiLiveLayerFromValues({
+const perUserBudgetApiLiveLayer = buildApiLiveLayerFromValues({
   databaseUrl: testDatabaseUrl,
   discordGuildId: "test-discord-server-id",
   firecrawl: {
@@ -118,11 +122,12 @@ const perUserBudgetApiLiveLayer = makeApiLiveLayerFromValues({
     perUserMonthlyRequestBudget: 1,
   },
 });
+
 const perUserBudgetHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(
     Layer.merge(perUserBudgetApiLiveLayer, failingProfilePreviewLayer)
   ),
-  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
+  Layer.provideMerge(buildBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 
@@ -131,6 +136,7 @@ const withPerUserBudgetHttpApi = <A>(
 ) =>
   Effect.gen(function* acquirePerUserBudgetHttpApi() {
     const appHttpApi = yield* integrationHandler(perUserBudgetHttpApiLayer);
+
     return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
@@ -141,11 +147,13 @@ const withFailingAnnouncementHttpApi = <A>(
     const appHttpApi = yield* integrationHandler(
       failingAnnouncementHttpApiLayer
     );
+
     return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
 const createSignedInAdmin = async (name: string) => {
   const email = `${name}@example.com`;
+
   const response = await testAuth.handler(
     new Request("http://localhost:3000/api/auth/sign-up/email", {
       body: JSON.stringify({
@@ -173,6 +181,7 @@ const createSignedInAdmin = async (name: string) => {
   }
 
   const cookie = response.headers.get("set-cookie");
+
   if (cookie === null || cookie.length === 0) {
     throw new Error("Expected sign up to create a session cookie");
   }
@@ -198,6 +207,7 @@ describe("Effect HttpApi routes", () => {
   effectIt.effect("redacts persistence causes from route responses", () =>
     withFailingAnnouncementHttpApi(async (appHttpApi) => {
       const { cookie } = await createSignedInAdmin("redaction-admin");
+
       const response = await appHttpApi.handler(
         new Request("http://localhost:3000/announcements", {
           ...authenticatedGet(cookie),
@@ -219,6 +229,7 @@ describe("Effect HttpApi routes", () => {
   effectIt.effect("redacts upstream causes from route responses", () =>
     withFailingAnnouncementHttpApi(async (appHttpApi) => {
       const { cookie } = await createSignedInAdmin("upstream-redaction-admin");
+
       const response = await appHttpApi.handler(
         new Request(
           "http://localhost:3000/squad-builder/account-imports/preview-profile",
@@ -246,6 +257,7 @@ describe("Effect HttpApi routes", () => {
       const { cookie, id } = await createSignedInAdmin(
         "per-user-budget-redaction-admin"
       );
+
       const request = async () =>
         await appHttpApi.handler(
           new Request(

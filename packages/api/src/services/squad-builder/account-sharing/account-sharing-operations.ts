@@ -23,6 +23,7 @@ export const respond = Effect.fn("AccountSharing.respondToInvite")(
   function* respond(input: RespondToAccountAccessInviteInput) {
     const store = yield* AccountSharingStoreService;
     const now = yield* DateTime.nowAsDate;
+
     return yield* store.respondToAccountAccessInvite({
       accessId: input.accessId,
       invitedUserId: input.actorUserId,
@@ -38,6 +39,7 @@ export const revoke = Effect.fn("AccountSharing.revokeAccess")(function* revoke(
 ) {
   const store = yield* AccountSharingStoreService;
   const now = yield* DateTime.nowAsDate;
+
   return yield* store.revokeAccountAccess({
     accessId: input.accessId,
     now,

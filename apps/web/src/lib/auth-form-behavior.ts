@@ -1,3 +1,4 @@
+import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -31,11 +32,13 @@ export const getAuthProviderErrorMessage = (
   error: AuthProviderErrorDetails
 ): string => {
   const message = error.message?.trim();
+
   if (message !== undefined && message.length > 0) {
     return message;
   }
 
   const statusText = error.statusText?.trim();
+
   if (statusText !== undefined && statusText.length > 0) {
     return statusText;
   }
@@ -44,9 +47,13 @@ export const getAuthProviderErrorMessage = (
 };
 
 /** The result of an authentication mutation that is safe to render in a form. */
-export type AuthFormSubmissionResult =
-  | { readonly _tag: "success" }
-  | { readonly _tag: "failure"; readonly error: AuthFormSubmissionError };
+export type AuthFormSubmissionResult = Data.TaggedEnum<{
+  readonly success: Record<never, never>;
+  readonly failure: { readonly error: AuthFormSubmissionError };
+}>;
+
+export const AuthFormSubmissionResult =
+  Data.taggedEnum<AuthFormSubmissionResult>();
 
 /**
  * Translates an auth client's response and rejected promise into one typed
@@ -96,10 +103,11 @@ export const runAuthFormSubmission = async <Response extends AuthResponse>(
 ): Promise<AuthFormSubmissionResult> => {
   try {
     await Effect.runPromise(authFormSubmission(operation, request));
-    return { _tag: "success" };
+
+    return AuthFormSubmissionResult.success();
   } catch (error: unknown) {
     if (Schema.is(AuthFormSubmissionError)(error)) {
-      return { _tag: "failure", error };
+      return AuthFormSubmissionResult.failure({ error });
     }
 
     throw error;

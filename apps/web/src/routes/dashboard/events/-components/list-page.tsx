@@ -106,18 +106,22 @@ const EventsListContent = ({
 }: EventsListContentProps) => {
   const queryClient = useQueryClient();
   const [eventAction, setEventAction] = useState<EventAction>(null);
+
   const deleteEvent = useMutation(
     deleteEventMutationOptions(queryClient, runAppHttpApi)
   );
+
   const toggleEventActive = useMutation(
     toggleEventActiveMutationOptions(queryClient, runAppHttpApi)
   );
+
   const actionPending = deleteEvent.isPending || toggleEventActive.isPending;
 
   const isAdminUser = isAdmin(session);
 
   let actionButtonLabel =
     eventAction?.active === true ? "Dezaktywuj" : "Aktywuj";
+
   if (actionPending) {
     actionButtonLabel = "Przetwarzanie...";
   } else if (eventAction?.type === "delete") {
@@ -138,6 +142,7 @@ const EventsListContent = ({
       })();
     },
   };
+
   const toggleMutation = {
     isPending: actionPending,
     mutate: (input: { id: number; active: boolean }) => {
@@ -225,6 +230,7 @@ const EventsListContent = ({
                   {events.map((event, index) => {
                     const IconComponent = getEventIcon(event.icon);
                     const isEventActive = event.active !== false;
+
                     return (
                       <TableRow key={event.id}>
                         <TableCell className="text-muted-foreground">
@@ -345,6 +351,7 @@ const EventsListContent = ({
                 if (!eventAction) {
                   return;
                 }
+
                 if (eventAction.type === "delete") {
                   deleteMutation.mutate(eventAction.id);
                 } else {

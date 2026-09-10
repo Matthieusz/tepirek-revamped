@@ -35,6 +35,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
   const targetUserId = parseTestUserId("effect-squad-send-target");
   const groupId = parseTestGroupId();
   const invitationId = parseTestInvitationId();
+
   const sharingStore = makeSquadGroupSharingStoreServiceTestService({
     authorizeSquadGroupOwner: (input) => {
       expect(input.actorUserId).toBe(actorUserId);
@@ -68,6 +69,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
+
   const directoryStore = makeSquadGroupDirectoryStoreServiceTestService({
     findVerifiedSquadEditorInviteTarget: (input) => {
       expect(input.targetUserId).toBe(targetUserId);
@@ -79,6 +81,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
+
   const testLayer = Layer.merge(
     Layer.succeed(SquadGroupSharingStoreService, sharingStore),
     Layer.succeed(SquadGroupDirectoryStoreService, directoryStore)
@@ -86,6 +89,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const invite = yield* send({
       actorUserId,
       groupId,
@@ -103,6 +107,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-squad-self-owner");
   const groupId = parseTestGroupId();
+
   const sharingStore = makeSquadGroupSharingStoreServiceTestService({
     authorizeSquadGroupOwner: () =>
       Effect.succeed({
@@ -112,6 +117,7 @@ it.effect("rejects self-invites before resolving the target", () => {
         role: "owner" as const,
       }),
   });
+
   const testLayer = Layer.merge(
     Layer.succeed(SquadGroupSharingStoreService, sharingStore),
     Layer.succeed(
@@ -122,6 +128,7 @@ it.effect("rejects self-invites before resolving the target", () => {
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       send({
         actorUserId,

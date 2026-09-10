@@ -17,15 +17,20 @@ const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
+
 export const AuctionProfessionSchema = Schema.Literals(AUCTION_PROFESSIONS);
+
 export const AuctionTypeSchema = Schema.Literals(AUCTION_TYPES);
+
 export const AuctionGroupPayload = Schema.Struct({
   profession: AuctionProfessionSchema,
   type: AuctionTypeSchema,
 });
+
 export interface AuctionGroupPayload extends Schema.Schema.Type<
   typeof AuctionGroupPayload
 > {}
+
 const AuctionSignupPayloadFields = Schema.Struct({
   column: PositiveInt,
   level: PositiveInt,
@@ -33,6 +38,7 @@ const AuctionSignupPayloadFields = Schema.Struct({
   round: PositiveInt,
   type: AuctionTypeSchema,
 });
+
 export const AuctionSignupPayload = AuctionSignupPayloadFields.pipe(
   Schema.refine(
     (value): value is typeof AuctionSignupPayloadFields.Type =>
@@ -40,9 +46,11 @@ export const AuctionSignupPayload = AuctionSignupPayloadFields.pipe(
     { message: "Nieprawidłowe pole licytacji" }
   )
 );
+
 export const RemoveAuctionSignupPayload = Schema.Struct({
   id: AuctionSignupId,
 });
+
 export interface RemoveAuctionSignupPayload extends Schema.Schema.Type<
   typeof RemoveAuctionSignupPayload
 > {}
@@ -57,29 +65,38 @@ export const AuctionSignupSummary = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+
 export interface AuctionSignupSummary extends Schema.Schema.Type<
   typeof AuctionSignupSummary
 > {}
+
 export const AuctionStats = Schema.Struct({
   totalSignups: Schema.Finite,
   uniqueUsers: Schema.Finite,
 });
+
 export interface AuctionStats extends Schema.Schema.Type<typeof AuctionStats> {}
+
 export const ToggleAuctionSignupSuccess = Schema.Struct({
   action: Schema.Literals(["added", "removed"]),
 });
+
 export interface ToggleAuctionSignupSuccess extends Schema.Schema.Type<
   typeof ToggleAuctionSignupSuccess
 > {}
+
 export const RemoveAuctionSignupSuccess = Schema.Struct({
   success: Schema.Literal(true),
 });
+
 export interface RemoveAuctionSignupSuccess extends Schema.Schema.Type<
   typeof RemoveAuctionSignupSuccess
 > {}
+
 export const ClearAuctionSignupsSuccess = Schema.Struct({
   success: Schema.Literal(true),
 });
+
 export interface ClearAuctionSignupsSuccess extends Schema.Schema.Type<
   typeof ClearAuctionSignupsSuccess
 > {}
@@ -89,21 +106,25 @@ export class AuctionUnauthorized extends Schema.TaggedErrorClass<AuctionUnauthor
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class AuctionForbidden extends Schema.TaggedErrorClass<AuctionForbidden>()(
   "AuctionForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class AuctionNotFound extends Schema.TaggedErrorClass<AuctionNotFound>()(
   "AuctionNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
+
 export class AuctionConflict extends Schema.TaggedErrorClass<AuctionConflict>()(
   "AuctionConflict",
   { message: Schema.String },
   { httpApiStatus: 409 }
 ) {}
+
 export class AuctionPersistenceUnavailable extends Schema.TaggedErrorClass<AuctionPersistenceUnavailable>()(
   "AuctionPersistenceUnavailable",
   { operation: Schema.String },

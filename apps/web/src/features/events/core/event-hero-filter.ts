@@ -20,6 +20,7 @@ import type {
  */
 
 export const ALL_FILTER = "all" as const;
+
 export type FilterSelection = string;
 
 const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
@@ -28,9 +29,11 @@ const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
     Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
   )
 );
+
 const decodePositiveIntegerId = Schema.decodeUnknownOption(
   PositiveIntegerIdFromString
 );
+
 const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
 /** Schema for a validated URL positive integer ID encoded as a string. */
@@ -80,6 +83,7 @@ export const normalizeEventHeroFilter = (input: {
 
   // Choosing all Events clears Hero: there is no Hero without an Event.
   let heroId: FilterSelection = ALL_FILTER;
+
   if (!isAllFilter(eventId) && !isAllFilter(resolvedHeroId)) {
     heroId = resolvedHeroId;
   }
@@ -98,6 +102,7 @@ export const toQueryInput = (
   if (selection === undefined || isAllFilter(selection)) {
     return undefined;
   }
+
   return Option.getOrUndefined(decodePositiveIntegerId(selection));
 };
 
@@ -105,7 +110,9 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
   if (eventEndTime === undefined) {
     return Number.NEGATIVE_INFINITY;
   }
+
   const date = new Date(eventEndTime);
+
   return isValidDate(date) ? date.getTime() : Number.NEGATIVE_INFINITY;
 };
 
@@ -158,5 +165,6 @@ export const selectHeroUpdate = (
   if (isAllFilter(state.eventId)) {
     return { heroId: undefined };
   }
+
   return { heroId: isAllFilter(heroId) ? undefined : heroId };
 };

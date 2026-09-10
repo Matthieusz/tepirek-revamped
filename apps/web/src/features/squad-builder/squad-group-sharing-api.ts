@@ -45,6 +45,7 @@ export const listIncomingSquadGroupInvites = Effect.fn(
   "Web.SquadGroupSharing.listIncomingInvites"
 )(function* listIncomingSquadGroupInvitesEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.listIncomingSquadGroupInvites(
     { payload: {} }
   );
@@ -55,6 +56,7 @@ export const listSharedSquadGroups = Effect.fn(
   "Web.SquadGroupSharing.listSharedGroups"
 )(function* listSharedSquadGroupsEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.listSharedSquadGroups({
     payload: {},
   });
@@ -65,6 +67,7 @@ export const listSquadGroupEditorGrants = Effect.fn(
   "Web.SquadGroupSharing.listEditorGrants"
 )(function* listSquadGroupEditorGrantsEffect(groupId: number) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.listSquadGroupEditorGrants(
     {
       payload: { groupId: yield* asSquadGroupId(groupId) },
@@ -79,6 +82,7 @@ export const searchSquadEditorInviteTargets = Effect.fn(
   input: SearchSquadEditorInviteTargetsInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.searchSquadEditorInviteTargets(
     {
       payload: {
@@ -96,6 +100,7 @@ export const sendSquadGroupEditorInvite = Effect.fn(
   input: SendSquadGroupEditorInviteInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite(
     {
       payload: {
@@ -113,6 +118,7 @@ export const respondToSquadGroupInvite = Effect.fn(
   input: RespondToSquadGroupInviteInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
     payload: {
       invitationId: yield* asSquadGroupInvitationId(input.invitationId),
@@ -126,6 +132,7 @@ export const revokeSquadGroupEditor = Effect.fn(
   "Web.SquadGroupSharing.revokeEditor"
 )(function* revokeSquadGroupEditorEffect(input: RevokeSquadGroupEditorInput) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
     payload: {
       invitationId: yield* asSquadGroupInvitationId(input.invitationId),

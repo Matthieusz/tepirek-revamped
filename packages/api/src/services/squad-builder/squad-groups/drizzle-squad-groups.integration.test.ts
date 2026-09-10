@@ -83,6 +83,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-list-owner" })
         );
+
         const other = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-list-other" })
         );
@@ -101,6 +102,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         });
 
         const squadGroupStore = yield* SquadGroupAggregateStoreService;
+
         const groups = yield* squadGroupStore.listMySquadGroups({
           actorUserId: parseTestUserId(member.id),
         });
@@ -125,6 +127,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         });
 
         const squadGroupStore = yield* SquadGroupAggregateStoreService;
+
         const detail = yield* squadGroupStore.getSquadGroupDetail({
           actorUserId: parseTestUserId(member.id),
           groupId: created.groupId,
@@ -146,6 +149,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-save-owner" })
         );
+
         const createService = { create: createSquadGroup };
         const saveService = { save: saveSquadGroup };
 
@@ -177,6 +181,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         });
 
         const [firstSquad] = saved.squads;
+
         if (firstSquad === undefined) {
           throw new Error("Failed to load saved squad");
         }
@@ -202,6 +207,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             },
           ],
         });
+
         const secondSquad = resaved.squads.find(
           (item) => item.name === "Second squad"
         );
@@ -236,6 +242,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-stale-owner" })
         );
+
         const createService = { create: createSquadGroup };
         const saveService = { save: saveSquadGroup };
 
@@ -275,6 +282,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-rollback-owner" })
           );
+
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -358,6 +366,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
           const groupId = parseTestSquadGroupId(group.id);
           const squadId = parseTestSquadId(seededSquad.id);
+
           const [beforeGroup] = yield* Effect.promise(() =>
             testDb
               .select({ updatedAt: squadGroup.updatedAt })
@@ -365,6 +374,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .where(eq(squadGroup.id, group.id))
               .limit(1)
           );
+
           const beforePlacement = yield* Effect.promise(() =>
             testDb
               .select()
@@ -378,6 +388,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           }
 
           const squadGroupSharingStore = yield* SquadGroupSharingStoreService;
+
           const failure = yield* Effect.flip(
             squadGroupSharingStore.saveSharedSquadGroupCharacters({
               actorUserId: parseTestUserId(member.id),
@@ -410,6 +421,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .where(eq(squadCharacter.id, placement.id))
               .limit(1)
           );
+
           const [afterGroup] = yield* Effect.promise(() =>
             testDb
               .select({ updatedAt: squadGroup.updatedAt })
@@ -431,12 +443,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-available-owner" })
           );
+
           const listService = { list: listAvailableSquadCharacters };
 
           const created = yield* createSquadGroup({
             actorUserId: parseTestUserId(member.id),
             name: "Effect available group",
           });
+
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -496,6 +510,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               id: "effect-visibility-owner",
             })
         );
+
         const createService = { create: createSquadGroup };
         const visibilityService = { set: setSquadGroupVisibility };
 
@@ -536,6 +551,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Send Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -543,7 +559,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Send Target",
             })
         );
+
         const createService = { create: createSquadGroup };
+
         const group = yield* createService.create({
           actorUserId: parseTestUserId(owner.id),
           name: "Effect store squad send group",
@@ -586,9 +604,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        expect(duplicateFailure).toMatchObject({
-          _tag: "SquadGroupInvitationTransitionNotAllowed",
-        });
+        expect(duplicateFailure).toHaveProperty(
+          "_tag",
+          "SquadGroupInvitationTransitionNotAllowed"
+        );
       })
     );
 
@@ -601,6 +620,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Respond Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -608,16 +628,20 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Respond Target",
             })
         );
+
         const createService = { create: createSquadGroup };
+
         const group = yield* createService.create({
           actorUserId: parseTestUserId(owner.id),
           name: "Effect store squad respond group",
         });
+
         const invite = yield* send({
           actorUserId: parseTestUserId(owner.id),
           groupId: group.groupId,
           invitedUserId: parseTestUserId(target.id),
         });
+
         const accepted = yield* respond({
           actorUserId: parseTestUserId(target.id),
           invitationId: invite.invitationId,
@@ -651,6 +675,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Revoke Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -658,16 +683,20 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Squad Revoke Target",
             })
         );
+
         const createService = { create: createSquadGroup };
+
         const group = yield* createService.create({
           actorUserId: parseTestUserId(owner.id),
           name: "Effect store squad revoke group",
         });
+
         const invite = yield* send({
           actorUserId: parseTestUserId(owner.id),
           groupId: group.groupId,
           invitedUserId: parseTestUserId(target.id),
         });
+
         const revoked = yield* revoke({
           actorUserId: parseTestUserId(owner.id),
           invitationId: invite.invitationId,
@@ -696,9 +725,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-global-owner" })
         );
+
         const other = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-global-other" })
         );
+
         const createService = { create: createSquadGroup };
         const visibilityService = { set: setSquadGroupVisibility };
         const listGlobalService = { list: listGlobalSquadGroups };
@@ -707,6 +738,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(member.id),
           name: "Effect global group",
         });
+
         yield* visibilityService.set({
           actorUserId: parseTestUserId(member.id),
           groupId: globalGroup.groupId,
@@ -720,6 +752,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const groups = yield* listGlobalService.list({
           actorUserId: parseTestUserId(other.id),
         });
+
         const groupNames = groups.map((group) => group.name);
 
         expect(groupNames).toContain("Effect global group");

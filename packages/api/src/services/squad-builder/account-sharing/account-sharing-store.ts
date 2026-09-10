@@ -17,6 +17,7 @@ import type {
   MargonemAccountNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../squad-groups/squad-group-errors.ts";
+
 /** A verified user that may be invited to use an account. */
 export interface AccountInviteTarget {
   readonly userId: AppUserId;

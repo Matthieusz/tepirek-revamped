@@ -28,9 +28,11 @@ const makeLayer = (
     setVerified: unexpectedCall,
     updateProfile: unexpectedCall,
   });
+
   const verifier = DiscordGuildVerifier.of({
     verifyMembership: () => Effect.succeed(valid),
   });
+
   return Layer.merge(
     Layer.succeed(UserStore, store),
     Layer.succeed(DiscordGuildVerifier, verifier)
@@ -40,12 +42,15 @@ const makeLayer = (
 it.effect("marks a Discord guild member as verified at the current time", () =>
   Effect.gen(function* verifyDiscordGuildMember() {
     const userId = yield* parseAppUserId("discord-member");
+
     const markedUsers = yield* Ref.make<
       readonly { readonly updatedAt: Date; readonly userId: typeof userId }[]
     >([]);
+
     const layer = makeLayer(true, (input) => Ref.set(markedUsers, [input]));
 
     yield* TestClock.setTime(FIXED_TIME.getTime());
+
     const result = yield* verifyDiscordGuildMembership({ userId }).pipe(
       Effect.provide(layer)
     );
@@ -64,6 +69,7 @@ it.effect("does not mutate verification state for a non-member", () =>
   Effect.gen(function* rejectDiscordGuildNonMember() {
     const userId = yield* parseAppUserId("discord-non-member");
     const markCount = yield* Ref.make(0);
+
     const layer = makeLayer(false, () =>
       Ref.update(markCount, (count) => count + 1)
     );

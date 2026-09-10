@@ -66,6 +66,7 @@ describe("integration database reset safety", () => {
       "postgres://developer:different-password@LOCALHOST/tepirek-revamped-test?sslmode=disable",
       "DATABASE_URL"
     );
+
     const equivalentTestDatabase = parseDatabaseUrl(
       "postgresql://postgres:password@localhost:5432/tepirek-revamped-test?sslmode=disable",
       "TEST_DATABASE_URL"

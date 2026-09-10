@@ -8,15 +8,19 @@ export const changeFieldLabel = (field: string): string => {
     case "name": {
       return "Nazwa";
     }
+
     case "level": {
       return "Poziom";
     }
+
     case "profession": {
       return "Profesja";
     }
+
     case "avatarUrl": {
       return "Avatar";
     }
+
     default: {
       return field;
     }

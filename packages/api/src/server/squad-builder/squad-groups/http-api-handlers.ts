@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import type { SquadGroupListFilterError } from "../../../domain/squad-builder/squad-group-list-filters.ts";
@@ -36,15 +38,19 @@ import { withRequestCorrelation } from "../request-correlation.ts";
 type DeleteSquadGroupError = Effect.Error<
   ReturnType<typeof deleteSquadGroupWorkflow>
 >;
+
 type ListOwnedSquadGroupsError = Effect.Error<
   ReturnType<typeof listOwnedSquadGroupsWorkflow>
 >;
+
 type ListGlobalSquadGroupsError =
   | SquadGroupListFilterError
   | Effect.Error<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
+
 type GetSquadGroupDetailError = Effect.Error<
   ReturnType<typeof getSquadGroupDetailWorkflow>
 >;
+
 type SetSquadGroupVisibilityError = Effect.Error<
   ReturnType<typeof setSquadGroupVisibilityWorkflow>
 >;
@@ -62,13 +68,16 @@ type SquadGroupsHandlerError =
 type CreateSquadGroupProtocolError =
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type DeleteSquadGroupProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
   | SquadBuilderPersistenceUnavailable;
+
 type ListGlobalSquadGroupsProtocolError =
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type SaveSquadGroupProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
@@ -97,69 +106,80 @@ function mapSquadGroupsError(
 function mapSquadGroupsError(
   error: SquadGroupsHandlerError
 ): SaveSquadGroupProtocolError {
-  switch (error._tag) {
-    case "SquadGroupNotFound": {
-      return new SquadBuilderNotFound({ message: error._tag });
-    }
-    case "ActorDoesNotOwnSquadGroup":
-    case "ActorCannotViewSquadGroup":
-    case "ActorCannotEditSquadGroup":
-    case "EditorCannotChangeSquadStructure":
-    case "SquadCharacterNotAccessible": {
-      return new SquadBuilderForbidden({ message: error._tag });
-    }
-    case "SquadGroupWriteConflict": {
-      return new SquadBuilderConflict({ message: error._tag });
-    }
-    case "SquadNotInGroup":
-    case "InvalidSquadGroupName":
-    case "InvalidSquadName":
-    case "TooManyCharactersInSquad":
-    case "DuplicateCharacterInSquad":
-    case "DuplicateAccountInSquad":
-    case "DuplicateCharacterInSquadGroup":
-    case "SquadCharacterNotJaruna":
-    case "InvalidSquadSnapshot":
-    case "InvalidSquadGroupNameQuery":
-    case "InvalidSquadGroupLevelRange": {
-      return new SquadBuilderInvalidInput({ message: error._tag });
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return new SquadBuilderPersistenceUnavailable({
-        operation: error.operation,
-      });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
+  return Match.value(error).pipe(
+    Match.tag(
+      "SquadGroupNotFound",
+      (error) => new SquadBuilderNotFound({ message: error._tag })
+    ),
+    Match.tag(
+      "ActorDoesNotOwnSquadGroup",
+      "ActorCannotViewSquadGroup",
+      "ActorCannotEditSquadGroup",
+      "EditorCannotChangeSquadStructure",
+      "SquadCharacterNotAccessible",
+      (error) => new SquadBuilderForbidden({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadGroupWriteConflict",
+      (error) => new SquadBuilderConflict({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadNotInGroup",
+      "InvalidSquadGroupName",
+      "InvalidSquadName",
+      "TooManyCharactersInSquad",
+      "DuplicateCharacterInSquad",
+      "DuplicateAccountInSquad",
+      "DuplicateCharacterInSquadGroup",
+      "SquadCharacterNotJaruna",
+      "InvalidSquadSnapshot",
+      "InvalidSquadGroupNameQuery",
+      "InvalidSquadGroupLevelRange",
+      (error) => new SquadBuilderInvalidInput({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      (error) =>
+        new SquadBuilderPersistenceUnavailable({
+          operation: error.operation,
+        })
+    ),
+    Match.exhaustive
+  );
 }
 
 const mapCreateSquadGroupError = (
   error: CreateSquadGroupError
 ): CreateSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapDeleteSquadGroupError = (
   error: DeleteSquadGroupError
 ): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapListOwnedSquadGroupsError = (
   error: ListOwnedSquadGroupsError
 ): SquadBuilderPersistenceUnavailable => mapSquadGroupsError(error);
+
 const mapListGlobalSquadGroupsError = (
   error: ListGlobalSquadGroupsError
 ): ListGlobalSquadGroupsProtocolError => mapSquadGroupsError(error);
+
 const mapGetSquadGroupDetailError = (
   error: GetSquadGroupDetailError
 ): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapListAvailableSquadCharactersError = (
   error: ListAvailableSquadCharactersError
 ): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapSaveSquadGroupError = (
   error: SaveSquadGroupError
 ): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapSaveSharedSquadGroupCharactersError = (
   error: EffectSharedSquadGroupSaveError
 ): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+
 const mapSetSquadGroupVisibilityError = (
   error: SetSquadGroupVisibilityError
 ): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
@@ -174,6 +194,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.createSquadGroup")(
           function* createSquadGroup({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               createSquadGroupWorkflow({
@@ -196,6 +217,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 groupId: payload.groupId,
               })
             ).pipe(Effect.mapError(mapDeleteSquadGroupError));
+
             return { groupId: payload.groupId };
           }
         )
@@ -205,6 +227,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.listOwnedSquadGroups")(
           function* listOwnedSquadGroupsHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listOwnedSquadGroupsWorkflow({
@@ -219,6 +242,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.listGlobalSquadGroups")(
           function* listGlobalSquadGroups({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               Effect.gen(function* listGlobalSquadGroupsEffect() {
@@ -242,6 +266,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.getSquadGroupDetail")(
           function* getSquadGroupDetailHandler({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               getSquadGroupDetailWorkflow({
@@ -257,6 +282,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.listAvailableSquadCharacters")(
           function* listAvailableSquadCharacters({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listAvailableSquadCharactersWorkflow({
@@ -272,6 +298,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.saveSquadGroup")(
           function* saveSquadGroup({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               saveSquadGroupWorkflow({
@@ -286,6 +313,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                     name: squad.name,
                     position: squad.position,
                   };
+
                   return squad.squadId === undefined
                     ? mappedSquad
                     : { ...mappedSquad, squadId: squad.squadId };
@@ -300,6 +328,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.saveSharedSquadGroupCharacters")(
           function* saveSharedSquadGroupCharacters({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               saveSharedSquadGroupCharactersWorkflow({
@@ -320,6 +349,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderSquadGroup.setSquadGroupVisibility")(
           function* setSquadGroupVisibility({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               setSquadGroupVisibilityWorkflow({

@@ -19,6 +19,7 @@ export const Route = createFileRoute(
 )({
   loader: async ({ context, params }) => {
     const groupId = Option.getOrNull(decodeSquadGroupId(params.groupId));
+
     if (groupId === null) {
       return { groupId };
     }
@@ -27,6 +28,7 @@ export const Route = createFileRoute(
       ...squadGroupDetailQueryOptions(groupId),
       staleTime: 0,
     });
+
     if (detail.accessRole !== "viewer") {
       await context.queryClient.query({
         ...availableSquadCharactersQueryOptions(groupId),

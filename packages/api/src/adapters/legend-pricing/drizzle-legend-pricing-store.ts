@@ -41,13 +41,14 @@ import type {
 } from "../../services/legend-pricing/legend-pricing-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
 const listOperation = "listLegendPrices" as const;
+
 const updateOperation = "updateLegendCost" as const;
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
 
@@ -149,16 +150,20 @@ const decodePriceRows = (rows: readonly PriceRow[]) =>
   Effect.gen(function* decodePriceRows() {
     const itemId = decodePersisted(LegendaryItemId, listOperation);
     const itemLevel = decodePersisted(LegendaryItemLevel, listOperation);
+
     const itemSourceKey = decodePersisted(
       LegendaryItemSourceKey,
       listOperation
     );
+
     const enemyId = decodePersisted(LegendaryEnemyId, listOperation);
     const enemyLevel = decodePersisted(LegendaryEnemyLevel, listOperation);
+
     const enemySourceKey = decodePersisted(
       LegendaryEnemySourceKey,
       listOperation
     );
+
     const iconUrl = decodePersisted(MargonemCdnIconUrl, listOperation);
     const bonus = decodePersisted(LegendaryBonus, listOperation);
     const price = decodePersisted(LegendPriceGold, listOperation);
@@ -171,21 +176,27 @@ const decodePriceRows = (rows: readonly PriceRow[]) =>
       const decodedItemIconUrl = yield* iconUrl(row.item.iconUrl);
       const decodedItemLevel = yield* itemLevel(row.item.level);
       const decodedEnemyId = yield* enemyId(row.enemy.id);
+
       const decodedEnemySourceKey = yield* enemySourceKey(
         row.enemy.sourceIconKey
       );
+
       const decodedEnemyIconUrl = yield* iconUrl(row.enemy.iconUrl);
       const decodedEnemyLevel = yield* enemyLevel(row.enemy.level);
+
       const decodedBonus =
         row.item.legendaryBonus === null
           ? null
           : yield* bonus(row.item.legendaryBonus);
+
       const decodedPrice =
         row.cost === null ? null : yield* price(row.cost.priceGold);
+
       const decodedVersion =
         row.cost === null
           ? LegendCostVersion.make(0)
           : yield* version(row.cost.version);
+
       const enemy: LegendPriceEnemySource = {
         category: row.enemy.category,
         iconUrl: decodedEnemyIconUrl,
@@ -194,7 +205,9 @@ const decodePriceRows = (rows: readonly PriceRow[]) =>
         name: row.enemy.name,
         sourceIconKey: decodedEnemySourceKey,
       };
+
       const existing = summaries.get(decodedItemId);
+
       if (existing === undefined) {
         summaries.set(decodedItemId, {
           enemies: [enemy],
@@ -240,6 +253,7 @@ const updateWithTransaction = (
       .where(
         and(eq(legendaryItem.id, input.itemId), eq(legendaryItem.active, true))
       );
+
     if (item === undefined) {
       return yield* new ApplicationNotFound({
         message: "Legendary item not found",
@@ -257,6 +271,7 @@ const updateWithTransaction = (
         })
         .onConflictDoNothing({ target: legendaryItemCost.itemId })
         .returning({ itemId: legendaryItemCost.itemId });
+
       if (inserted.length === 0) {
         return yield* new ApplicationConflict({
           message: "Legendary item cost was updated concurrently",
@@ -264,6 +279,7 @@ const updateWithTransaction = (
       }
     } else {
       const updatedAt = new Date(yield* Clock.currentTimeMillis);
+
       const updated = yield* tx
         .update(legendaryItemCost)
         .set({
@@ -279,6 +295,7 @@ const updateWithTransaction = (
           )
         )
         .returning({ itemId: legendaryItemCost.itemId });
+
       if (updated.length === 0) {
         return yield* new ApplicationConflict({
           message: "Legendary item cost was updated concurrently",
@@ -288,12 +305,14 @@ const updateWithTransaction = (
 
     const rows = yield* selectPriceRows(tx, input.itemId);
     const [summary] = yield* decodePriceRows(rows);
+
     if (summary === undefined) {
       return yield* new ApplicationDependencyUnavailable({
         cause: new Error("Updated legendary item has no active drop source"),
         operation: updateOperation,
       });
     }
+
     return summary;
   });
 

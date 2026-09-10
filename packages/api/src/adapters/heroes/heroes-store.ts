@@ -17,12 +17,13 @@ import type {
 } from "../../services/heroes/heroes-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
@@ -39,6 +40,7 @@ const decodeHeroRow = <
   Effect.gen(function* decodeHeroRowEffect() {
     const eventId = yield* decodePersisted(EventId)(row.eventId);
     const id = yield* decodePersisted(HeroId)(row.id);
+
     return { ...row, eventId, id };
   });
 

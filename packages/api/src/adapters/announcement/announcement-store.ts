@@ -18,12 +18,13 @@ import type {
 import { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
@@ -77,10 +78,13 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
       Effect.forEach(rows, (row) =>
         Effect.gen(function* decodeAnnouncementRow() {
           const id = yield* decodePersisted(AnnouncementId)(row.id);
+
           if (row.user === null) {
             return { ...row, id, user: null };
           }
+
           const userId = yield* decodePersisted(AppUserId)(row.user.id);
+
           return {
             ...row,
             id,

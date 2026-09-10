@@ -8,18 +8,21 @@ export const deleteUser = Effect.fn("User.delete")(function* deleteUser(input: {
   readonly userId: Parameters<(typeof UserStore.Service)["deleteUser"]>[0];
 }) {
   const store = yield* UserStore;
+
   return yield* store.deleteUser(input.userId);
 });
 
 export const getVerifiedUsers = Effect.fn("User.getVerified")(
   function* getVerifiedUsers() {
     const store = yield* UserStore;
+
     return yield* store.getVerified();
   }
 );
 
 export const listUsers = Effect.fn("User.list")(function* listUsers() {
   const store = yield* UserStore;
+
   return yield* store.list();
 });
 
@@ -27,6 +30,7 @@ export const setRole = Effect.fn("User.setRole")(function* setRole(
   input: Omit<Parameters<(typeof UserStore.Service)["setRole"]>[0], "updatedAt">
 ) {
   const store = yield* UserStore;
+
   return yield* store.setRole({
     ...input,
     updatedAt: yield* DateTime.nowAsDate,
@@ -40,6 +44,7 @@ export const setVerified = Effect.fn("User.setVerified")(function* setVerified(
   >
 ) {
   const store = yield* UserStore;
+
   return yield* store.setVerified({
     ...input,
     updatedAt: yield* DateTime.nowAsDate,
@@ -54,6 +59,7 @@ export const updateProfile = Effect.fn("User.updateProfile")(
     >
   ) {
     const store = yield* UserStore;
+
     return yield* store.updateProfile({
       ...input,
       updatedAt: yield* DateTime.nowAsDate,

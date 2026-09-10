@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 import { describe } from "vitest";
 
 import { parseMargonemProfileHtml } from "./margonem-profile-html-parser.ts";
@@ -9,6 +10,7 @@ describe("Margonem profile HTML parser", () => {
   it.effect("returns a typed parser failure when profile name is missing", () =>
     Effect.gen(function* profileNameMissing() {
       const profileId = yield* parseMargonemProfileId(7_298_897);
+
       const error = yield* parseMargonemProfileHtml({
         html: '<html><body><li class="char-row"></li></body></html>',
         profileId,
@@ -21,6 +23,7 @@ describe("Margonem profile HTML parser", () => {
   it.effect("returns a typed failure for a malformed numeric entity", () =>
     Effect.gen(function* malformedNumericEntity() {
       const profileId = yield* parseMargonemProfileId(7_298_897);
+
       const error = yield* parseMargonemProfileHtml({
         html: `
           <div class="profile-header__name"><span>Informati &#oops;</span></div>
@@ -36,6 +39,7 @@ describe("Margonem profile HTML parser", () => {
   it.effect("returns a typed failure for an out-of-range numeric entity", () =>
     Effect.gen(function* outOfRangeNumericEntity() {
       const profileId = yield* parseMargonemProfileId(7_298_897);
+
       const error = yield* parseMargonemProfileHtml({
         html: `
           <div class="profile-header__name"><span>Informati</span></div>
@@ -47,7 +51,8 @@ describe("Margonem profile HTML parser", () => {
       }).pipe(Effect.flip);
 
       expect(error._tag).toBe("MargonemCharacterRowInvalid");
-      if (error._tag === "MargonemCharacterRowInvalid") {
+
+      if (Predicate.isTagged("MargonemCharacterRowInvalid")(error)) {
         expect(error.safeReason).toBe("invalid numeric HTML entity");
       }
     })
@@ -56,6 +61,7 @@ describe("Margonem profile HTML parser", () => {
   it.effect("uses DOM structure instead of attribute formatting", () =>
     Effect.gen(function* parseDomStructure() {
       const profileId = yield* parseMargonemProfileId(7_298_897);
+
       const parsed = yield* parseMargonemProfileHtml({
         html: `
           <section class='profile-header__name'><div><span>Informati</span></div></section>
@@ -80,6 +86,7 @@ describe("Margonem profile HTML parser", () => {
   it.effect("does not mix unsupported-world records into Jaruna output", () =>
     Effect.gen(function* ignoreUnsupportedWorld() {
       const profileId = yield* parseMargonemProfileId(7_298_897);
+
       const parsed = yield* parseMargonemProfileHtml({
         html: `
           <div class="profile-header__name"><span>Informati</span></div>
@@ -103,6 +110,7 @@ describe("Margonem profile HTML parser", () => {
     () =>
       Effect.gen(function* parseJarunaCharacter() {
         const profileId = yield* parseMargonemProfileId(7_298_897);
+
         const parsed = yield* parseMargonemProfileHtml({
           html: `
           <div class="profile-header__name"><span>Informati</span></div>

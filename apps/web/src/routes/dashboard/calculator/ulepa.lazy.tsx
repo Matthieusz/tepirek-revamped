@@ -6,6 +6,7 @@ const routeApi = getRouteApi("/dashboard/calculator/ulepa");
 
 const CalculatorUlepaRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <CalculatorUlepaPage session={session} />;
 };
 

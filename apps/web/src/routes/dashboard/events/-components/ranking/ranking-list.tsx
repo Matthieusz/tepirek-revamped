@@ -23,7 +23,9 @@ export interface RankingItem {
 }
 
 const GOLD_MEDAL = 1;
+
 const SILVER_MEDAL = 2;
+
 const BRONZE_MEDAL = 3;
 
 const getRankIcon = (position: number): ReactElement | null => {
@@ -36,6 +38,7 @@ const getRankIcon = (position: number): ReactElement | null => {
       />
     );
   }
+
   if (position === SILVER_MEDAL) {
     return (
       <HugeiconsIcon
@@ -45,6 +48,7 @@ const getRankIcon = (position: number): ReactElement | null => {
       />
     );
   }
+
   if (position === BRONZE_MEDAL) {
     return (
       <HugeiconsIcon
@@ -54,6 +58,7 @@ const getRankIcon = (position: number): ReactElement | null => {
       />
     );
   }
+
   return null;
 };
 
@@ -68,10 +73,12 @@ export const RankingList = ({ players }: RankingListProps) => (
         Num.parse(player.totalEarnings ?? "0"),
         () => 0
       );
+
       const points = Option.getOrElse(
         Num.parse(player.totalPoints ?? "0"),
         () => 0
       );
+
       const rankIcon = getRankIcon(index + 1);
 
       return (

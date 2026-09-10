@@ -16,11 +16,13 @@ import type {
 export interface CreateProfessionInput {
   readonly name: string;
 }
+
 export interface CreateRangeInput {
   readonly image: string;
   readonly level: number;
   readonly name: string;
 }
+
 export interface CreateSkillInput {
   readonly link: string;
   readonly mastery: boolean;
@@ -29,22 +31,28 @@ export interface CreateSkillInput {
   readonly rangeId: SkillRangeId;
   readonly userId: AppUserId;
 }
+
 export interface DeleteRangeInput {
   readonly id: SkillRangeId;
 }
+
 export interface DeleteSkillInput {
   readonly id: SkillId;
 }
+
 export interface GetRangeBySlugInput {
   readonly slug: string;
 }
+
 export interface GetSkillsByRangeInput {
   readonly rangeId: SkillRangeId;
 }
+
 export interface ProfessionSummary {
   readonly id: ProfessionId;
   readonly name: string;
 }
+
 export interface RangeSummary {
   readonly id: SkillRangeId;
   readonly image: string | null;
@@ -52,6 +60,7 @@ export interface RangeSummary {
   readonly name: string;
   readonly slug: string;
 }
+
 export interface SkillSummary {
   readonly addedBy: string | null;
   readonly addedByImage: string | null;

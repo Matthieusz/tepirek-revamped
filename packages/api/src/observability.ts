@@ -7,6 +7,7 @@ import * as Otlp from "./observability/otlp.ts";
 const makeRunId = Effect.gen(function* makeObservabilityRunId() {
   const cryptoService = yield* Crypto.Crypto;
   const uuid = yield* cryptoService.randomUUIDv4;
+
   return uuid.slice(0, 8);
 });
 
@@ -33,6 +34,7 @@ export const makeLayer = (config: ObservabilityConfig) =>
         const applicationLogs = makeLoggerLayer(
           config.printLogs ? [Logging.makeStderrLogger(runId)] : []
         );
+
         const logs = Otlp.loggerLayer(config, runId).pipe(
           Layer.provide(applicationLogs),
           Layer.provide(

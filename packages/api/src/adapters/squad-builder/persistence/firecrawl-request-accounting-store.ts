@@ -35,6 +35,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
   }: ReserveFirecrawlRequestInput) {
     const operation = "reserveRequest" as const;
     const yearMonthText = yearMonth;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* reserveInTransaction(
         tx: TransactionDatabase
@@ -42,6 +43,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
         );
+
         const usageRows = yield* tx
           .select({ usedRequests: count() })
           .from(firecrawlProfileScrapeRequest)
@@ -54,6 +56,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
               )
             )
           );
+
         const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
         if (usedRequests >= monthlyRequestBudget) {
@@ -81,6 +84,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
                 )
               )
             );
+
           const usedRequestsByUser = userUsageRows[0]?.usedRequests ?? 0;
 
           if (usedRequestsByUser >= perUserMonthlyRequestBudget) {
@@ -101,6 +105,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
             yearMonth: yearMonthText,
           })
           .returning({ id: firecrawlProfileScrapeRequest.id });
+
         const [reserved] = insertedRows;
 
         if (reserved === undefined) {

@@ -7,6 +7,7 @@ export const AppUserId = Schema.NonEmptyString.pipe(
 ).annotate({
   identifier: "AppUserId",
 });
+
 export type AppUserId = typeof AppUserId.Type;
 
 /** Failure returned when an app user id is missing or empty. */

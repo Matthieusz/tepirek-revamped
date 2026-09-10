@@ -10,6 +10,7 @@ const scopedBuild = <A, E>(layer: Layer.Layer<A, E>) =>
 
 it.effect("releases the server, handlers, and pool in dependency order", () => {
   const calls: string[] = [];
+
   const applicationLayer = Layer.effect(
     ServerApplication,
     Effect.gen(function* acquireControlledApplication() {
@@ -23,9 +24,11 @@ it.effect("releases the server, handlers, and pool in dependency order", () => {
           calls.push("handlers");
         })
       );
+
       return ServerApplication.of({ app: new Hono() });
     })
   );
+
   const serverLayer = makeServerHostLayer(applicationLayer, () =>
     Effect.succeed({
       stop: async () => {
@@ -44,16 +47,21 @@ it.effect("releases the server, handlers, and pool in dependency order", () => {
 it.effect("does not serve when handler-layer acquisition fails", () => {
   const handlerFailure = new Error("handler layer failed");
   const handlerLayer = Layer.effectDiscard(Effect.fail(handlerFailure));
+
   const applicationLayer = Layer.effect(
     ServerApplication,
     Effect.gen(function* acquireApplicationHandlers() {
       yield* Layer.build(handlerLayer);
+
       return ServerApplication.of({ app: new Hono() });
     })
   );
+
   let serveCalled = false;
+
   const serverLayer = makeServerHostLayer(applicationLayer, () => {
     serveCalled = true;
+
     return Effect.succeed({
       stop: async () => {
         await Promise.resolve();
@@ -71,6 +79,7 @@ it.effect("does not serve when handler-layer acquisition fails", () => {
 
 it.effect("releases acquired resources when server startup fails", () => {
   const calls: string[] = [];
+
   const applicationLayer = Layer.effect(
     ServerApplication,
     Effect.acquireRelease(
@@ -81,7 +90,9 @@ it.effect("releases acquired resources when server startup fails", () => {
         })
     )
   );
+
   const startupFailure = new Error("server startup failed");
+
   const serverLayer = makeServerHostLayer(applicationLayer, () =>
     Effect.fail(startupFailure)
   );

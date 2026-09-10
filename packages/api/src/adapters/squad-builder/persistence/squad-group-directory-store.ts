@@ -29,6 +29,7 @@ import {
 } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -77,6 +78,7 @@ const searchSquadEditorInviteTargetsWithDatabase = (
     const operation = "searchSquadEditorInviteTargets" as const;
     const groupIdNumber = groupId;
     const owner = ownerUserId;
+
     const select = database
       .select({ image: user.image, name: user.name, userId: user.id })
       .from(user)
@@ -97,6 +99,7 @@ const searchSquadEditorInviteTargetsWithDatabase = (
       )
       .orderBy(user.name)
       .limit(maxResults);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const targets: SquadEditorInviteTarget[] = [];
@@ -125,6 +128,7 @@ const findVerifiedSquadEditorInviteTargetWithDatabase = (
     readonly targetUserId: AppUserId;
   }) {
     const operation = "findVerifiedSquadEditorInviteTarget" as const;
+
     const select = database
       .select({
         image: user.image,
@@ -135,6 +139,7 @@ const findVerifiedSquadEditorInviteTargetWithDatabase = (
       .from(user)
       .where(eq(user.id, targetUserId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [target] = rows;
@@ -177,6 +182,7 @@ export const listAvailableCharactersForOwnerWithDatabase = (
           )
         )
         .for("update");
+
       yield* persistenceQuery(operation, accessLock);
     }
 
@@ -216,6 +222,7 @@ export const listAvailableCharactersForOwnerWithDatabase = (
         )
       )
       .orderBy(asc(margonemAccount.displayName), asc(margonemCharacter.level));
+
     const rows = yield* persistenceQuery(operation, select);
 
     const characters: AvailableSquadCharacter[] = [];
@@ -277,6 +284,7 @@ export const buildSquadGroupListFilterPredicates = (
 
   if (filters.nameQuery !== undefined) {
     const escapedQuery = escapeLikePattern(filters.nameQuery);
+
     const namePredicate = or(
       ilike(squadGroup.name, `%${escapedQuery}%`),
       exists(
@@ -297,7 +305,7 @@ export const buildSquadGroupListFilterPredicates = (
     }
   }
 
-  if (filters.levelRange._tag === "BoundedLevelRange") {
+  if (Predicate.isTagged("BoundedLevelRange")(filters.levelRange)) {
     const levelPredicates = [eq(squad.squadGroupId, squadGroup.id)];
 
     if (filters.levelRange.minLevel !== undefined) {
@@ -336,10 +344,12 @@ const listGlobalSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
     limit,
   }: ListGlobalSquadGroupsInput) {
     const operation = "listGlobalSquadGroups" as const;
+
     const filterPredicates = buildSquadGroupListFilterPredicates(
       database,
       filters
     );
+
     const select = database
       .select({
         characterCount: sql<number>`count(distinct ${squadCharacter.id})::int`,
@@ -359,6 +369,7 @@ const listGlobalSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
       .groupBy(squadGroup.id, user.id)
       .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id))
       .limit(limit);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const groups: GlobalSquadGroupSummary[] = [];

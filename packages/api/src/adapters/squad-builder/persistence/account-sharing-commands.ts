@@ -12,6 +12,7 @@ import {
 import { and, eq, inArray } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 
 import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
 import { parseAccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
@@ -56,6 +57,7 @@ export const upsertAccountAccessInviteWithDatabase = (
     const accountIdNumber = accountId;
     const invitedUser = invitedUserId;
     const owner = ownerUserId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* upsertAccountAccessInviteTransaction(
         tx: TransactionDatabase
@@ -75,6 +77,7 @@ export const upsertAccountAccessInviteWithDatabase = (
             ],
           })
           .returning({ id: margonemAccountAccess.id });
+
         const insertedRows = yield* insert;
 
         const [inserted] = insertedRows;
@@ -97,6 +100,7 @@ export const upsertAccountAccessInviteWithDatabase = (
           )
           .limit(1)
           .for("update");
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -121,6 +125,7 @@ export const upsertAccountAccessInviteWithDatabase = (
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         const updatedRows = yield* tx
           .update(margonemAccountAccess)
           .set({
@@ -130,6 +135,7 @@ export const upsertAccountAccessInviteWithDatabase = (
           })
           .where(eq(margonemAccountAccess.id, existing.id))
           .returning({ id: margonemAccountAccess.id });
+
         const [updated] = updatedRows;
 
         if (updated === undefined) {
@@ -142,6 +148,7 @@ export const upsertAccountAccessInviteWithDatabase = (
         return updated.id;
       })
     );
+
     const upserted = yield* persistenceQuery(operation, transaction);
 
     const accessId = yield* parseMargonemAccountAccessId(upserted).pipe(
@@ -172,6 +179,7 @@ export const respondToAccountAccessInviteWithDatabase = (
   }: RespondToAccountAccessInviteStoreInput) {
     const operation = "respondToAccountAccessInvite" as const;
     const invitedUser = invitedUserId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* respondToAccountAccessInviteTransaction(
         tx: TransactionDatabase
@@ -186,6 +194,7 @@ export const respondToAccountAccessInviteWithDatabase = (
           .where(eq(margonemAccountAccess.id, accessId))
           .limit(1)
           .for("update");
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -214,11 +223,13 @@ export const respondToAccountAccessInviteWithDatabase = (
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         const updatedRows = yield* tx
           .update(margonemAccountAccess)
           .set({ status: transitioned.nextStatus, updatedAt: now })
           .where(eq(margonemAccountAccess.id, existing.id))
           .returning({ id: margonemAccountAccess.id });
+
         const [updated] = updatedRows;
 
         if (updated === undefined) {
@@ -231,9 +242,10 @@ export const respondToAccountAccessInviteWithDatabase = (
         return { _tag: "Updated" as const };
       })
     );
+
     const respond = yield* persistenceQuery(operation, transaction);
 
-    if (respond._tag !== "Updated") {
+    if (!Predicate.isTagged("Updated")(respond)) {
       return yield* respond;
     }
 
@@ -253,6 +265,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
     const operation = "revokeAccountAccess" as const;
     const accessIdNumber = accessId;
     const owner = ownerUserId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* revokeAccountAccessTransaction(
         tx: TransactionDatabase
@@ -267,6 +280,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(margonemAccountAccess.id, accessIdNumber))
           .limit(1)
           .for("update");
+
         const accessRows = yield* accessSelect;
 
         const [access] = accessRows;
@@ -280,6 +294,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
           .from(margonemAccount)
           .where(eq(margonemAccount.id, access.accountId))
           .limit(1);
+
         const accountRows = yield* accountSelect;
 
         const [account] = accountRows;
@@ -305,6 +320,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         yield* tx
           .update(margonemAccountAccess)
           .set({ status: transitioned.nextStatus, updatedAt: now })
@@ -312,11 +328,12 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
 
         let removedSquadCharacterCount = 0;
 
-        if (transitioned.previousStatus === "accepted") {
+        if (Predicate.isTagged("accepted")(transitioned)) {
           const characterSelect = tx
             .select({ id: margonemCharacter.id })
             .from(margonemCharacter)
             .where(eq(margonemCharacter.accountId, access.accountId));
+
           const accountCharacters = yield* characterSelect;
 
           const accountCharacterIds = accountCharacters.map(
@@ -337,6 +354,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
                   eq(squadGroup.ownerUserId, access.userId)
                 )
               );
+
             const affectedGroups = yield* affectedGroupSelect;
 
             const affectedGroupIds = Arr.dedupe(
@@ -353,6 +371,7 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
                   )
                 )
                 .returning({ id: squadCharacter.id });
+
               const removedPlacements = yield* removedPlacementsDelete;
 
               removedSquadCharacterCount = removedPlacements.length;
@@ -373,9 +392,10 @@ export const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
         };
       })
     );
+
     const revoked = yield* persistenceQuery(operation, transaction);
 
-    if (revoked._tag !== "Revoked") {
+    if (!Predicate.isTagged("Revoked")(revoked)) {
       return yield* revoked;
     }
 

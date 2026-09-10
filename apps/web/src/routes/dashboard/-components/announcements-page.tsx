@@ -99,8 +99,10 @@ const DashboardHomeContent = ({
   session,
 }: DashboardHomeContentProps) => {
   const queryClient = useQueryClient();
+
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
+
   const deleteMutation = useMutation(
     deleteAnnouncementMutationOptions(queryClient)
   );

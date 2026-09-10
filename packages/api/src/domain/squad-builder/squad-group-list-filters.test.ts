@@ -1,8 +1,12 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 import { describe } from "vitest";
 
-import { parseSquadGroupListFilters } from "./squad-group-list-filters.ts";
+import {
+  parseSquadGroupListFilters,
+  SquadGroupLevelRange,
+} from "./squad-group-list-filters.ts";
 
 describe("parseSquadGroupListFilters", () => {
   it.effect(
@@ -10,7 +14,9 @@ describe("parseSquadGroupListFilters", () => {
     () =>
       Effect.gen(function* filtersEmpty() {
         const result = yield* parseSquadGroupListFilters({});
-        expect(result).toEqual({ levelRange: { _tag: "AnyLevel" } });
+        expect(result).toEqual({
+          levelRange: SquadGroupLevelRange.AnyLevel(),
+        });
       })
   );
 
@@ -19,10 +25,13 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         nameQuery: "  Smoki   jaruna ",
       });
+
       expect(result.nameQuery).toBeDefined();
+
       if (result.nameQuery === undefined) {
         return;
       }
+
       expect(result.nameQuery).toBe("Smoki jaruna");
     })
   );
@@ -32,6 +41,7 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         nameQuery: "a",
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupNameQuery");
     })
   );
@@ -41,6 +51,7 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         nameQuery: "a".repeat(81),
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupNameQuery");
     })
   );
@@ -51,16 +62,20 @@ describe("parseSquadGroupListFilters", () => {
         maxLevel: 180,
         minLevel: 120,
       });
+
       expect(result.levelRange._tag).toBe("BoundedLevelRange");
-      if (result.levelRange._tag !== "BoundedLevelRange") {
+
+      if (!Predicate.isTagged("BoundedLevelRange")(result.levelRange)) {
         return;
       }
+
       if (
         result.levelRange.minLevel === undefined ||
         result.levelRange.maxLevel === undefined
       ) {
         return;
       }
+
       expect(result.levelRange.minLevel).toBe(120);
       expect(result.levelRange.maxLevel).toBe(180);
     })
@@ -81,6 +96,7 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         minLevel: 1.5,
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupLevelRange");
     })
   );
@@ -90,6 +106,7 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         minLevel: 0,
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupLevelRange");
     })
   );
@@ -99,6 +116,7 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         maxLevel: 501,
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupLevelRange");
     })
   );
@@ -109,6 +127,7 @@ describe("parseSquadGroupListFilters", () => {
         maxLevel: 120,
         minLevel: 180,
       }).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidSquadGroupLevelRange");
     })
   );

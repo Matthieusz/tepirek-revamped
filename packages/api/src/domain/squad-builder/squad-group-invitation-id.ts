@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { makeBrandedPositiveInt } from "./positive-int.ts";
+import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a squad group invitation id is invalid. */
 export class InvalidSquadGroupInvitationId extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationId>()(
@@ -8,7 +8,7 @@ export class InvalidSquadGroupInvitationId extends Schema.TaggedErrorClass<Inval
   {}
 ) {}
 
-const brandedSquadGroupInvitationId = makeBrandedPositiveInt(
+const brandedSquadGroupInvitationId = buildBrandedPositiveInt(
   "SquadGroupInvitationId",
   "SquadGroupInvitationId.parse",
   () => new InvalidSquadGroupInvitationId()
@@ -16,6 +16,7 @@ const brandedSquadGroupInvitationId = makeBrandedPositiveInt(
 
 /** A persisted squad group invitation id. */
 export const SquadGroupInvitationId = brandedSquadGroupInvitationId.schema;
+
 export type SquadGroupInvitationId = typeof SquadGroupInvitationId.Type;
 
 /** Parse a positive integer as a squad group invitation id. */

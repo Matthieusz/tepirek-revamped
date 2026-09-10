@@ -27,7 +27,9 @@ export type SquadGroupAccess = Data.TaggedEnum<{
     readonly ownerUserId: AppUserId;
   };
 }>;
+
 export const SquadGroupAccess = Data.taggedEnum<SquadGroupAccess>();
+
 export type SquadGroupOwnerAccess = Data.TaggedEnum.Value<
   SquadGroupAccess,
   "SquadGroupOwnerAccess"

@@ -43,6 +43,7 @@ interface RangeCardProps {
 export const RangeCard = ({ range, session, className }: RangeCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
+
   const deleteMutation = useMutation(
     deleteSkillRangeMutationOptions(queryClient, undefined, {
       onError: (error) => {

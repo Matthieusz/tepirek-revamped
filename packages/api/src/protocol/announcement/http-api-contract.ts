@@ -9,16 +9,20 @@ import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 export { AnnouncementId } from "../../domain/core-identifiers.ts";
 
 const { NonEmptyString } = Schema;
+
 export const CreateAnnouncementPayload = Schema.Struct({
   description: NonEmptyString,
   title: NonEmptyString,
 });
+
 export interface CreateAnnouncementPayload extends Schema.Schema.Type<
   typeof CreateAnnouncementPayload
 > {}
+
 export const DeleteAnnouncementPayload = Schema.Struct({
   id: AnnouncementId,
 });
+
 export interface DeleteAnnouncementPayload extends Schema.Schema.Type<
   typeof DeleteAnnouncementPayload
 > {}
@@ -28,9 +32,11 @@ export const AnnouncementAuthor = Schema.Struct({
   image: Schema.NullOr(Schema.String),
   name: Schema.NullOr(Schema.String),
 });
+
 export interface AnnouncementAuthor extends Schema.Schema.Type<
   typeof AnnouncementAuthor
 > {}
+
 export const AnnouncementSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
   description: Schema.String,
@@ -38,6 +44,7 @@ export const AnnouncementSummary = Schema.Struct({
   title: Schema.String,
   user: Schema.NullOr(AnnouncementAuthor),
 });
+
 export interface AnnouncementSummary extends Schema.Schema.Type<
   typeof AnnouncementSummary
 > {}

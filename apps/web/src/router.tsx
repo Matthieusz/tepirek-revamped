@@ -13,6 +13,7 @@ import { routeTree } from "./routeTree.gen";
 /** Creates an isolated router and QueryClient. */
 export const getRouter = () => {
   const queryClient = createQueryClient();
+
   const router = createTanStackRouter({
     context: { getUser, queryClient },
     defaultNotFoundComponent: () => <NotFound />,
@@ -20,7 +21,9 @@ export const getRouter = () => {
     routeTree,
     scrollRestoration: true,
   });
+
   setupRouterSsrQueryIntegration({ queryClient, router });
+
   return router;
 };
 

@@ -6,6 +6,7 @@ const routeApi = getRouteApi("/dashboard/profile");
 
 const ProfileRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <ProfilePage session={session} />;
 };
 

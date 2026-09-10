@@ -53,21 +53,25 @@ export const saveWithStoreService = Effect.fn(
   input: SaveSharedSquadGroupCharactersInput
 ) {
   const sharingStore = yield* SquadGroupSharingStoreService;
+
   const snapshotSquads: SharedSquadGroupCharactersSnapshot["squads"][number][] =
     [];
 
   for (const squad of input.squads) {
     const characters: SquadCharacterDraftPlacement[] = [];
+
     for (const character of squad.characters) {
       characters.push({
         characterId: character.characterId,
         position: yield* parseCharacterPosition(character.position),
       });
     }
+
     snapshotSquads.push({ characters, squadId: squad.squadId });
   }
 
   const now = yield* DateTime.nowAsDate;
+
   return yield* sharingStore.saveSharedSquadGroupCharacters({
     actorUserId: input.actorUserId,
     expectedUpdatedAt: input.expectedUpdatedAt,

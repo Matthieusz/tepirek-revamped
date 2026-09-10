@@ -95,6 +95,7 @@ export const heroesByEventQueryOptions = (
       if (eventId === null || eventId <= 0) {
         return [];
       }
+
       return await runner(listHeroesByEvent(eventId), { signal });
     },
     queryKey:
@@ -149,7 +150,9 @@ export const deleteHeroMutationOptions = (
             ) {
               return heroes;
             }
+
             const index = Math.min(snapshot.index, heroes.length);
+
             return [
               ...heroes.slice(0, index),
               snapshot.previousHero,
@@ -158,17 +161,21 @@ export const deleteHeroMutationOptions = (
           }
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: DeleteHeroInput) => {
       await queryClient.cancelQueries({ queryKey: heroesQueryKey });
       const snapshots: HeroCacheSnapshot[] = [];
+
       for (const [queryKey, heroes] of queryClient.getQueriesData<
         readonly Hero[]
       >({ queryKey: heroesQueryKey })) {
         const index = heroes?.findIndex((hero) => hero.id === input.id) ?? -1;
+
         const previousHero =
           index >= 0 && heroes !== undefined ? heroes[index] : undefined;
+
         if (previousHero !== undefined) {
           snapshots.push({
             index,
@@ -176,10 +183,12 @@ export const deleteHeroMutationOptions = (
             queryKey,
           });
         }
+
         queryClient.setQueryData<readonly Hero[]>(queryKey, (current) =>
           current?.filter((hero) => hero.id !== input.id)
         );
       }
+
       return { snapshots };
     },
     onSettled: async () => {

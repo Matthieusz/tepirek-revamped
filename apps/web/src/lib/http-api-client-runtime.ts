@@ -4,6 +4,7 @@ import { Layer } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import type * as LayerType from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 import { FetchHttpClient, HttpClientResponse } from "effect/unstable/http";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { HttpApiClient } from "effect/unstable/httpapi";
@@ -27,7 +28,7 @@ const isUnexpectedApiError = (
   error: Parameters<typeof HttpClientError.isHttpClientError>[0]
 ): error is UnexpectedApiError =>
   HttpClientError.isHttpClientError(error) &&
-  error.reason._tag === "DecodeError" &&
+  Predicate.isTagged("DecodeError")(error.reason) &&
   error.reason.response.status >= 400;
 
 const decodeUnexpectedApiError = (

@@ -39,10 +39,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -95,18 +97,22 @@ describe("announcement queries and mutations", () => {
     const { calls, layer } = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(layer);
     const testClient = makeTestQueryClient();
+
     const queryObserver = new QueryObserver(
       testClient.queryClient,
       announcementsQueryOptions(runner)
     );
+
     const unsubscribe = queryObserver.subscribe(() => {});
 
     try {
       await queryObserver.refetch();
+
       const create = new MutationObserver(
         testClient.queryClient,
         createAnnouncementMutationOptions(testClient.queryClient, runner)
       );
+
       await expect(
         create.mutate({ description: "Description", title: "Title" })
       ).resolves.toBeUndefined();
@@ -129,6 +135,7 @@ describe("announcement queries and mutations", () => {
     const { queryClient } = testClient;
     const refreshErrors: Error[] = [];
     queryClient.setQueryData(announcementsQueryKey, []);
+
     const queryObserver = new QueryObserver(queryClient, {
       queryFn: async () =>
         await Promise.reject(new Error("Announcement list refresh failed")),
@@ -136,6 +143,7 @@ describe("announcement queries and mutations", () => {
       retry: false,
       staleTime: Number.POSITIVE_INFINITY,
     });
+
     const unsubscribe = queryObserver.subscribe(() => {});
 
     try {
@@ -147,6 +155,7 @@ describe("announcement queries and mutations", () => {
           },
         })
       );
+
       await expect(
         create.mutate({ description: "Description", title: "Title" })
       ).resolves.toBeUndefined();
@@ -189,6 +198,7 @@ describe("announcement queries and mutations", () => {
           }
         )
       );
+
       const request = deleteMutation.mutate({ id: firstAnnouncement.id });
 
       await vi.waitFor(() => {
@@ -221,6 +231,7 @@ describe("announcement queries and mutations", () => {
         testClient.queryClient,
         deleteAnnouncementMutationOptions(testClient.queryClient, runner)
       );
+
       expect(
         deleteAnnouncementMutationOptions(testClient.queryClient, runner).retry
       ).toBe(false);

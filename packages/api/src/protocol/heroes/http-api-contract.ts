@@ -18,14 +18,19 @@ export const CreateHeroPayload = Schema.Struct({
   level: Schema.optionalKey(HeroLevel),
   name: Schema.NonEmptyString,
 });
+
 export interface CreateHeroPayload extends Schema.Schema.Type<
   typeof CreateHeroPayload
 > {}
+
 export const DeleteHeroPayload = Schema.Struct({ id: HeroId });
+
 export interface DeleteHeroPayload extends Schema.Schema.Type<
   typeof DeleteHeroPayload
 > {}
+
 export const HeroesByEventPayload = Schema.Struct({ eventId: EventId });
+
 export interface HeroesByEventPayload extends Schema.Schema.Type<
   typeof HeroesByEventPayload
 > {}
@@ -38,6 +43,7 @@ export const HeroSummary = Schema.Struct({
   name: Schema.NonEmptyString,
   pointWorth: Schema.String,
 });
+
 export interface HeroSummary extends Schema.Schema.Type<typeof HeroSummary> {}
 
 export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthorized>()(
@@ -45,11 +51,13 @@ export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthoriz
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class HeroesForbidden extends Schema.TaggedErrorClass<HeroesForbidden>()(
   "HeroesForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class HeroesPersistenceUnavailable extends Schema.TaggedErrorClass<HeroesPersistenceUnavailable>()(
   "HeroesPersistenceUnavailable",
   { operation: Schema.String },

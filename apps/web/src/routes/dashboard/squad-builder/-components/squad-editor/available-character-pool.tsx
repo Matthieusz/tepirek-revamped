@@ -12,6 +12,7 @@ import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Predicate from "effect/Predicate";
 import { useMemo, useReducer } from "react";
 
 import {
@@ -158,15 +159,19 @@ const characterPoolReducer = (
         levelToInput: "",
       };
     }
+
     case "set-filters": {
       return { ...state, filters: action.filters };
     }
+
     case "set-level-from": {
       return { ...state, levelFromInput: action.value };
     }
+
     case "set-level-to": {
       return { ...state, levelToInput: action.value };
     }
+
     case "set-name": {
       return {
         ...state,
@@ -184,6 +189,7 @@ const characterPoolReducer = (
         ],
       };
     }
+
     case "toggle-account": {
       const collapsedAccountIds = HashSet.has(
         state.collapsedAccountIds,
@@ -191,8 +197,10 @@ const characterPoolReducer = (
       )
         ? HashSet.remove(state.collapsedAccountIds, action.accountId)
         : HashSet.add(state.collapsedAccountIds, action.accountId);
+
       return { ...state, collapsedAccountIds };
     }
+
     default: {
       return state;
     }
@@ -268,6 +276,7 @@ const DestinationMenu = ({
         )}
         {draft.squads.map((squad) => {
           const isCurrent = selectedSquad?.clientKey === squad.clientKey;
+
           const error = getPlacementError(
             draft,
             character.characterId,
@@ -275,7 +284,9 @@ const DestinationMenu = ({
             accountInfoByCharacterId,
             true
           );
+
           let disabledReason: string | undefined;
+
           if (isCurrent) {
             disabledReason = "obecny skład";
           } else if (error !== undefined) {
@@ -285,6 +296,7 @@ const DestinationMenu = ({
               squad.name
             );
           }
+
           return (
             <DropdownMenuItem
               disabled={isCurrent || error !== undefined}
@@ -297,7 +309,8 @@ const DestinationMenu = ({
                   accountInfoByCharacterId,
                   true
                 );
-                if (result._tag === "success") {
+
+                if (Predicate.isTagged("success")(result)) {
                   onDraftChange(result.draft);
                 }
               }}
@@ -334,6 +347,7 @@ const CharacterPoolTile = ({
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }) => {
   const profession = getProfessionPresentation(character.profession);
+
   return (
     <li className="min-w-0">
       <article className="border-border bg-card/40 hover:border-primary/40 flex min-w-0 items-center gap-2 rounded-md border p-1.5 transition-colors motion-reduce:transition-none">
@@ -387,12 +401,15 @@ const useCharacterPoolModel = ({
   readonly levelToInput: string;
 }) => {
   const result = useQuery(availableSquadCharactersQueryOptions(groupId));
+
   const refresh = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     result.refetch();
   };
+
   const allCharacterById = useMemo(() => {
     let merged = characterById;
+
     if (result.data !== undefined) {
       for (const character of result.data) {
         merged = HashMap.set(
@@ -402,16 +419,20 @@ const useCharacterPoolModel = ({
         );
       }
     }
+
     return merged;
   }, [characterById, result]);
+
   const characters = useMemo(
     () => Arr.fromIterable(HashMap.values(allCharacterById)),
     [allCharacterById]
   );
+
   const assignedCharacterIds = useMemo(
     () => getAssignedCharacterIds(draft.squads),
     [draft.squads]
   );
+
   const unassignedCharacters = useMemo(
     () =>
       characters.filter(
@@ -419,10 +440,12 @@ const useCharacterPoolModel = ({
       ),
     [assignedCharacterIds, characters]
   );
+
   const parsedFilters = useMemo(
     () => parseCharacterPoolFilters(filters, levelFromInput, levelToInput),
     [filters, levelFromInput, levelToInput]
   );
+
   const filteredCharacters = useMemo(
     () =>
       filterAvailableCharacters(
@@ -432,25 +455,31 @@ const useCharacterPoolModel = ({
       ),
     [assignedCharacterIds, characters, parsedFilters]
   );
+
   const groupedCharacters = useMemo(
     () => groupCharactersByAccount(filteredCharacters),
     [filteredCharacters]
   );
+
   const accountInfoByCharacterId = useMemo(
     () => getAccountInfoMap(allCharacterById),
     [allCharacterById]
   );
+
   const selectedProfessions = useMemo(
     () => HashSet.fromIterable(getProfessionFilterValues(filters)),
     [filters]
   );
+
   const hasActiveFilters =
     filters.length > 0 ||
     characterNameQuery.trim().length > 0 ||
     levelFromInput.trim().length > 0 ||
     levelToInput.trim().length > 0;
+
   const hasLevelError =
     parsedFilters.hasInvalidLevelInput || parsedFilters.hasReversedLevelRange;
+
   const levelErrorMessage = parsedFilters.hasReversedLevelRange
     ? "Poziom od nie może być większy niż poziom do."
     : "Poziom musi być dodatnią liczbą całkowitą.";
@@ -481,6 +510,7 @@ export const AvailableCharacterPool = ({
     characterPoolReducer,
     initialCharacterPoolState
   );
+
   const {
     characterNameQuery,
     collapsedAccountIds,
@@ -488,6 +518,7 @@ export const AvailableCharacterPool = ({
     levelFromInput,
     levelToInput,
   } = state;
+
   const {
     accountInfoByCharacterId,
     characters,
@@ -509,10 +540,12 @@ export const AvailableCharacterPool = ({
     levelFromInput,
     levelToInput,
   });
+
   const levelErrorId = `character-pool-level-error-${groupId}`;
 
   const updateProfessionFilter = (profession: string) => {
     const currentValues = getProfessionFilterValues(filters);
+
     const nextValues = currentValues.includes(profession)
       ? currentValues.filter((value) => value !== profession)
       : [...currentValues, profession];
@@ -522,16 +555,19 @@ export const AvailableCharacterPool = ({
         filters: filters.filter((filter) => filter.field !== "profession"),
         type: "set-filters",
       });
+
       return;
     }
 
     const hasProfessionFilter = filters.some(
       (filter) => filter.field === "profession"
     );
+
     const nextProfessionFilter: CharacterPoolFilter = {
       field: "profession",
       values: nextValues,
     };
+
     dispatch({
       filters: hasProfessionFilter
         ? filters.map((filter) =>
@@ -686,6 +722,7 @@ export const AvailableCharacterPool = ({
                       collapsedAccountIds,
                       accountGroup.accountId
                     );
+
                     const charactersId = `character-account-${groupId}-${accountGroup.accountId}`;
 
                     return (

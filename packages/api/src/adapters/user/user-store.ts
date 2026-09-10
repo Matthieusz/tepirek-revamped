@@ -27,11 +27,12 @@ import type {
 } from "../../services/user/user-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
+
 const PersistedCount = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
 
 const verifiedMemberSelect = {
@@ -50,7 +51,7 @@ const playerListSelect = {
   verified: user.verified,
 };
 
-const userPersistenceQuery = makeDirectPersistenceQuery(
+const userPersistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
 
@@ -68,6 +69,7 @@ const toVerifiedMember = Effect.fnUntraced(function* toVerifiedMember(row: {
   readonly name: string;
 }) {
   const id = yield* decodeAppUserId("getVerified.decode")(row.id);
+
   return { ...row, id };
 });
 
@@ -81,11 +83,14 @@ const toPlayer = Effect.fnUntraced(function* toPlayer(row: {
   readonly verified: boolean;
 }) {
   const id = yield* decodeAppUserId("listUsers.decode")(row.id);
+
   return { ...row, id };
 });
 
 type UserRow = typeof user.$inferSelect;
+
 type UserQueryExecutor = Pick<EffectPgDatabase, "select" | "update">;
+
 type UserMutationState = Partial<Pick<UserRow, "role" | "verified">>;
 
 const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
@@ -96,6 +101,7 @@ const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
     "loadTargetUser",
     database.select().from(user).where(eq(user.id, userId))
   );
+
   const [targetUser] = rows;
 
   if (targetUser === undefined) {
@@ -138,6 +144,7 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
     const nextRole = next.role ?? targetUser.role;
     const nextVerified = next.verified ?? targetUser.verified;
     const willBeVerifiedAdmin = nextRole === "admin" && nextVerified;
+
     const isCurrentlyVerifiedAdmin =
       targetUser.role === "admin" && targetUser.verified;
 
@@ -173,12 +180,14 @@ const updateAndReturnUser = Effect.fnUntraced(function* updateAndReturnUser(
       .set({ updatedAt, ...values })
       .where(where)
   );
+
   const rows = yield* userPersistenceQuery(
     operation,
     database.select(playerListSelect).from(user).where(where)
   );
 
   const [row] = rows;
+
   return row === undefined ? null : yield* toPlayer(row);
 });
 
@@ -304,6 +313,7 @@ const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
           and(eq(account.userId, userId), eq(account.providerId, "discord"))
         )
     );
+
     const accessToken = rows[0]?.accessToken;
 
     if (

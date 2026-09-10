@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
-import type { LastBetState } from "./member-selection";
 import {
+  LastBetState,
   clearSelection,
   copyLastBet,
   filterUsersBySearch,
@@ -107,15 +107,15 @@ describe("restoreSelection", () => {
 
 describe("copyLastBet", () => {
   it("maps the last bet's members to selected user IDs", () => {
-    const lastBet: LastBetState = {
-      _tag: "available",
+    const lastBet = LastBetState.available({
       members: [{ userId: "u2" }, { userId: "u3" }],
-    };
+    });
+
     expect(copyLastBet(lastBet)).toEqual(["u2", "u3"]);
   });
 
   it("returns an empty array when the last bet is unavailable", () => {
-    expect(copyLastBet({ _tag: "unavailable" })).toEqual([]);
+    expect(copyLastBet(LastBetState.unavailable())).toEqual([]);
   });
 });
 

@@ -107,6 +107,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
   }: DeleteSquadGroupStoreInput) {
     const operation = "deleteSquadGroup" as const;
     const groupIdNumber = groupId;
+
     const existingRows = yield* persistenceQuery(
       operation,
       database
@@ -115,11 +116,13 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
         .where(eq(squadGroup.id, groupIdNumber))
         .limit(1)
     );
+
     const [existing] = existingRows;
 
     if (existing === undefined) {
       return yield* new SquadGroupNotFound({});
     }
+
     if (existing.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnSquadGroup({});
     }
@@ -135,6 +138,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
           )
         )
     );
+
     return yield* Effect.void;
   });
 
@@ -192,6 +196,7 @@ export const loadSquadGroupDetailWithDatabase = (
     const operation = "getSquadGroupDetail" as const;
     const groupIdNumber = groupId;
     const actor = actorUserId;
+
     const groupSelect = database
       .select({
         name: squadGroup.name,
@@ -202,6 +207,7 @@ export const loadSquadGroupDetailWithDatabase = (
       .from(squadGroup)
       .where(eq(squadGroup.id, groupIdNumber))
       .limit(1);
+
     const groupRows = yield* persistenceQuery(operation, groupSelect);
 
     const [group] = groupRows;
@@ -214,10 +220,12 @@ export const loadSquadGroupDetailWithDatabase = (
       operation,
       group.ownerUserId
     );
+
     const groupName = yield* parsePersistedSquadGroupName(
       operation,
       group.name
     );
+
     const visibility = yield* parseSquadGroupVisibility(group.visibility).pipe(
       Effect.catch((error) => failPersistence(operation, error))
     );
@@ -242,6 +250,7 @@ export const loadSquadGroupDetailWithDatabase = (
           )
         )
         .limit(1);
+
       const inviteRows = yield* persistenceQuery(operation, inviteSelect);
 
       const [invite] = inviteRows;
@@ -280,6 +289,7 @@ export const loadSquadGroupDetailWithDatabase = (
       .from(squad)
       .where(eq(squad.squadGroupId, groupIdNumber))
       .orderBy(asc(squad.position), asc(squad.id));
+
     const squadRows = yield* persistenceQuery(operation, squadSelect);
 
     const placementSelect = database
@@ -310,6 +320,7 @@ export const loadSquadGroupDetailWithDatabase = (
       .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
       .where(eq(squadCharacter.squadGroupId, groupIdNumber))
       .orderBy(asc(squadCharacter.position), asc(squadCharacter.id));
+
     const placementRows = yield* persistenceQuery(operation, placementSelect);
 
     let charactersBySquadId = HashMap.empty<
@@ -321,6 +332,7 @@ export const loadSquadGroupDetailWithDatabase = (
       const current = HashMap.get(charactersBySquadId, placement.squadId).pipe(
         Option.getOrElse(() => [])
       );
+
       const accountDisplayName = yield* parseAccountDisplayName(
         placement.accountDisplayName
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
@@ -422,6 +434,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(squadGroup.id, groupIdNumber))
           .limit(1)
           .for("update");
+
         const groupRows = yield* groupSelect;
 
         const [group] = groupRows;
@@ -442,6 +455,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           operation,
           group.ownerUserId
         );
+
         const availableCharacters =
           yield* listAvailableCharactersForOwnerWithDatabase(
             tx,
@@ -450,10 +464,12 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           )({
             ownerUserId,
           });
+
         const validatedSnapshot = yield* validateParsedSquadGroupSnapshot({
           availableCharacters,
           snapshot,
         });
+
         const availableByCharacterId = HashMap.fromIterable(
           availableCharacters.map(
             (character) => [character.characterId, character] as const
@@ -472,13 +488,16 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           .select({ id: squad.id })
           .from(squad)
           .where(eq(squad.squadGroupId, groupIdNumber));
+
         const existingSquadIds = new Set(
           existingSquads.map((existingSquad) => existingSquad.id)
         );
+
         const submittedSquadIds = new Set<number>();
 
         for (const squadSnapshot of validatedSnapshot.squads) {
           const { squadId } = squadSnapshot;
+
           if (squadId === undefined) {
             continue;
           }
@@ -537,6 +556,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
               persistedSquadId = insertedSquad.id;
               break;
             }
+
             default: {
               const updatedSquadRows = yield* tx
                 .update(squad)
@@ -619,6 +639,7 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
   }: SetSquadGroupVisibilityStoreInput) {
     const operation = "setSquadGroupVisibility" as const;
     const groupIdNumber = groupId;
+
     const select = database
       .select({
         ownerUserId: squadGroup.ownerUserId,
@@ -628,6 +649,7 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
       .from(squadGroup)
       .where(eq(squadGroup.id, groupIdNumber))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [existing] = rows;
@@ -649,6 +671,7 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
       .set({ updatedAt: now, visibility })
       .where(eq(squadGroup.id, groupIdNumber))
       .returning({ updatedAt: squadGroup.updatedAt });
+
     const updatedRows = yield* persistenceQuery(operation, update);
 
     const [updated] = updatedRows;
@@ -690,6 +713,7 @@ export const DrizzleSquadGroupAggregateStoreServiceLayer: Layer.Layer<
             yield* tx.execute(
               sql`set transaction isolation level repeatable read`
             );
+
             return yield* loadSquadGroupDetailWithDatabase(tx)(input);
           })
         );

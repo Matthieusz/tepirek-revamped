@@ -11,6 +11,7 @@ export const listIncomingAccountInvites = Effect.fn(
   >[0]
 ) {
   const store = yield* AccountSharingStoreService;
+
   return yield* store.listIncomingAccountInvites(input);
 });
 
@@ -23,5 +24,6 @@ export const listSharedAccounts = Effect.fn(
   >[0]
 ) {
   const store = yield* AccountSharingStoreService;
+
   return yield* store.listSharedAccounts(input);
 });

@@ -20,6 +20,7 @@ export const previewAccountRefetch = Effect.fn(
   "Web.SquadAccountRefetch.preview"
 )(function* previewAccountRefetchEffect(input: PreviewAccountRefetchInput) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountRefetch.previewAccountRefetch({
     payload: {
       accountId: yield* asMargonemAccountId(input.accountId),
@@ -31,6 +32,7 @@ export const previewAccountRefetch = Effect.fn(
 export const applyAccountRefetch = Effect.fn("Web.SquadAccountRefetch.apply")(
   function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderAccountRefetch.applyAccountRefetch({
       payload: {
         refetchPreviewId: yield* asPendingMargonemAccountRefetchId(

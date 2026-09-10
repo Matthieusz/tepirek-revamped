@@ -12,6 +12,7 @@ interface BetMemberSummary {
   readonly userImage: string | null;
   readonly userName: string | null;
 }
+
 interface BetSummary {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
@@ -26,6 +27,7 @@ interface BetSummary {
   readonly memberCount: number;
   readonly members: BetMemberSummary[];
 }
+
 interface BetByEventSummary {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
@@ -35,11 +37,13 @@ interface BetByEventSummary {
   readonly id: BetId;
   readonly memberCount: number;
 }
+
 interface StoredBetMember {
   readonly id: number;
   readonly points: string;
   readonly userId: AppUserId;
 }
+
 interface CreatedBet {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
@@ -47,10 +51,12 @@ interface CreatedBet {
   readonly id: BetId;
   readonly memberCount: number;
 }
+
 interface LatestBetForCopy {
   readonly id: BetId;
   readonly members: readonly BetMemberSummary[];
 }
+
 interface PaginatedBets {
   readonly items: BetSummary[];
   readonly pagination: {
@@ -61,6 +67,7 @@ interface PaginatedBets {
     readonly totalPages: number;
   };
 }
+
 interface MutationSuccess {
   readonly success: boolean;
 }

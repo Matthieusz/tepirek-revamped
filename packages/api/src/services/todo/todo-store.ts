@@ -9,18 +9,22 @@ export interface CreateTodoInput {
   readonly text: string;
   readonly userId: AppUserId;
 }
+
 export interface DeleteTodoInput {
   readonly id: TodoId;
   readonly userId: AppUserId;
 }
+
 export interface ListTodosInput {
   readonly userId: AppUserId;
 }
+
 export interface ToggleTodoInput {
   readonly completed: boolean;
   readonly id: TodoId;
   readonly userId: AppUserId;
 }
+
 export interface TodoSummary {
   readonly completed: boolean;
   readonly id: TodoId;

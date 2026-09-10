@@ -25,6 +25,7 @@ describe("persisted branded id boundaries", () => {
         const failure = yield* parsePendingMargonemAccountImportId(value).pipe(
           Effect.flip
         );
+
         expect(failure._tag).toBe("InvalidPendingMargonemAccountImportId");
       }
     })
@@ -45,6 +46,7 @@ describe("persisted branded id boundaries", () => {
         const failure = yield* parseSquadGroupInvitationId(value).pipe(
           Effect.flip
         );
+
         expect(failure._tag).toBe("InvalidSquadGroupInvitationId");
       }
     })

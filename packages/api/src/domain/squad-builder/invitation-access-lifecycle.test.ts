@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
 import {
+  InvitationAccessTransitionNotAllowed,
   invitationAccessTransitionTable,
   transitionInvitationAccess,
 } from "./invitation-access-lifecycle.ts";
@@ -42,11 +43,12 @@ describe("transitionInvitationAccess", () => {
         "pending"
       ).pipe(Effect.flip);
 
-      expect(failure).toMatchObject({
-        _tag: "InvitationAccessTransitionNotAllowed",
-        attempted: "pending",
-        currentStatus: "accepted",
-      });
+      expect(failure).toMatchObject(
+        new InvitationAccessTransitionNotAllowed({
+          attempted: "pending",
+          currentStatus: "accepted",
+        })
+      );
     })
   );
 });

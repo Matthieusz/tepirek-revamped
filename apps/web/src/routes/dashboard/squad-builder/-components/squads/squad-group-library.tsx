@@ -52,9 +52,11 @@ import {
 } from "./squad-group-presenters";
 
 type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;
+
 type SquadListTab = "mine" | "shared" | "public";
 
 const SquadListTabSchema = Schema.Literals(["mine", "shared", "public"]);
+
 const decodeSquadListTab = Schema.decodeUnknownOption(SquadListTabSchema);
 
 interface SquadGroupListFilterFormState {
@@ -68,10 +70,12 @@ const emptyFilterForm: SquadGroupListFilterFormState = {
   minLevel: "",
   nameQuery: "",
 };
+
 const PositiveLevelFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );
+
 const decodeOptionalLevel = (value: string): number | null =>
   Option.getOrNull(Schema.decodeOption(PositiveLevelFromString)(value));
 
@@ -82,9 +86,11 @@ const SquadFilterFormSchema = Schema.Struct({
 }).check(
   Schema.makeFilter((values) => {
     const result = validateSquadFilterLevelOrder(values);
+
     return result === true ? undefined : result;
   })
 );
+
 const SquadFilterFormValidator = Schema.toStandardSchemaV1(
   SquadFilterFormSchema
 );
@@ -108,9 +114,11 @@ const SquadGroupListFilters = ({
     onSubmit: async ({ value }) => {
       const decoded =
         await SquadFilterFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
+
       onApply({
         maxLevel: decoded.value.maxLevel.trim(),
         minLevel: decoded.value.minLevel.trim(),
@@ -119,6 +127,7 @@ const SquadGroupListFilters = ({
     },
     validators: { onSubmit: SquadFilterFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
@@ -202,9 +211,11 @@ const CollectionEmpty = ({
   readonly onCreateGroup: (() => void) | undefined;
 }) => {
   let copy = "Nie ma jeszcze publicznych grup składów.";
+
   let icon = (
     <HugeiconsIcon aria-hidden="true" icon={Search01Icon} className="size-5" />
   );
+
   if (kind === "mine") {
     copy =
       "Nie masz jeszcze grup składów. Utwórz pierwszą grupę i dodaj postacie z Jaruny.";
@@ -244,6 +255,7 @@ const GroupRow = (props: GroupRowProps) => {
   const { group } = props;
   const owner = props.kind === "mine" ? undefined : props.group;
   let status = "publiczny";
+
   if (props.kind === "mine") {
     status = "właściciel";
   } else if (props.kind === "shared") {
@@ -340,9 +352,11 @@ const CollectionPanel = (props: CollectionPanelProps) => {
   if (props.result.isError) {
     return <CollectionFailure onRetry={props.onRetry} />;
   }
+
   if (props.result.isPending || props.result.data === undefined) {
     return <LoadingSpinner />;
   }
+
   if (props.result.data.length === 0) {
     return (
       <CollectionEmpty
@@ -366,6 +380,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
         </ul>
       );
     }
+
     case "shared": {
       return (
         <ul
@@ -378,6 +393,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
         </ul>
       );
     }
+
     case "public": {
       return (
         <ul
@@ -390,6 +406,7 @@ const CollectionPanel = (props: CollectionPanelProps) => {
         </ul>
       );
     }
+
     default: {
       return assertNever(props);
     }
@@ -407,6 +424,7 @@ export const SquadGroupLibrary = ({
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
   const ownedResult = useQuery(ownedSquadGroupsQueryOptions());
   const sharedResult = useQuery(sharedSquadGroupsQueryOptions());
+
   const publicFilters = {
     maxLevel:
       appliedFilters.maxLevel.length > 0
@@ -419,23 +437,29 @@ export const SquadGroupLibrary = ({
     nameQuery:
       appliedFilters.nameQuery.length > 0 ? appliedFilters.nameQuery : null,
   };
+
   const publicResult = useQuery(globalSquadGroupsQueryOptions(publicFilters));
+
   const refreshOwned = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     ownedResult.refetch();
   };
+
   const refreshShared = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     sharedResult.refetch();
   };
+
   const refreshPublic = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     publicResult.refetch();
   };
+
   const activeFilters = hasActiveFilters(appliedFilters);
   const ownedGroups = ownedResult.data ?? [];
   const sharedGroups = sharedResult.data ?? [];
   const publicGroups = publicResult.data ?? [];
+
   const sharedCollectionResult: CollectionResult<
     readonly SharedSquadGroupSummary[]
   > = {
@@ -448,6 +472,7 @@ export const SquadGroupLibrary = ({
     <Tabs
       onValueChange={(value) => {
         const tab = Option.getOrUndefined(decodeSquadListTab(value));
+
         if (tab !== undefined) {
           setActiveTab(tab);
         }

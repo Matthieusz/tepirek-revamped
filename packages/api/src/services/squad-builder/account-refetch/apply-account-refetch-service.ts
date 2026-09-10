@@ -31,6 +31,7 @@ export const apply = EffectRuntime.fn("AccountRefetch.apply")(
   function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
     const store = yield* AccountRefetchStoreService;
     const now = yield* currentDate;
+
     const applied = yield* store.applyPendingRefetch({
       actorUserId: input.actorUserId,
       now,

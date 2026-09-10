@@ -12,10 +12,12 @@ const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
 
 const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
+
 it.effect("searches invite targets for an account owner", () => {
   const actorUserId = parseTestUserId("effect-account-search-owner");
   const targetUserId = parseTestUserId("effect-account-search-target");
   const accountId = parseTestAccountId();
+
   const store = makeAccountSharingStoreServiceTestService({
     findAccountOwnerUserId: (input) => {
       expect(input).toEqual({ accountId });
@@ -36,6 +38,7 @@ it.effect("searches invite targets for an account owner", () => {
       ]);
     },
   });
+
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* searchInviteTargetsEffect() {

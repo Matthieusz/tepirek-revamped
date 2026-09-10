@@ -42,6 +42,7 @@ export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
   input: SaveSquadGroupInput
 ) {
   const aggregateStore = yield* SquadGroupAggregateStoreService;
+
   const snapshot = yield* parseSquadGroupSnapshot({
     groupId: input.groupId,
     name: input.name,
@@ -49,6 +50,7 @@ export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
   });
 
   const now = yield* DateTime.nowAsDate;
+
   return yield* aggregateStore.saveSquadGroupSnapshot({
     actorUserId: input.actorUserId,
     expectedUpdatedAt: input.expectedUpdatedAt,

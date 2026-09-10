@@ -22,6 +22,7 @@ export interface ToggleTodoInput extends TodoIdInput {
 export const listTodos = Effect.fn("Web.Todo.list")(
   function* listTodosEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.todo.listTodos({});
   }
 );
@@ -30,6 +31,7 @@ export const listTodos = Effect.fn("Web.Todo.list")(
 export const createTodo = Effect.fn("Web.Todo.create")(
   function* createTodoEffect(payload: CreateTodoPayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.todo.createTodo({ payload });
   }
 );
@@ -38,6 +40,7 @@ export const createTodo = Effect.fn("Web.Todo.create")(
 export const deleteTodo = Effect.fn("Web.Todo.delete")(
   function* deleteTodoEffect(input: TodoIdInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.todo.deleteTodo({
       payload: { id: yield* asTodoId(input.id) },
     });
@@ -48,6 +51,7 @@ export const deleteTodo = Effect.fn("Web.Todo.delete")(
 export const toggleTodo = Effect.fn("Web.Todo.toggle")(
   function* toggleTodoEffect(input: ToggleTodoInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.todo.toggleTodo({
       payload: {
         completed: input.completed,

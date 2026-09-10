@@ -48,6 +48,7 @@ export const searchInviteTargetsWithDatabase = (database: EffectPgDatabase) =>
     const operation = "searchInviteTargets" as const;
     const accountIdNumber = accountId;
     const actor = actorUserId;
+
     const select = database
       .select({
         image: user.image,
@@ -72,6 +73,7 @@ export const searchInviteTargetsWithDatabase = (database: EffectPgDatabase) =>
       )
       .orderBy(user.name)
       .limit(10);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const targets: AccountInviteTarget[] = [];
@@ -99,11 +101,13 @@ export const findAccountOwnerUserIdWithDatabase = (
     accountId,
   }: FindAccountOwnerUserIdInput) {
     const operation = "findAccountOwnerUserId" as const;
+
     const select = database
       .select({ ownerUserId: margonemAccount.ownerUserId })
       .from(margonemAccount)
       .where(eq(margonemAccount.id, accountId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [account] = rows;
@@ -125,6 +129,7 @@ export const findVerifiedInviteTargetWithDatabase = (
     readonly targetUserId: AppUserId;
   }) {
     const operation = "findVerifiedInviteTarget" as const;
+
     const select = database
       .select({
         image: user.image,
@@ -135,6 +140,7 @@ export const findVerifiedInviteTargetWithDatabase = (
       .from(user)
       .where(eq(user.id, targetUserId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [target] = rows;
@@ -164,6 +170,7 @@ export const listIncomingAccountInvitesWithDatabase = (
     actorUserId,
   }: ListIncomingAccountInvitesInput) {
     const operation = "listIncomingAccountInvites" as const;
+
     const select = database
       .select({
         accountDisplayName: margonemAccount.displayName,
@@ -194,6 +201,7 @@ export const listIncomingAccountInvitesWithDatabase = (
         desc(margonemAccountAccess.createdAt),
         desc(margonemAccountAccess.id)
       );
+
     const rows = yield* persistenceQuery(operation, select);
 
     const invites: AccountAccessInviteSummary[] = [];
@@ -210,16 +218,20 @@ export const listIncomingAccountInvitesWithDatabase = (
       const accountDisplayName = yield* parseAccountDisplayName(
         row.accountDisplayName
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
       const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
+
       const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
+
       const invitedUserId = yield* parsePersistedAppUserId(
         operation,
         row.invitedUserId
       );
+
       const ownerUserId = yield* parsePersistedAppUserId(
         operation,
         row.ownerId
@@ -249,6 +261,7 @@ export const listSharedAccountsWithDatabase = (database: EffectPgDatabase) =>
     actorUserId,
   }: ListSharedAccountsInput) {
     const operation = "listSharedAccounts" as const;
+
     const select = database
       .select({
         accountId: margonemAccount.id,
@@ -281,6 +294,7 @@ export const listSharedAccountsWithDatabase = (database: EffectPgDatabase) =>
       )
       .groupBy(margonemAccount.id, user.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
+
     const rows = yield* persistenceQuery(operation, select);
 
     const accounts: SharedMargonemAccountSummary[] = [];
@@ -328,6 +342,7 @@ export const listAccountAccessGrantsWithDatabase = (
     readonly accountId: MargonemAccountId;
   }) {
     const operation = "listAccountAccessGrants" as const;
+
     const select = database
       .select({
         accessId: margonemAccountAccess.id,
@@ -347,6 +362,7 @@ export const listAccountAccessGrantsWithDatabase = (
         )
       )
       .orderBy(desc(margonemAccountAccess.createdAt));
+
     const rows = yield* persistenceQuery(operation, select);
 
     const grants: AccountAccessGrantSummary[] = [];

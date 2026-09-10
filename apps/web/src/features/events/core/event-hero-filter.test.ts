@@ -18,6 +18,7 @@ describe("normalizeEventHeroFilter", () => {
       urlEventId: "1",
       urlHeroId: "10",
     });
+
     expect(state).toEqual({ eventId: "1", heroId: "10" });
   });
 
@@ -26,6 +27,7 @@ describe("normalizeEventHeroFilter", () => {
       urlEventId: undefined,
       urlHeroId: undefined,
     });
+
     expect(state).toEqual({ eventId: ALL_FILTER, heroId: ALL_FILTER });
   });
 
@@ -34,6 +36,7 @@ describe("normalizeEventHeroFilter", () => {
       urlEventId: ALL_FILTER,
       urlHeroId: "20",
     });
+
     expect(state).toEqual({ eventId: ALL_FILTER, heroId: ALL_FILTER });
   });
 });
@@ -115,6 +118,7 @@ describe("sortEventsByEndTimeDesc", () => {
         name: "new",
       },
     ];
+
     expect(sortEventsByEndTimeDesc(events).map((e) => e.id)).toEqual([2, 1]);
   });
 
@@ -129,6 +133,7 @@ describe("sortEventsByEndTimeDesc", () => {
         name: "has end",
       },
     ];
+
     expect(sortEventsByEndTimeDesc(events).map((e) => e.id)).toEqual([2, 1]);
   });
 
@@ -143,6 +148,7 @@ describe("sortHeroesByLevel", () => {
       { id: 1, level: 300, name: "high" },
       { id: 2, level: 30, name: "low" },
     ];
+
     expect(sortHeroesByLevel(heroes).map((h) => h.id)).toEqual([2, 1]);
   });
 
@@ -151,6 +157,7 @@ describe("sortHeroesByLevel", () => {
       { id: 1, name: "no level" },
       { id: 2, level: 100, name: "has level" },
     ];
+
     expect(sortHeroesByLevel(heroes).map((h) => h.id)).toEqual([1, 2]);
   });
 

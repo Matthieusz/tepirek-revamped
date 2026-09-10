@@ -111,6 +111,7 @@ export const withServices = <A>(
     const bet = yield* BetService;
     const ranking = yield* RankingService;
     const vault = yield* VaultService;
+
     return yield* f({
       createBet: (input) =>
         bet.createBet({
@@ -139,6 +140,7 @@ export const withServices = <A>(
       getOldestUnpaidEvent: ranking.getOldestUnpaidEvent,
       getPaginatedBets: (input) => {
         const { eventId, heroId, ...pagination } = input;
+
         return bet.getPaginatedBets({
           ...pagination,
           eventId: eventId === undefined ? undefined : EventId.make(eventId),
@@ -147,6 +149,7 @@ export const withServices = <A>(
       },
       getRanking: (input) => {
         const { eventId, heroId } = input;
+
         return ranking.getRanking({
           eventId: eventId === undefined ? undefined : EventId.make(eventId),
           heroId: heroId === undefined ? undefined : HeroId.make(heroId),

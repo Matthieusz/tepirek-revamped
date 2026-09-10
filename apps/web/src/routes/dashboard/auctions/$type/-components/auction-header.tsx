@@ -137,10 +137,12 @@ const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
 
 export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
   const queryClient = useQueryClient();
+
   const group = {
     profession: props.profession,
     type: props.type,
   };
+
   const clearMutation = useMutation(
     clearAuctionSignupsMutationOptions(queryClient, group, undefined, {
       onRefreshError: () => {
@@ -148,6 +150,7 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
       },
     })
   );
+
   const handleClear = async () => {
     try {
       await clearMutation.mutateAsync();
@@ -156,6 +159,7 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = (props) => {
       toast.error(getErrorMessage(error));
     }
   };
+
   const statsQuery = useQuery(
     auctionStatsQueryOptions({
       profession: props.profession,

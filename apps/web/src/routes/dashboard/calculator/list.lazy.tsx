@@ -6,6 +6,7 @@ const routeApi = getRouteApi("/dashboard/calculator/list");
 
 const CalculatorListRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <CalculatorListPage session={session} />;
 };
 

@@ -64,6 +64,7 @@ export const heroStatsQueryOptions = (
       if (heroId === null || heroId <= 0) {
         return undefined;
       }
+
       return await runner(getHeroStats(heroId), { signal });
     },
     queryKey:

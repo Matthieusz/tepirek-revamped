@@ -1,14 +1,19 @@
 import { QueryErrorState } from "@/components/ui/query-error-state";
 
-import type { HeroStatsPreviewState } from "./hero-stats-preview-utils";
+import { HeroStatsPreviewState } from "./hero-stats-preview-utils";
+import type { HeroStatsPreviewState as HeroStatsPreviewStateType } from "./hero-stats-preview-utils";
 
 const HeroStatsPreview = ({
   state,
 }: {
-  readonly state: Exclude<HeroStatsPreviewState, { readonly _tag: "hidden" }>;
+  readonly state: Exclude<
+    HeroStatsPreviewStateType,
+    { readonly _tag: "hidden" }
+  >;
 }) => {
-  if (state._tag === "failure") {
+  if (HeroStatsPreviewState.$is("failure")(state)) {
     const handleRetry = state.onRetry;
+
     return (
       <QueryErrorState
         message="Nie udało się wczytać statystyk herosa."
@@ -17,7 +22,7 @@ const HeroStatsPreview = ({
     );
   }
 
-  if (state._tag === "loading") {
+  if (HeroStatsPreviewState.$is("loading")(state)) {
     return (
       <div className="bg-muted/30 rounded-lg border p-4">
         <p className="text-muted-foreground text-sm">Ładowanie statystyk...</p>
@@ -25,7 +30,7 @@ const HeroStatsPreview = ({
     );
   }
 
-  if (state._tag === "empty") {
+  if (HeroStatsPreviewState.$is("empty")(state)) {
     return (
       <div className="bg-muted/30 rounded-lg border p-4">
         <p className="text-muted-foreground text-sm">
@@ -64,10 +69,11 @@ const HeroStatsPreview = ({
 export const HeroStatsPreviewSlot = ({
   state,
 }: {
-  readonly state: HeroStatsPreviewState;
+  readonly state: HeroStatsPreviewStateType;
 }) => {
-  if (state._tag === "hidden") {
+  if (HeroStatsPreviewState.$is("hidden")(state)) {
     return null;
   }
+
   return <HeroStatsPreview state={state} />;
 };

@@ -45,6 +45,7 @@ const OwnedAccountCharacterPreview = ({
   }
 
   const profession = getProfessionPresentation(character.profession);
+
   return (
     <div className="flex shrink-0 items-center">
       <span className="sr-only">Postać konta: {character.name}</span>
@@ -153,6 +154,7 @@ export const OwnedAccountsGrid = ({
 }: OwnedAccountsPanelProps) => {
   const columns = OWNED_ACCOUNT_COLUMNS;
   const tableData = useMemo(() => [...accounts], [accounts]);
+
   const table = useTable({
     columns,
     data: tableData,

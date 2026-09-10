@@ -18,23 +18,29 @@ export const AccountInviteTargetSchema = Schema.Struct({
   name: Schema.String,
   userId: AppUserId,
 });
+
 export interface AccountInviteTargetSchema extends Schema.Schema.Type<
   typeof AccountInviteTargetSchema
 > {}
+
 export const SearchAccountInviteTargetsPayload = Schema.Struct({
   accountId: MargonemAccountId,
   query: Schema.String,
 });
+
 export interface SearchAccountInviteTargetsPayload extends Schema.Schema.Type<
   typeof SearchAccountInviteTargetsPayload
 > {}
+
 export const SendAccountAccessInvitePayload = Schema.Struct({
   accountId: MargonemAccountId,
   invitedUserId: AppUserId,
 });
+
 export interface SendAccountAccessInvitePayload extends Schema.Schema.Type<
   typeof SendAccountAccessInvitePayload
 > {}
+
 export const AccountAccessInviteSummarySchema = Schema.Struct({
   accessId: MargonemAccountAccessId,
   accountDisplayName: Schema.String,
@@ -48,37 +54,47 @@ export const AccountAccessInviteSummarySchema = Schema.Struct({
   status: AccountAccessStatusSchema,
   updatedAt: Schema.DateFromString,
 });
+
 export interface AccountAccessInviteSummarySchema extends Schema.Schema.Type<
   typeof AccountAccessInviteSummarySchema
 > {}
+
 export const RespondToAccountAccessInvitePayload = Schema.Struct({
   accessId: MargonemAccountAccessId,
   response: InviteResponseSchema,
 });
+
 export interface RespondToAccountAccessInvitePayload extends Schema.Schema.Type<
   typeof RespondToAccountAccessInvitePayload
 > {}
+
 export const RevokeAccountAccessPayload = Schema.Struct({
   accessId: MargonemAccountAccessId,
 });
+
 export interface RevokeAccountAccessPayload extends Schema.Schema.Type<
   typeof RevokeAccountAccessPayload
 > {}
+
 export const RevokeAccountAccessSuccess = Schema.Struct({
   accessId: MargonemAccountAccessId,
   accountId: MargonemAccountId,
   removedSquadCharacterCount: Schema.Finite,
   revokedUserId: AppUserId,
 });
+
 export interface RevokeAccountAccessSuccess extends Schema.Schema.Type<
   typeof RevokeAccountAccessSuccess
 > {}
+
 export const AccountAccessGrantsPayload = Schema.Struct({
   accountId: MargonemAccountId,
 });
+
 export interface AccountAccessGrantsPayload extends Schema.Schema.Type<
   typeof AccountAccessGrantsPayload
 > {}
+
 export const SharedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountId,
   characterCount: Schema.Finite,
@@ -90,9 +106,11 @@ export const SharedMargonemAccountSummarySchema = Schema.Struct({
   ownerUserName: Schema.String,
   profileId: MargonemProfileId,
 });
+
 export interface SharedMargonemAccountSummarySchema extends Schema.Schema.Type<
   typeof SharedMargonemAccountSummarySchema
 > {}
+
 export const AccountAccessGrantSummarySchema = Schema.Struct({
   accessId: MargonemAccountAccessId,
   createdAt: Schema.DateFromString,
@@ -102,6 +120,7 @@ export const AccountAccessGrantSummarySchema = Schema.Struct({
   status: ActiveAccountAccessStatusSchema,
   updatedAt: Schema.DateFromString,
 });
+
 export interface AccountAccessGrantSummarySchema extends Schema.Schema.Type<
   typeof AccountAccessGrantSummarySchema
 > {}

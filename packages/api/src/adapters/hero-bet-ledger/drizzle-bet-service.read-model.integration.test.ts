@@ -19,6 +19,7 @@ effectIt.layer(testLayer)("HeroBetLedger read models and pagination", (it) => {
             name: "Ledger Admin",
           })
       );
+
       const member = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
@@ -27,6 +28,7 @@ effectIt.layer(testLayer)("HeroBetLedger read models and pagination", (it) => {
             name: "Ledger Page Member",
           })
       );
+
       const createdHero = yield* Effect.promise(
         async () =>
           await createHero({
@@ -46,6 +48,7 @@ effectIt.layer(testLayer)("HeroBetLedger read models and pagination", (it) => {
           }),
         new Date("2026-07-05T09:00:00.000Z")
       );
+
       const newerBet = yield* withServices(
         (ledger) =>
           ledger.createBet({
@@ -102,6 +105,7 @@ effectIt.layer(testLayer)("HeroBetLedger read models and pagination", (it) => {
       const latestBet = yield* withServices((ledger) =>
         ledger.getLatestBetForCopy()
       );
+
       expect(latestBet).toEqual({
         id: newerBet.id,
         members: [
@@ -122,6 +126,7 @@ effectIt.layer(testLayer)("HeroBetLedger read models and pagination", (it) => {
           page: 2,
         })
       );
+
       expect(secondPage.items[0]?.id).toBe(olderBet.id);
       expect(secondPage.pagination.hasMore).toBe(false);
     })

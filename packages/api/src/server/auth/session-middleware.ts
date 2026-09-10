@@ -22,6 +22,7 @@ const headersFromRequest = (
 export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
   function* loadCurrentSession(headers: Headers) {
     const auth = yield* BetterAuthService;
+
     const session = yield* auth
       .getSession(headers)
       .pipe(
@@ -29,15 +30,19 @@ export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
           () => new SessionUnavailable({ message: "SESSION_UNAVAILABLE" })
         )
       );
+
     if (session === null) {
       return null;
     }
+
     const userId = yield* parseAppUserId(session.user.id).pipe(
       Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
     );
+
     const sessionUserId = yield* parseAppUserId(session.session.userId).pipe(
       Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
     );
+
     return {
       ...session,
       session: { ...session.session, userId: sessionUserId },
@@ -51,15 +56,18 @@ export const SessionMiddlewareLayer = Layer.effect(
   SessionMiddleware,
   Effect.gen(function* makeSessionMiddleware() {
     const auth = yield* BetterAuthService;
+
     const loadRequestSession = Effect.fnUntraced(function* loadRequestSession<
       A,
       E,
       R,
     >(effect: Effect.Effect<A, E, R>) {
       const request = yield* HttpServerRequest.HttpServerRequest;
+
       const currentSession = yield* loadCurrentSession(
         headersFromRequest(request)
       ).pipe(Effect.provideService(BetterAuthService, auth));
+
       return yield* effect.pipe(
         Effect.provideService(CurrentSession, currentSession)
       );

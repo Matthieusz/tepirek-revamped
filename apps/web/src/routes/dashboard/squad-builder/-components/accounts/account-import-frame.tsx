@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -51,6 +52,7 @@ import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-com
 const AccountPreviewFormSchema = Schema.Struct({
   profileUrls: ProfileUrlsSchema,
 });
+
 const AccountPreviewFormValidator = Schema.toStandardSchemaV1(
   AccountPreviewFormSchema
 );
@@ -58,6 +60,7 @@ const AccountPreviewFormValidator = Schema.toStandardSchemaV1(
 const AccountConfirmationFormSchema = Schema.Struct({
   displayName: AccountDisplayNameSchema,
 });
+
 const AccountConfirmationFormValidator = Schema.toStandardSchemaV1(
   AccountConfirmationFormSchema
 );
@@ -120,32 +123,40 @@ const PreviewRow = ({
 }: PreviewRowProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const form = useAppForm({
     defaultValues: {
       displayName: item.status === "success" ? item.defaultDisplayName : "",
     },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
+
       const decoded =
         await AccountConfirmationFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded) || item.status === "error") {
         return;
       }
+
       const result = await runFormSubmission(async () => {
         await onConfirm(item, {
           displayName: decoded.value.displayName.trim(),
           pendingImportId: item.pendingImportId,
         });
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
+
       form.reset();
       onConfirmed(item);
     },
     validators: { onSubmit: AccountConfirmationFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   if (item.status === "error") {
@@ -199,6 +210,7 @@ const PreviewRow = ({
                   const profession = getProfessionPresentation(
                     character.profession
                   );
+
                   return (
                     <li
                       className="flex min-w-0 items-start gap-1.5 text-xs"
@@ -416,33 +428,43 @@ export const AccountImportFrame = () => {
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const previewImports = useMutation(
     previewOwnedAccountImportsMutationOptions()
   );
+
   const confirmImport = useMutation(
     confirmOwnedAccountImportMutationOptions(queryClient)
   );
+
   const form = useAppForm({
     defaultValues: DEFAULT_ACCOUNT_PREVIEW_VALUES,
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
+
       const decoded =
         await AccountPreviewFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
+
       const result = await runFormSubmission(
         async () => await previewImports.mutateAsync(decoded.value)
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
+
       setPreviewItems(
         result.value.items.map((item) =>
-          item._tag === "PreviewSucceeded"
+          Predicate.isTagged("PreviewSucceeded")(item)
             ? {
                 ...item,
                 characterCount: item.jarunaCharacters.length,
@@ -462,21 +484,26 @@ export const AccountImportFrame = () => {
     },
     validators: { onSubmit: AccountPreviewFormValidator },
   });
+
   const isPreviewPending = useSelector(
     form.store,
     (state) => state.isSubmitting
   );
+
   const clearImport = (): void => {
     form.reset();
     setSubmissionFailure(undefined);
     setPreviewItems([]);
     setActiveStep(1);
   };
+
   const profileUrls = useSelector(
     form.store,
     (state) => state.values.profileUrls
   );
+
   const profileLineCount = getProfileLines(profileUrls).length;
+
   const previewForm = (
     <Form className="border-border space-y-4 border-b px-5 py-4" form={form}>
       <form.AppField name="profileUrls">
@@ -547,12 +574,14 @@ export const AccountImportFrame = () => {
       onClear={clearImport}
       onConfirm={async (item, payload) => {
         setConfirmingId(item.pendingImportId);
+
         try {
           await confirmImport.mutateAsync(payload);
         } catch (error: unknown) {
           setConfirmingId(null);
           throw error;
         }
+
         setConfirmingId(null);
       }}
       onConfirmed={(item) => {

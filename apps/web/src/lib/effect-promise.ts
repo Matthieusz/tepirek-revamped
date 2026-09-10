@@ -2,6 +2,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import type * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 
 /** Options exposed at the Promise boundary used by query functions. */
 export type EffectPromiseOptions = Pick<Effect.RunOptions, "signal">;
@@ -29,7 +30,8 @@ export const makeEffectPromiseRunner =
     }
 
     const typedError = Cause.findErrorOption(exit.cause);
-    if (typedError._tag === "Some") {
+
+    if (Predicate.isTagged("Some")(typedError)) {
       // Typed failures are intentionally not restricted to Error: protocol
       // failures are data values that must remain recognizable to the caller.
       // oxlint-disable-next-line typescript/only-throw-error -- preserve typed protocol failures

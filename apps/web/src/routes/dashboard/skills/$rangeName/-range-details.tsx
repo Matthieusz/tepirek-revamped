@@ -113,6 +113,7 @@ const RangeSkillsContent = ({
   const isAdminUser = isAdmin(session);
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
   const queryClient = useQueryClient();
+
   const deleteSkill = useMutation(
     deleteSkillMutationOptions(queryClient, undefined, {
       onError: (error) => {
@@ -125,6 +126,7 @@ const RangeSkillsContent = ({
       },
     })
   );
+
   const isDeleting = deleteSkill.isPending;
 
   const skillsGrouped = Arr.groupBy(skills, (skill) =>
@@ -170,6 +172,7 @@ const RangeSkillsContent = ({
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {professions.map((profession) => {
           const professionSkills = skillsGrouped[String(profession.id)] ?? [];
+
           return (
             <Card key={profession.id}>
               <CardHeader className="pb-3">

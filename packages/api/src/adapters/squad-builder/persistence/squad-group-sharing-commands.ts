@@ -65,6 +65,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
     const groupIdNumber = groupId;
     const invitedUser = invitedUserId;
     const owner = ownerUserId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* upsertSquadGroupEditorInviteTransaction(
         tx: TransactionDatabase
@@ -84,6 +85,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
             ],
           })
           .returning({ id: squadGroupInvitation.id });
+
         const insertedRows = yield* insert;
 
         const [inserted] = insertedRows;
@@ -106,6 +108,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
           )
           .limit(1)
           .for("update");
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -130,6 +133,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         const updatedRows = yield* tx
           .update(squadGroupInvitation)
           .set({
@@ -139,6 +143,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
           })
           .where(eq(squadGroupInvitation.id, existing.id))
           .returning({ id: squadGroupInvitation.id });
+
         const [updated] = updatedRows;
 
         if (updated === undefined) {
@@ -151,6 +156,7 @@ export const upsertSquadGroupEditorInviteWithDatabase = (
         return updated.id;
       })
     );
+
     const upserted = yield* persistenceQuery(operation, transaction);
 
     const invitationId = yield* parseSquadGroupInvitationId(upserted).pipe(
@@ -180,6 +186,7 @@ export const respondToSquadGroupInviteWithDatabase = (
     const operation = "respondToSquadGroupInvite" as const;
     const invitedUser = invitedUserId;
     const invitationIdNumber = invitationId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* respondToSquadGroupInviteTransaction(
         tx: TransactionDatabase
@@ -194,6 +201,7 @@ export const respondToSquadGroupInviteWithDatabase = (
           .where(eq(squadGroupInvitation.id, invitationIdNumber))
           .limit(1)
           .for("update");
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -222,11 +230,13 @@ export const respondToSquadGroupInviteWithDatabase = (
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         const updatedRows = yield* tx
           .update(squadGroupInvitation)
           .set({ status: transitioned.nextStatus, updatedAt: now })
           .where(eq(squadGroupInvitation.id, existing.id))
           .returning({ id: squadGroupInvitation.id });
+
         const [updated] = updatedRows;
 
         if (updated === undefined) {
@@ -239,6 +249,7 @@ export const respondToSquadGroupInviteWithDatabase = (
         return { _tag: "Updated" as const };
       })
     );
+
     yield* persistenceQuery(operation, transaction);
 
     return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
@@ -259,6 +270,7 @@ export const revokeSquadGroupEditorWithDatabase = (
     const operation = "revokeSquadGroupEditor" as const;
     const owner = ownerUserId;
     const invitationIdNumber = invitationId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* revokeSquadGroupEditorTransaction(
         tx: TransactionDatabase
@@ -276,6 +288,7 @@ export const revokeSquadGroupEditorWithDatabase = (
           .where(eq(squadGroupInvitation.id, invitationIdNumber))
           .limit(1)
           .for("update", { of: squadGroupInvitation });
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -301,11 +314,13 @@ export const revokeSquadGroupEditorWithDatabase = (
               Effect.catch((error) => failPersistence(operation, error))
             ),
         });
+
         const updatedRows = yield* tx
           .update(squadGroupInvitation)
           .set({ status: transitioned.nextStatus, updatedAt: now })
           .where(eq(squadGroupInvitation.id, invitationIdNumber))
           .returning({ id: squadGroupInvitation.id });
+
         const [updated] = updatedRows;
 
         if (updated === undefined) {
@@ -318,6 +333,7 @@ export const revokeSquadGroupEditorWithDatabase = (
         return { _tag: "Revoked" as const };
       })
     );
+
     yield* persistenceQuery(operation, transaction);
 
     return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
@@ -340,6 +356,7 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
     const operation = "saveSharedSquadGroupCharacters" as const;
     const groupIdNumber = groupId;
     const actor = actorUserId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* saveSharedSquadGroupCharactersTransaction(
         tx: TransactionDatabase
@@ -359,6 +376,7 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
           .where(eq(squadGroup.id, groupIdNumber))
           .limit(1)
           .for("update");
+
         const groupRows = yield* groupSelect;
 
         const [group] = groupRows;
@@ -383,6 +401,7 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
               )
             )
             .limit(1);
+
           const inviteRows = yield* inviteSelect;
 
           if (inviteRows[0] === undefined) {
@@ -398,11 +417,13 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
           })
           .from(squad)
           .where(eq(squad.squadGroupId, groupIdNumber));
+
         const existingSquads = yield* existingSquadSelect;
 
         const existingSquadIds = HashSet.fromIterable(
           existingSquads.map((row) => row.id)
         );
+
         const submittedSquadIds = HashSet.fromIterable(
           snapshot.squads.map((item) => item.squadId)
         );
@@ -417,10 +438,12 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
         const submittedBySquadId = HashMap.fromIterable(
           snapshot.squads.map((item) => [item.squadId, item] as const)
         );
+
         for (const submitted of snapshot.squads) {
           const parsedSubmittedSquadId = yield* parseSquadId(
             submitted.squadId
           ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           if (!HashSet.has(existingSquadIds, parsedSubmittedSquadId)) {
             return yield* new SquadNotInGroup({
               squadId: parsedSubmittedSquadId,
@@ -431,18 +454,23 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
         const parsedGroupId = yield* parseSquadGroupId(groupIdNumber).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
+
         const ownerUserId = yield* parsePersistedAppUserId(
           operation,
           group.ownerUserId
         );
+
         const squadsForValidation = [];
+
         for (const existingSquad of existingSquads) {
           const parsedSquadId = yield* parseSquadId(existingSquad.id).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
+
           const submitted = HashMap.get(submittedBySquadId, parsedSquadId).pipe(
             Option.getOrUndefined
           );
+
           squadsForValidation.push({
             characters: submitted?.characters ?? [],
             clientKey: `squad-${existingSquad.id}`,
@@ -451,11 +479,13 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
             squadId: parsedSquadId,
           });
         }
+
         const snapshotForValidation = yield* parseSquadGroupSnapshot({
           groupId: parsedGroupId,
           name: group.name,
           squads: squadsForValidation,
         });
+
         const availableCharacters =
           yield* listAvailableCharactersForOwnerWithDatabase(
             tx,
@@ -464,10 +494,12 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
           )({
             ownerUserId,
           });
+
         const validatedSnapshot = yield* validateParsedSquadGroupSnapshot({
           availableCharacters,
           snapshot: snapshotForValidation,
         });
+
         const availableByCharacterId = HashMap.fromIterable(
           availableCharacters.map(
             (character) => [character.characterId, character] as const

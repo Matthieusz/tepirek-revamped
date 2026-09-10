@@ -14,6 +14,7 @@ export {
 
 /** HTTP/API schema for account-access lifecycle status. */
 export const AccountAccessStatusSchema = InvitationAccessStatusSchema;
+
 /** Lifecycle status of a `margonem_account_access` row. */
 export type AccountAccessStatus = typeof AccountAccessStatusSchema.Type;
 

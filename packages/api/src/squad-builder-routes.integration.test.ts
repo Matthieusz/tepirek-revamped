@@ -1,5 +1,5 @@
 import { describe, expect, it as effectIt } from "@effect/vitest";
-import { makeBetterAuthServiceLayer } from "@tepirek-revamped/auth";
+import { buildBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -9,14 +9,14 @@ import * as Schema from "effect/Schema";
 import { HttpServer } from "effect/unstable/http";
 
 import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.ts";
-import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
+import { buildApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { testAuth } from "./test/integration/auth.ts";
 import { testDatabaseUrl, testDb } from "./test/integration/database.ts";
 import { integrationHandler } from "./test/integration/http-handler.ts";
 import type { IntegrationHandler } from "./test/integration/http-handler.ts";
 
-const apiLiveLayer = makeApiLiveLayerFromValues({
+const apiLiveLayer = buildApiLiveLayerFromValues({
   databaseUrl: testDatabaseUrl,
   discordGuildId: "test-discord-server-id",
   firecrawl: {
@@ -28,7 +28,7 @@ const apiLiveLayer = makeApiLiveLayerFromValues({
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(apiLiveLayer),
-  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
+  Layer.provideMerge(buildBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 
@@ -37,6 +37,7 @@ const withAppHttpApi = <A>(
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
+
     return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
@@ -49,6 +50,7 @@ const requestHttpApi = async (
 
 const createSignedInUser = async (name: string, verified = true) => {
   const email = `${name}@example.com`;
+
   const response = await testAuth.handler(
     new Request("http://localhost:3000/api/auth/sign-up/email", {
       body: JSON.stringify({
@@ -76,6 +78,7 @@ const createSignedInUser = async (name: string, verified = true) => {
   }
 
   const cookie = response.headers.get("set-cookie");
+
   if (cookie === null || cookie.length === 0) {
     throw new Error("Expected sign up to create a session cookie");
   }
@@ -88,6 +91,7 @@ const jsonPost = (
   cookie?: string
 ): RequestInit => {
   const headers = new Headers({ "Content-Type": "application/json" });
+
   if (cookie !== undefined) {
     headers.set("Cookie", cookie);
   }
@@ -102,9 +106,10 @@ const jsonPost = (
 const expectUnauthorized = async (response: Response) => {
   expect(response.status).toBe(401);
   expect(response.headers.get("content-type")).toBe("application/json");
-  await expect(response.json()).resolves.toMatchObject({
-    _tag: "SquadBuilderUnauthorized",
-  });
+  await expect(response.json()).resolves.toHaveProperty(
+    "_tag",
+    "SquadBuilderUnauthorized"
+  );
 };
 
 describe("squad-builder squad-group route auth", () => {
@@ -171,10 +176,13 @@ describe("squad-builder squad-group route auth", () => {
           "/squad-builder/squad-groups/owned",
           jsonPost({}, user1.cookie)
         );
+
         expect(user1OwnedResponse.status).toBe(200);
+
         const user1Owned = Schema.decodeUnknownSync(
           Schema.Array(SquadGroupSummarySchema)
         )(await user1OwnedResponse.json());
+
         expect(user1Owned).toHaveLength(1);
         expect(user1Owned[0]).toMatchObject({ name: "Spoofed Group" });
 
@@ -183,10 +191,13 @@ describe("squad-builder squad-group route auth", () => {
           "/squad-builder/squad-groups/owned",
           jsonPost({}, user2.cookie)
         );
+
         expect(user2OwnedResponse.status).toBe(200);
+
         const user2Owned = Schema.decodeUnknownSync(
           Schema.Array(SquadGroupSummarySchema)
         )(await user2OwnedResponse.json());
+
         expect(user2Owned).toHaveLength(0);
       })
   );
@@ -201,6 +212,7 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups",
         jsonPost({ name: "User1 Group" }, user1.cookie)
       );
+
       expect(response1.status).toBe(200);
 
       const response2 = await requestHttpApi(
@@ -208,6 +220,7 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups",
         jsonPost({ name: "User2 Group" }, user2.cookie)
       );
+
       expect(response2.status).toBe(200);
 
       const owned1 = await requestHttpApi(
@@ -215,10 +228,13 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups/owned",
         jsonPost({}, user1.cookie)
       );
+
       expect(owned1.status).toBe(200);
+
       const owned1Json = Schema.decodeUnknownSync(
         Schema.Array(SquadGroupSummarySchema)
       )(await owned1.json());
+
       expect(owned1Json).toHaveLength(1);
       expect(owned1Json[0]).toMatchObject({ name: "User1 Group" });
 
@@ -227,10 +243,13 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups/owned",
         jsonPost({}, user2.cookie)
       );
+
       expect(owned2.status).toBe(200);
+
       const owned2Json = Schema.decodeUnknownSync(
         Schema.Array(SquadGroupSummarySchema)
       )(await owned2.json());
+
       expect(owned2Json).toHaveLength(1);
       expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
     })
@@ -240,12 +259,15 @@ describe("squad-builder squad-group route auth", () => {
     withAppHttpApi(async (appHttpApi) => {
       const owner = await createSignedInUser("delete-owner");
       const otherUser = await createSignedInUser("delete-other");
+
       const createResponse = await requestHttpApi(
         appHttpApi,
         "/squad-builder/squad-groups",
         jsonPost({ name: "Delete Me" }, owner.cookie)
       );
+
       expect(createResponse.status).toBe(200);
+
       const created = Schema.decodeUnknownSync(SquadGroupSummarySchema)(
         await createResponse.json()
       );
@@ -255,6 +277,7 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups/delete",
         jsonPost({ groupId: created.groupId }, otherUser.cookie)
       );
+
       expect(forbiddenResponse.status).toBe(403);
 
       const deleteResponse = await requestHttpApi(
@@ -262,6 +285,7 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups/delete",
         jsonPost({ groupId: created.groupId }, owner.cookie)
       );
+
       expect(deleteResponse.status).toBe(200);
       await expect(deleteResponse.json()).resolves.toEqual({
         groupId: created.groupId,
@@ -272,6 +296,7 @@ describe("squad-builder squad-group route auth", () => {
         "/squad-builder/squad-groups/detail",
         jsonPost({ groupId: created.groupId }, owner.cookie)
       );
+
       expect(detailResponse.status).toBe(404);
     })
   );
@@ -297,6 +322,7 @@ describe("squad-builder squad-group route auth", () => {
             admin.cookie
           )
         );
+
         expect(warmedResponse.status).toBe(200);
 
         await testDb
@@ -315,10 +341,12 @@ describe("squad-builder squad-group route auth", () => {
             admin.cookie
           )
         );
+
         expect(revokedResponse.status).not.toBe(200);
-        await expect(revokedResponse.json()).resolves.toMatchObject({
-          _tag: "EventForbidden",
-        });
+        await expect(revokedResponse.json()).resolves.toHaveProperty(
+          "_tag",
+          "EventForbidden"
+        );
       })
   );
 
@@ -333,6 +361,7 @@ describe("squad-builder squad-group route auth", () => {
           "/squad-builder/squad-groups",
           jsonPost({ name: "Before Verification" }, userToVerify.cookie)
         );
+
         expect(warmedResponse.status).toBe(403);
 
         await testDb
@@ -345,6 +374,7 @@ describe("squad-builder squad-group route auth", () => {
           "/squad-builder/squad-groups",
           jsonPost({ name: "After Verification" }, userToVerify.cookie)
         );
+
         expect(verifiedResponse.status).toBe(200);
       })
   );

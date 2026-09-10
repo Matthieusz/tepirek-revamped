@@ -4,6 +4,7 @@ import { useSelector } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { VerifiedMember } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -65,6 +66,7 @@ const AddBetFormSchema = Schema.Struct({
   heroId: PositiveIntegerIdFromString.annotate({ message: "Wybierz herosa" }),
   userIds: NonEmptyUserIdsSchema,
 });
+
 const AddBetFormValidator = Schema.toStandardSchemaV1(AddBetFormSchema);
 
 interface BetsAddFormValues {
@@ -100,15 +102,19 @@ export const BetsAddForm = ({
 }: BetsAddFormProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createBet = useMutation(
     createBetMutationOptions(queryClient, runAppHttpApi)
   );
+
   const form = useAppForm({
     defaultValues: BETS_ADD_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await AddBetFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -121,8 +127,10 @@ export const BetsAddForm = ({
             userIds: decoded.value.userIds,
           })
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -131,7 +139,9 @@ export const BetsAddForm = ({
     },
     validators: { onSubmit: AddBetFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+
   const selectedEventId = useSelector(
     form.store,
     (state) => state.values.eventId
@@ -162,13 +172,16 @@ export const BetsAddForm = ({
                 const fieldId = getFieldId(field.name);
                 const errorId = getFieldErrorId(fieldId);
                 const error = getFieldErrorMessage(field.state.meta.errors);
+
                 const showError =
                   error !== undefined &&
                   (field.state.meta.isTouched ||
                     field.form.state.submissionAttempts > 0);
+
                 const selectedEvent = events.find(
                   (event) => event.id.toString() === field.state.value
                 );
+
                 const SelectedIcon = selectedEvent
                   ? getEventIcon(selectedEvent.icon)
                   : null;
@@ -219,6 +232,7 @@ export const BetsAddForm = ({
                         ) : (
                           events.map((event) => {
                             const IconComponent = getEventIcon(event.icon);
+
                             return (
                               <SelectItem
                                 key={event.id}
@@ -273,15 +287,18 @@ export const BetsAddForm = ({
               const fieldId = getFieldId(field.name);
               const errorId = getFieldErrorId(fieldId);
               const error = getFieldErrorMessage(field.state.meta.errors);
+
               const showError =
                 error !== undefined &&
                 (field.state.meta.isTouched ||
                   field.form.state.submissionAttempts > 0);
+
               const filteredHeroes = heroes.filter(
                 (hero) => hero.eventId === Number(selectedEventId)
               );
 
               let heroContent: ReactNode;
+
               if (heroesLoading) {
                 heroContent = (
                   <p className="text-muted-foreground text-sm">Ładowanie...</p>
@@ -339,10 +356,12 @@ export const BetsAddForm = ({
               const fieldId = getFieldId(field.name);
               const errorId = getFieldErrorId(fieldId);
               const error = getFieldErrorMessage(field.state.meta.errors);
+
               const showError =
                 error !== undefined &&
                 (field.state.meta.isTouched ||
                   field.form.state.submissionAttempts > 0);
+
               return (
                 <fieldset
                   aria-describedby={showError ? errorId : undefined}

@@ -10,6 +10,7 @@ const routeApi = getRouteApi("/dashboard");
 
 const DashboardRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <DashboardLayout session={session} />;
 };
 
@@ -17,6 +18,7 @@ export const loadDashboardSession = async (
   getUser: RouterAppContext["getUser"]
 ) => {
   const session = await requireVerified(getUser);
+
   return { session };
 };
 

@@ -12,7 +12,10 @@ import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
-import { AccountImportStoreService } from "./account-import-store.ts";
+import {
+  AccountImportStoreService,
+  ProfileAccessState,
+} from "./account-import-store.ts";
 import { preview } from "./preview-owned-account-imports-service.ts";
 
 const parseTestUserId = () =>
@@ -30,9 +33,11 @@ it.effect(
   "previews owned account imports and persists successful lines through services",
   () => {
     const actorUserId = parseTestUserId();
+
     const pendingImportId = Effect.runSync(
       parsePendingMargonemAccountImportId(123)
     );
+
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
         Effect.succeed({
@@ -46,11 +51,14 @@ it.effect(
       scrapeUrlHtml: () =>
         Effect.die(new Error("URL scraping is not used by this test")),
     };
+
     const store = makeAccountImportStoreServiceTestService({
       createPendingImport: (input) =>
         Effect.succeed({ id: pendingImportId, profileId: input.profileId }),
-      findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
+      findProfileAccessState: () =>
+        Effect.succeed(ProfileAccessState.Available()),
     });
+
     const requestAccounting =
       makeFirecrawlRequestAccountingStoreServiceTestService({
         markRequestSucceeded: () => Effect.void,
@@ -76,15 +84,16 @@ it.effect(
       });
 
       expect(output.items).toHaveLength(2);
+      expect(output.items[0]).toHaveProperty("_tag", "PreviewSucceeded");
       expect(output.items[0]).toMatchObject({
-        _tag: "PreviewSucceeded",
         pendingImportId: 123,
         suggestedAccountName: "informati",
       });
-      expect(output.items[1]).toMatchObject({
-        _tag: "PreviewFailed",
-        error: { _tag: "DuplicateProfileInBatch" },
-      });
+      expect(output.items[1]).toHaveProperty("_tag", "PreviewFailed");
+      expect(output.items[1]).toHaveProperty(
+        "error._tag",
+        "DuplicateProfileInBatch"
+      );
     }).pipe(
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),

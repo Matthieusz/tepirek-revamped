@@ -15,6 +15,7 @@
 export const formatVaultEarnings = (totalEarnings: string): string => {
   const parsedEarnings = Number(totalEarnings);
   const earnings = Number.isFinite(parsedEarnings) ? parsedEarnings : 0;
+
   return (Math.floor(earnings / 1_000_000) * 1_000_000).toLocaleString(
     "pl-PL",
     { maximumFractionDigits: 0 }
@@ -35,8 +36,10 @@ const shorthandMultipliers = new Map([
 export const tryParseGoldAmount = (value: string): number | undefined => {
   const trimmed = value.trim().toLowerCase();
   const suffix = trimmed.at(-1);
+
   const multiplier =
     suffix === undefined ? undefined : shorthandMultipliers.get(suffix);
+
   const numericText = multiplier === undefined ? trimmed : trimmed.slice(0, -1);
   const parsedAmount = Number(numericText);
 
@@ -52,6 +55,7 @@ export const tryParseGoldAmount = (value: string): number | undefined => {
     multiplier === undefined
       ? parsedAmount
       : Math.floor(parsedAmount * multiplier);
+
   return Number.isSafeInteger(normalizedAmount) ? normalizedAmount : undefined;
 };
 
@@ -69,6 +73,7 @@ export const formatGoldAmountInput = (value: number): string => {
     }
 
     const shorthandAmount = `${value / multiplier}${suffix}`;
+
     if (
       shorthandAmount.length < formattedAmount.length &&
       tryParseGoldAmount(shorthandAmount) === value

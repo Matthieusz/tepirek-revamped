@@ -104,6 +104,7 @@ export const AccountRefetchWorkflow = ({
   const queryClient = useQueryClient();
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
   const previewRefetch = useMutation(previewAccountRefetchMutationOptions());
+
   const applyRefetch = useMutation(
     applyAccountRefetchMutationOptions(queryClient)
   );

@@ -28,6 +28,7 @@ const parseItemLevel = (value: string | undefined): number | undefined => {
   }
 
   const level = Number(value);
+
   return Number.isSafeInteger(level) && level > 0 ? level : undefined;
 };
 
@@ -43,6 +44,7 @@ export const groupLegendPricesByEnemy = (
   const itemName = normalizeSearchTerm(filters.itemName);
   const monsterName = normalizeSearchTerm(filters.monsterName);
   const itemLevel = parseItemLevel(filters.itemLevel);
+
   const groupsByEnemyId = new Map<
     LegendPrice["enemies"][number]["id"],
     MutableLegendPriceGroup
@@ -52,6 +54,7 @@ export const groupLegendPricesByEnemy = (
     const matchesItemName =
       itemName.length === 0 ||
       item.name.toLocaleLowerCase("pl").includes(itemName);
+
     const matchesItemLevel =
       itemLevel === undefined || item.level === itemLevel;
 
@@ -63,14 +66,17 @@ export const groupLegendPricesByEnemy = (
       const matchesMonsterName =
         monsterName.length === 0 ||
         enemy.name.toLocaleLowerCase("pl").includes(monsterName);
+
       const matchesMonsterType =
         filters.monsterType === undefined ||
         enemy.category === filters.monsterType;
+
       if (!(matchesMonsterName && matchesMonsterType)) {
         continue;
       }
 
       const existingGroup = groupsByEnemyId.get(enemy.id);
+
       if (existingGroup === undefined) {
         groupsByEnemyId.set(enemy.id, { enemy, items: [item] });
       } else if (

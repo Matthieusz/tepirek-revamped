@@ -10,6 +10,7 @@ export const deleteOwnedAccount = Effect.fn("AccountImport.deleteOwnedAccount")(
     >[0]
   ) {
     const store = yield* AccountImportStoreService;
+
     return yield* store.deleteOwnedAccount(input);
   }
 );
@@ -22,6 +23,7 @@ export const listOwnedAccounts = Effect.fn("AccountImport.listOwnedAccounts")(
     >[0]
   ) {
     const store = yield* AccountImportStoreService;
+
     return yield* store.listOwnedAccounts(input);
   }
 );

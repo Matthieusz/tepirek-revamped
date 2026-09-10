@@ -29,13 +29,21 @@ import {
 import { DrizzleLegendCatalogStoreServiceLayer } from "./drizzle-legend-catalog-store.ts";
 
 const firstSynchronizedAt = new Date("2026-08-19T10:00:00.000Z");
+
 const secondSynchronizedAt = new Date("2026-08-26T10:00:00.000Z");
+
 const startedAt = new Date("2026-08-19T09:59:00.000Z");
+
 const enemyKey = (value: string) => LegendaryEnemySourceKey.make(value);
+
 const itemKey = (value: string) => LegendaryItemSourceKey.make(value);
+
 const icon = (value: string) => MargonemCdnIconUrl.make(value);
+
 const postId = (value: number) => MargonemForumPostId.make(value);
+
 const enemyLevel = (value: number) => LegendaryEnemyLevel.make(value);
+
 const itemLevel = (value: number) => LegendaryItemLevel.make(value);
 
 const makeInitialSnapshot = (): ReconcileLegendCatalogInput => ({
@@ -116,6 +124,7 @@ const makeReducedSnapshot = (): ReconcileLegendCatalogInput => {
   const [sharedItem] = initial.items;
   const [, eliteDrop] = initial.drops;
   const [heroPost, elitePost] = initial.sourcePosts;
+
   if (
     originalHero === undefined ||
     elite === undefined ||
@@ -126,6 +135,7 @@ const makeReducedSnapshot = (): ReconcileLegendCatalogInput => {
   ) {
     throw new Error("Initial catalog fixture is incomplete");
   }
+
   const replacementHero = {
     ...originalHero,
     iconUrl: icon(
@@ -135,6 +145,7 @@ const makeReducedSnapshot = (): ReconcileLegendCatalogInput => {
     sourceIconKey: enemyKey("/obrazki/npc/her/replacement.gif"),
     sourcePostId: postId(103),
   };
+
   return {
     ...initial,
     drops: [
@@ -174,6 +185,7 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "legend-catalog-price-admin" })
         );
+
         const [pricedItem] = yield* Effect.promise(() =>
           testDb
             .select({ id: legendaryItem.id })
@@ -182,9 +194,11 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
               eq(legendaryItem.sourceIconKey, "/obrazki/itemy/pie/shared.gif")
             )
         );
+
         if (pricedItem === undefined) {
           throw new Error("Failed to load the item selected for pricing");
         }
+
         yield* Effect.promise(() =>
           testDb.insert(legendaryItemCost).values({
             itemId: pricedItem.id,
@@ -218,15 +232,18 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
             .from(legendaryEnemy)
             .orderBy(asc(legendaryEnemy.id))
         );
+
         const items = yield* Effect.promise(() =>
           testDb
             .select({ active: legendaryItem.active, name: legendaryItem.name })
             .from(legendaryItem)
             .orderBy(asc(legendaryItem.id))
         );
+
         const costs = yield* Effect.promise(() =>
           testDb.select().from(legendaryItemCost)
         );
+
         const drops = yield* Effect.promise(() =>
           testDb.select().from(legendaryItemDrop)
         );

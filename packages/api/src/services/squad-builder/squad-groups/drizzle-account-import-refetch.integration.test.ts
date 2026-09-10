@@ -46,7 +46,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-owned-owner" })
         );
+
         const accountImportStore = yield* AccountImportStoreService;
+
         const other = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-owned-other" })
         );
@@ -107,7 +109,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-pending-user" })
         );
+
         const accountImportStore = yield* AccountImportStoreService;
+
         const pending = yield* accountImportStore.createPendingImport({
           actorUserId: parseTestUserId(member.id),
           expiresAt: new Date("2026-06-29T12:30:00.000Z"),
@@ -164,7 +168,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-refetch-owner" })
           );
+
           const accountRefetchStore = yield* AccountRefetchStoreService;
+
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -198,6 +204,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           });
 
           const fetchedAt = new Date("2026-06-29T12:00:00.000Z");
+
           const latestCharacters = [
             {
               avatarUrl: null,
@@ -208,6 +215,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               world: "jaruna" as const,
             },
           ];
+
           const pending = yield* accountRefetchStore.createPendingRefetch({
             accountId: loaded.accountId,
             actorUserId: parseTestUserId(member.id),
@@ -228,6 +236,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .where(eq(margonemAccountRefetchPreview.id, pending.id))
               .limit(1)
           );
+
           const characters = yield* Effect.promise(() =>
             testDb
               .select({ name: margonemAccountRefetchPreviewCharacter.name })
@@ -262,6 +271,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           const member = yield* Effect.promise(
             async () => await createVerifiedMember({ id: "effect-apply-owner" })
           );
+
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -413,12 +423,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .from(margonemCharacter)
               .where(eq(margonemCharacter.accountId, account.id))
           );
+
           const remainingRefetchPreviews = yield* Effect.promise(() =>
             testDb
               .select({ id: margonemAccountRefetchPreview.id })
               .from(margonemAccountRefetchPreview)
               .where(eq(margonemAccountRefetchPreview.id, pending.id))
           );
+
           const remainingPlacements = yield* Effect.promise(() =>
             testDb
               .select({ id: squadCharacter.id })
@@ -445,6 +457,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-confirm-user" })
         );
+
         const [pending] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccountImportPreview)
@@ -495,6 +508,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .where(eq(margonemAccount.id, confirmed.accountId))
             .limit(1)
         );
+
         const [storedCharacter] = yield* Effect.promise(() =>
           testDb
             .select({ name: margonemCharacter.name })
@@ -502,6 +516,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .where(eq(margonemCharacter.accountId, confirmed.accountId))
             .limit(1)
         );
+
         const remainingImportPreviews = yield* Effect.promise(() =>
           testDb
             .select({ id: margonemAccountImportPreview.id })

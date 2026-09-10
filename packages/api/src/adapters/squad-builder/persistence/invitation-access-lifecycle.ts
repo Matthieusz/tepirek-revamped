@@ -37,6 +37,7 @@ export const validateInvitationAccessTransition = <
 > =>
   Effect.gen(function* validateInvitationAccessTransitionEffect() {
     const previousStatus = yield* input.parseStatus(input.currentStatus);
+
     const nextStatus = yield* transitionInvitationAccess(
       previousStatus,
       input.nextStatus

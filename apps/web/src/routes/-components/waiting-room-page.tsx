@@ -31,6 +31,7 @@ interface WaitingRoomPageProps {
 const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+
   const verifyDiscordGuildMembership = useMutation(
     verifyDiscordGuildMembershipMutationOptions(queryClient, undefined, {
       onRefreshError: () => {
@@ -43,6 +44,7 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
       },
     })
   );
+
   const isValidatingRef = useRef(false);
   const hasValidated = useRef(false);
 
@@ -54,8 +56,10 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
 
       hasValidated.current = true;
       isValidatingRef.current = true;
+
       try {
         const result = await verifyDiscordGuildMembership.mutateAsync();
+
         if (result.valid) {
           await router.navigate({ to: "/dashboard" });
         }
@@ -64,6 +68,7 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
           "Nie udało się zweryfikować przynależności do gildii Discord"
         );
       }
+
       isValidatingRef.current = false;
     };
 

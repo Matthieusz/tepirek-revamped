@@ -11,7 +11,9 @@ import {
 } from "./margonem-profile-id.ts";
 
 const accountId = MargonemAccountId.make(1);
+
 const profileId = MargonemProfileId.make(7_298_897);
+
 const fetchedAt = new Date("2026-06-29T12:00:00.000Z");
 
 type StoredCharacterFixtureInput = Omit<

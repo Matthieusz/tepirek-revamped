@@ -14,16 +14,16 @@ import {
   listHeroes,
   listHeroesByEvent,
 } from "../../services/heroes/heroes-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
-  {
+const { requireAdminSession, requireVerifiedSession } =
+  buildAuthorizationPolicy({
     forbidden: () => new HeroesForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new HeroesUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
       new HeroesForbidden({ message: "Konto oczekuje na weryfikację" }),
-  }
-);
+  });
+
 const mapHeroesError = (error: ApplicationDependencyUnavailable) =>
   new HeroesPersistenceUnavailable({ operation: error.operation });
 
@@ -47,12 +47,14 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
       .handle("listHeroes", () =>
         Effect.gen(function* listHeroesHandler() {
           yield* requireVerifiedSession();
+
           return yield* listHeroes().pipe(Effect.mapError(mapHeroesError));
         })
       )
       .handle("listHeroesByEvent", ({ payload }) =>
         Effect.gen(function* listHeroesByEventHandler() {
           yield* requireVerifiedSession();
+
           return yield* listHeroesByEvent(payload).pipe(
             Effect.mapError(mapHeroesError)
           );

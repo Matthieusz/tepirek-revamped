@@ -114,6 +114,7 @@ export const accountInviteTargetsQueryOptions = (
   runner: AccountSharingApiRunner = runAppHttpApi
 ) => {
   const normalizedQuery = query.trim();
+
   return queryOptions({
     enabled:
       accountId > 0 && actorUserId.length > 0 && normalizedQuery.length >= 2,

@@ -10,9 +10,11 @@ import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
   profileUrl: Schema.String,
 });
+
 export interface PreviewMargonemProfileImportPayload extends Schema.Schema.Type<
   typeof PreviewMargonemProfileImportPayload
 > {}
+
 export const PreviewMargonemProfileImportSuccess = Schema.Struct({
   firecrawlCreditsUsed: PositiveInt,
   generatedProfileUrl: Schema.String,
@@ -21,6 +23,7 @@ export const PreviewMargonemProfileImportSuccess = Schema.Struct({
   profileId: MargonemProfileId,
   suggestedAccountName: Schema.String,
 });
+
 export interface PreviewMargonemProfileImportSuccess extends Schema.Schema.Type<
   typeof PreviewMargonemProfileImportSuccess
 > {}
@@ -28,9 +31,11 @@ export interface PreviewMargonemProfileImportSuccess extends Schema.Schema.Type<
 export const PreviewOwnedAccountImportsPayload = Schema.Struct({
   profileUrls: Schema.Array(Schema.String),
 });
+
 export interface PreviewOwnedAccountImportsPayload extends Schema.Schema.Type<
   typeof PreviewOwnedAccountImportsPayload
 > {}
+
 const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
   DuplicateProfileInBatch: { firstLineNumber: PositiveInt },
   FirecrawlMonthlyBudgetExhausted: {
@@ -58,6 +63,7 @@ const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
   MissingMargonemProfileId: { message: Schema.String },
   SquadBuilderPersistenceUnavailable: { operation: Schema.String },
 });
+
 const PreviewOwnedAccountImportItem = Schema.TaggedUnion({
   PreviewFailed: {
     error: PreviewOwnedAccountImportLineError,
@@ -77,9 +83,11 @@ const PreviewOwnedAccountImportItem = Schema.TaggedUnion({
     suggestedAccountName: Schema.String,
   },
 });
+
 export const PreviewOwnedAccountImportsSuccess = Schema.Struct({
   items: Schema.Array(PreviewOwnedAccountImportItem),
 });
+
 export interface PreviewOwnedAccountImportsSuccess extends Schema.Schema.Type<
   typeof PreviewOwnedAccountImportsSuccess
 > {}
@@ -88,37 +96,46 @@ export const ConfirmOwnedAccountImportPayload = Schema.Struct({
   displayName: Schema.String,
   pendingImportId: PendingMargonemAccountImportId,
 });
+
 export interface ConfirmOwnedAccountImportPayload extends Schema.Schema.Type<
   typeof ConfirmOwnedAccountImportPayload
 > {}
+
 export const UpdateOwnedAccountDisplayNamePayload = Schema.Struct({
   accountId: MargonemAccountId,
   displayName: Schema.String,
 });
+
 export interface UpdateOwnedAccountDisplayNamePayload extends Schema.Schema.Type<
   typeof UpdateOwnedAccountDisplayNamePayload
 > {}
+
 export const DeleteOwnedAccountPayload = Schema.Struct({
   accountId: MargonemAccountId,
 });
+
 export interface DeleteOwnedAccountPayload extends Schema.Schema.Type<
   typeof DeleteOwnedAccountPayload
 > {}
+
 export const DeleteOwnedAccountSuccess = Schema.Struct({
   accountId: MargonemAccountId,
   removedAccessGrantCount: Schema.Finite,
   removedCharacterCount: Schema.Finite,
   removedSquadCharacterCount: Schema.Finite,
 });
+
 export interface DeleteOwnedAccountSuccess extends Schema.Schema.Type<
   typeof DeleteOwnedAccountSuccess
 > {}
+
 export const OwnedAccountCharacterPreviewSchema = Schema.Struct({
   avatarUrl: Schema.NullOr(Schema.String),
   characterId: Schema.Finite,
   name: Schema.String,
   profession: Schema.String,
 });
+
 export interface OwnedAccountCharacterPreviewSchema extends Schema.Schema.Type<
   typeof OwnedAccountCharacterPreviewSchema
 > {}
@@ -132,6 +149,7 @@ export const OwnedMargonemAccountSummarySchema = Schema.Struct({
   lastFetchedAt: Schema.DateFromString,
   profileId: MargonemProfileId,
 });
+
 export interface OwnedMargonemAccountSummarySchema extends Schema.Schema.Type<
   typeof OwnedMargonemAccountSummarySchema
 > {}

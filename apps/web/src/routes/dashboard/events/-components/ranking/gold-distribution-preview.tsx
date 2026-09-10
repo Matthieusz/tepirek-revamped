@@ -8,6 +8,7 @@ export const GoldAmountPreview = ({
   if (goldAmount <= 0) {
     return null;
   }
+
   return (
     <p className="text-muted-foreground font-mono text-xs">
       = {goldAmount.toLocaleString("pl-PL")} złota
@@ -34,6 +35,7 @@ export const DistributionPreview = ({
   ) {
     return null;
   }
+
   return (
     <div className="border-primary/20 bg-primary/5 rounded-lg border p-4">
       <h4 className="text-primary mb-2 text-sm font-semibold">

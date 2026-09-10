@@ -25,9 +25,11 @@ export const EventNameSchema = Schema.String.pipe(
 );
 
 export const EventIconSchema = Schema.Literals(EVENT_ICON_IDS);
+
 export const EventColorSchema = Schema.Literals(
   EventColors.map((color) => color.id)
 );
+
 export const EventDateSchema = Schema.NullOr(Schema.Date).pipe(
   Schema.refine((value): value is Date => value !== null, {
     message: "Wybierz datę końcową eventu",

@@ -4,9 +4,9 @@ import {
   SquadBuilderForbidden,
   SquadBuilderUnauthorized,
 } from "../../protocol/squad-builder/errors.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireVerifiedSession } = makeAuthorizationPolicy({
+const { requireVerifiedSession } = buildAuthorizationPolicy({
   forbidden: () => new SquadBuilderForbidden({ message: "FORBIDDEN" }),
   unauthorized: () => new SquadBuilderUnauthorized({ message: "UNAUTHORIZED" }),
   unverified: () =>

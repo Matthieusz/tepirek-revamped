@@ -10,6 +10,7 @@ export const deleteSquadGroup = Effect.fn("SquadGroup.delete")(
     >[0]
   ) {
     const store = yield* SquadGroupAggregateStoreService;
+
     return yield* store.deleteSquadGroup(input);
   }
 );
@@ -22,6 +23,7 @@ export const listOwnedSquadGroups = Effect.fn("SquadGroup.listOwned")(
     >[0]
   ) {
     const store = yield* SquadGroupAggregateStoreService;
+
     return yield* store.listMySquadGroups(input);
   }
 );
@@ -34,6 +36,7 @@ export const getSquadGroupDetail = Effect.fn("SquadGroup.getDetail")(
     >[0]
   ) {
     const store = yield* SquadGroupAggregateStoreService;
+
     return yield* store.getSquadGroupDetail(input);
   }
 );

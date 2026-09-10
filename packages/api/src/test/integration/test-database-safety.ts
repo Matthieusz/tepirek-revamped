@@ -8,6 +8,7 @@ type DatabaseUrlMetadata = Readonly<{
 }>;
 
 const defaultPostgresPort = "5432";
+
 const postgresProtocols = HashSet.fromIterable(["postgres:", "postgresql:"]);
 
 const canonicalizeSearch = (url: URL) => {

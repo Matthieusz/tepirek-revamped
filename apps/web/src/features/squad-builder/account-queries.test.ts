@@ -40,20 +40,25 @@ describe("account queries", () => {
       await testClient.queryClient.query(
         accountInviteTargetsQueryOptions(7, "other-actor", "al", runner)
       );
+
       const invalidGrantsObserver = new QueryObserver(
         testClient.queryClient,
         accountAccessGrantsQueryOptions(0, "actor", runner)
       );
+
       const incompleteSearchObserver = new QueryObserver(
         testClient.queryClient,
         accountInviteTargetsQueryOptions(7, "actor", "a", runner)
       );
+
       const unsubscribeInvalidGrants = invalidGrantsObserver.subscribe(
         () => {}
       );
+
       const unsubscribeIncompleteSearch = incompleteSearchObserver.subscribe(
         () => {}
       );
+
       unsubscribeInvalidGrants();
       unsubscribeIncompleteSearch();
 
@@ -129,6 +134,7 @@ describe("account queries", () => {
         queryClient,
         sendAccountAccessInviteMutationOptions(queryClient, runner)
       );
+
       await send.mutate({ accountId: 1, invitedUserId: "user" });
 
       for (const queryKey of [
@@ -151,6 +157,7 @@ describe("account queries", () => {
     const { queryClient } = testClient;
     const ownedGroups = ownedSquadGroupsQueryOptions(runner);
     const globalGroups = globalSquadGroupsQueryOptions({}, runner);
+
     const affectedQueryKeys = [
       ownedAccountsQueryKey,
       sharedAccountsQueryKey,
@@ -175,6 +182,7 @@ describe("account queries", () => {
         queryClient,
         applyAccountRefetchMutationOptions(queryClient, runner)
       );
+
       await apply.mutate({ refetchPreviewId: 7 });
 
       for (const queryKey of affectedQueryKeys) {
@@ -198,7 +206,9 @@ describe("account queries", () => {
         queryClient,
         applyAccountRefetchMutationOptions(queryClient, runner)
       );
+
       const unsubscribe = apply.subscribe(() => {});
+
       const request = apply.mutate(
         { refetchPreviewId: 7 },
         {
@@ -207,6 +217,7 @@ describe("account queries", () => {
           },
         }
       );
+
       unsubscribe();
 
       await request;

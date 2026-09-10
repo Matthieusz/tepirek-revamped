@@ -71,9 +71,11 @@ const invalidateAuctionGroup = async (
       { throwOnError: true }
     ),
   ]);
+
   const failure = results.find(
     (result): result is PromiseRejectedResult => result.status === "rejected"
   );
+
   if (failure !== undefined) {
     callbacks.onRefreshError?.(
       failure.reason instanceof Error
@@ -173,6 +175,7 @@ export const removeAuctionSignupMutationOptions = (
       context: RemoveAuctionSignupContext | undefined
     ) => {
       const previousSignup = context?.previousSignup;
+
       if (previousSignup !== undefined) {
         queryClient.setQueryData<readonly AuctionSignup[]>(
           auctionSignupsQueryKey(group),
@@ -183,10 +186,12 @@ export const removeAuctionSignupMutationOptions = (
             ) {
               return signups;
             }
+
             const previousIndex = Math.min(
               context?.previousIndex ?? 0,
               signups.length
             );
+
             return [
               ...signups.slice(0, previousIndex),
               previousSignup,
@@ -195,25 +200,31 @@ export const removeAuctionSignupMutationOptions = (
           }
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: RemoveAuctionSignupInput) => {
       await queryClient.cancelQueries({
         queryKey: auctionSignupsQueryKey(group),
       });
+
       const signups = queryClient.getQueryData<readonly AuctionSignup[]>(
         auctionSignupsQueryKey(group)
       );
+
       const previousIndex =
         signups?.findIndex((signup) => signup.id === input.id) ?? -1;
+
       const previousSignup =
         previousIndex >= 0 && signups !== undefined
           ? signups[previousIndex]
           : undefined;
+
       queryClient.setQueryData<readonly AuctionSignup[]>(
         auctionSignupsQueryKey(group),
         (current) => current?.filter((signup) => signup.id !== input.id)
       );
+
       return {
         previousIndex: Math.max(previousIndex, 0),
         previousSignup,

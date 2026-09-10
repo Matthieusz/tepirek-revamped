@@ -20,7 +20,9 @@ import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all squad-group queries, including details and character pools. */
 export const squadGroupsQueryKey = ["squad-groups"] as const;
+
 const ownedSquadGroupsQueryKey = [...squadGroupsQueryKey, "owned"] as const;
+
 const globalSquadGroupsQueryPrefix = [
   ...squadGroupsQueryKey,
   "global",
@@ -55,6 +57,7 @@ export const globalSquadGroupsQueryOptions = (
   runner: SquadGroupApiRunner = runAppHttpApi
 ) => {
   const normalizedFilters = normalizeGlobalFilters(filters);
+
   return queryOptions({
     queryFn: async ({ signal }) =>
       await runner(listGlobalSquadGroups(normalizedFilters), { signal }),

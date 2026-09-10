@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
@@ -32,21 +34,29 @@ import { withRequestCorrelation } from "../request-correlation.ts";
 type SearchSquadEditorInviteTargetsError = Effect.Error<
   ReturnType<typeof search>
 >;
+
 type SendSquadGroupEditorInviteError = Effect.Error<ReturnType<typeof send>>;
+
 type RespondToSquadGroupInviteError = Effect.Error<ReturnType<typeof respond>>;
+
 type RevokeSquadGroupEditorError = Effect.Error<ReturnType<typeof revoke>>;
+
 type ListIncomingSquadGroupInvitesError = Effect.Error<
   ReturnType<typeof listIncomingSquadGroupInvitesWorkflow>
 >;
+
 type ListSharedSquadGroupsError = Effect.Error<
   ReturnType<typeof listSharedSquadGroupsWorkflow>
 >;
+
 type ListSquadGroupEditorGrantsError = Effect.Error<
   ReturnType<typeof listSquadGroupEditorGrantsWorkflow>
 >;
+
 type CountPendingSquadGroupInvitesError = Effect.Error<
   ReturnType<typeof countPendingSquadGroupInvitesWorkflow>
 >;
+
 type SquadGroupSharingHandlerError =
   | SearchSquadEditorInviteTargetsError
   | SendSquadGroupEditorInviteError
@@ -60,14 +70,17 @@ type SearchSquadEditorInviteTargetsProtocolError =
   | SquadBuilderForbidden
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type SendSquadGroupEditorInviteProtocolError =
   | SearchSquadEditorInviteTargetsProtocolError
   | SquadBuilderConflict;
+
 type RespondToSquadGroupInviteProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
   | SquadBuilderConflict
   | SquadBuilderPersistenceUnavailable;
+
 type ListSquadGroupEditorGrantsProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
@@ -91,58 +104,68 @@ function mapSquadGroupSharingError(
 function mapSquadGroupSharingError(
   error: SquadGroupSharingHandlerError
 ): SendSquadGroupEditorInviteProtocolError {
-  switch (error._tag) {
-    case "SquadGroupNotFound":
-    case "SquadGroupInvitationNotFound":
-    case "SquadEditorInviteTargetNotFound": {
-      return new SquadBuilderNotFound({ message: error._tag });
-    }
-    case "ActorDoesNotOwnSquadGroup":
-    case "ActorIsNotSquadGroupInviteRecipient":
-    case "SquadEditorInviteTargetNotVerified": {
-      return new SquadBuilderForbidden({ message: error._tag });
-    }
-    case "SquadGroupInvitationTransitionNotAllowed": {
-      return new SquadBuilderConflict({ message: error._tag });
-    }
-    case "CannotInviteSelf":
-    case "InvalidAccountInviteTargetQuery": {
-      return new SquadBuilderInvalidInput({ message: error._tag });
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return new SquadBuilderPersistenceUnavailable({
-        operation: error.operation,
-      });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
+  return Match.value(error).pipe(
+    Match.tag(
+      "SquadGroupNotFound",
+      "SquadGroupInvitationNotFound",
+      "SquadEditorInviteTargetNotFound",
+      (error) => new SquadBuilderNotFound({ message: error._tag })
+    ),
+    Match.tag(
+      "ActorDoesNotOwnSquadGroup",
+      "ActorIsNotSquadGroupInviteRecipient",
+      "SquadEditorInviteTargetNotVerified",
+      (error) => new SquadBuilderForbidden({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadGroupInvitationTransitionNotAllowed",
+      (error) => new SquadBuilderConflict({ message: error._tag })
+    ),
+    Match.tag(
+      "CannotInviteSelf",
+      "InvalidAccountInviteTargetQuery",
+      (error) => new SquadBuilderInvalidInput({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      (error) =>
+        new SquadBuilderPersistenceUnavailable({
+          operation: error.operation,
+        })
+    ),
+    Match.exhaustive
+  );
 }
 
 const mapSearchSquadEditorInviteTargetsError = (
   error: SearchSquadEditorInviteTargetsError
 ): SearchSquadEditorInviteTargetsProtocolError =>
   mapSquadGroupSharingError(error);
+
 const mapSendSquadGroupEditorInviteError = (
   error: SendSquadGroupEditorInviteError
 ): SendSquadGroupEditorInviteProtocolError => mapSquadGroupSharingError(error);
+
 const mapRespondToSquadGroupInviteError = (
   error: RespondToSquadGroupInviteError
 ): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+
 const mapRevokeSquadGroupEditorError = (
   error: RevokeSquadGroupEditorError
 ): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+
 const mapListIncomingSquadGroupInvitesError = (
   error: ListIncomingSquadGroupInvitesError
 ): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+
 const mapListSharedSquadGroupsError = (
   error: ListSharedSquadGroupsError
 ): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+
 const mapListSquadGroupEditorGrantsError = (
   error: ListSquadGroupEditorGrantsError
 ): ListSquadGroupEditorGrantsProtocolError => mapSquadGroupSharingError(error);
+
 const mapCountPendingSquadGroupInvitesError = (
   error: CountPendingSquadGroupInvitesError
 ): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
@@ -159,6 +182,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
             "SquadBuilderSquadGroupSharing.searchSquadEditorInviteTargets"
           )(function* searchSquadEditorInviteTargets({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               search({
@@ -174,6 +198,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           Effect.fn("SquadBuilderSquadGroupSharing.sendSquadGroupEditorInvite")(
             function* sendSquadGroupEditorInvite({ payload, request }) {
               const session = yield* requireSquadBuilderSession();
+
               return yield* withRequestCorrelation(
                 request,
                 send({
@@ -190,6 +215,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           Effect.fn("SquadBuilderSquadGroupSharing.respondToSquadGroupInvite")(
             function* respondToSquadGroupInvite({ payload, request }) {
               const session = yield* requireSquadBuilderSession();
+
               return yield* withRequestCorrelation(
                 request,
                 respond({
@@ -206,6 +232,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           Effect.fn("SquadBuilderSquadGroupSharing.revokeSquadGroupEditor")(
             function* revokeSquadGroupEditor({ payload, request }) {
               const session = yield* requireSquadBuilderSession();
+
               return yield* withRequestCorrelation(
                 request,
                 revoke({
@@ -222,6 +249,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
             "SquadBuilderSquadGroupSharing.listIncomingSquadGroupInvites"
           )(function* listIncomingSquadGroupInvites({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listIncomingSquadGroupInvitesWorkflow({
@@ -235,6 +263,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           Effect.fn("SquadBuilderSquadGroupSharing.listSharedSquadGroups")(
             function* listSharedSquadGroups({ request }) {
               const session = yield* requireSquadBuilderSession();
+
               return yield* withRequestCorrelation(
                 request,
                 listSharedSquadGroupsWorkflow({
@@ -250,6 +279,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           Effect.fn("SquadBuilderSquadGroupSharing.listSquadGroupEditorGrants")(
             function* listSquadGroupEditorGrants({ payload, request }) {
               const session = yield* requireSquadBuilderSession();
+
               return yield* withRequestCorrelation(
                 request,
                 listSquadGroupEditorGrantsWorkflow({
@@ -266,6 +296,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
             "SquadBuilderSquadGroupSharing.countPendingSquadGroupInvites"
           )(function* countPendingSquadGroupInvites({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               countPendingSquadGroupInvitesWorkflow({

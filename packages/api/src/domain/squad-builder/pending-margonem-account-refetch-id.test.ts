@@ -17,6 +17,7 @@ describe("parsePendingMargonemAccountRefetchId", () => {
         const failure = yield* parsePendingMargonemAccountRefetchId(value).pipe(
           Effect.flip
         );
+
         expect(failure._tag).toBe("InvalidPendingMargonemAccountRefetchId");
       }
     })

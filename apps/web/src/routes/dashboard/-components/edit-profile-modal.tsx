@@ -2,6 +2,7 @@ import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { UpdateProfilePayload } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ interface EditProfileModalProps {
 const ProfileFormSchema = Schema.Struct({
   name: UpdateProfilePayload.fields.name,
 });
+
 const ProfileFormValidator = Schema.toStandardSchemaV1(ProfileFormSchema);
 
 const EditProfileModalContent = ({
@@ -34,10 +36,13 @@ const EditProfileModalContent = ({
   defaultName,
 }: EditProfileModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
   const router = useRouter();
+
   const updateProfile = useMutation(
     updateProfileMutationOptions(queryClient, undefined, {
       onRefreshError: () => {
@@ -48,11 +53,13 @@ const EditProfileModalContent = ({
       },
     })
   );
+
   const form = useAppForm({
     defaultValues: { name: defaultName },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await ProfileFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -60,8 +67,10 @@ const EditProfileModalContent = ({
       const result = await runFormSubmission(
         async () => await updateProfile.mutateAsync(decoded.value)
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -71,6 +80,7 @@ const EditProfileModalContent = ({
     },
     validators: { onSubmit: ProfileFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
@@ -79,9 +89,11 @@ const EditProfileModalContent = ({
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 

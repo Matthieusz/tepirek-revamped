@@ -1,6 +1,7 @@
 import type { BetterAuthOptions } from "better-auth";
 
 const BETTER_AUTH_CALLBACK_PATH = "/callback/:id";
+
 const DISCORD_PROVIDER_ID = "discord";
 
 type UserUpdateHook = NonNullable<
@@ -10,15 +11,19 @@ type UserUpdateHook = NonNullable<
     >["update"]
   >["before"]
 >;
+
 type UserUpdate = Parameters<UserUpdateHook>[0];
+
 type UserUpdateContext = Pick<
   NonNullable<Parameters<UserUpdateHook>[1]>,
   "params" | "path"
 >;
+
 type UserUpdateResult = Extract<
   Awaited<ReturnType<UserUpdateHook>>,
   { data: object }
 >;
+
 type UserUpdateResultData = UserUpdateResult["data"];
 
 /**
@@ -39,10 +44,12 @@ export const syncDiscordAvatar = async (
     user.image === undefined
   ) {
     await Promise.resolve();
+
     return;
   }
 
   const data: UserUpdateResultData = { image: user.image };
+
   for (const key of Object.keys(user)) {
     if (key !== "image") {
       data[key] = undefined;

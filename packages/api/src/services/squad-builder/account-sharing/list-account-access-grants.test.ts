@@ -23,6 +23,7 @@ it.effect("lists account access grants for an owned account", () => {
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
+
   const store = makeAccountSharingStoreServiceTestService({
     findAccountOwnerUserId: (input) => {
       expect(input).toEqual({ accountId });
@@ -64,6 +65,7 @@ it.effect(
     const actorUserId = parseTestUserId("effect-grants-attacker");
     const ownerUserId = parseTestUserId("effect-grants-real-owner");
     const accountId = parseTestAccountId();
+
     const store = makeAccountSharingStoreServiceTestService({
       findAccountOwnerUserId: () => Effect.succeed(ownerUserId),
     });

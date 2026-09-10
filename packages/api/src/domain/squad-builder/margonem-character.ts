@@ -7,6 +7,7 @@ import { MargonemCharacterId, PositiveLevel } from "./margonem-profile-id.ts";
 
 /** The only Margonem world supported by squad builder v1. */
 export const MargonemWorld = Schema.Literal("jaruna");
+
 export type MargonemWorld = typeof MargonemWorld.Type;
 
 /** Expected failure when a world string is not a known Margonem world. */
@@ -37,6 +38,7 @@ export const MargonemProfessionSchema = Schema.Literals([
   "hunter",
   "tracker",
 ]);
+
 export type MargonemProfession = typeof MargonemProfessionSchema.Type;
 
 /** HTTP/API schema for a Jaruna character parsed from a Margonem profile. */
@@ -48,9 +50,11 @@ export const MargonemCharacterPreviewSchema = Schema.Struct({
   profession: MargonemProfessionSchema,
   world: MargonemWorld,
 });
+
 export interface MargonemCharacterPreviewSchema extends Schema.Schema.Type<
   typeof MargonemCharacterPreviewSchema
 > {}
+
 export type MargonemCharacterPreview = MargonemCharacterPreviewSchema;
 
 /** Expected failure when a profession label cannot be normalized. */
@@ -88,6 +92,7 @@ const cleanProfessionLabel = (label: string): string =>
 export const parseMargonemProfession = Effect.fn("MargonemProfession.parse")(
   function* parseMargonemProfession(label: string) {
     const cleanLabel = cleanProfessionLabel(label);
+
     if (!hasProfessionLabel(cleanLabel)) {
       return yield* new UnknownMargonemProfession({ label: cleanLabel });
     }

@@ -67,10 +67,12 @@ const ItemRaritySchema = Schema.Literals([
   "ulepszony",
   "legendarny",
 ]);
+
 const UlepaFormSchema = Schema.Struct({
   itemLevel: CalculatorItemLevelFromStringSchema,
   itemRarity: ItemRaritySchema,
 });
+
 const UlepaFormValidator = Schema.toStandardSchemaV1(UlepaFormSchema);
 
 interface CalculatorUlepaPageProps {
@@ -186,6 +188,7 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
         <TableBody>
           {result.differentialCosts.map((cost, idx) => {
             const level = idx + 1;
+
             return (
               <TableRow
                 key={`upgrade-${cost}-${result.cumulativeCosts[idx] ?? 0}`}
@@ -224,10 +227,12 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
 
 const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
   const [result, setResult] = useState<UlepaResult | null>(null);
+
   const form = useAppForm({
     defaultValues: ULEPA_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       const decoded = await UlepaFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -243,6 +248,7 @@ const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
     },
     validators: { onChange: UlepaFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
@@ -282,10 +288,12 @@ const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
                   {(field) => {
                     const fieldId = getFieldId(field.name);
                     const error = getFieldErrorMessage(field.state.meta.errors);
+
                     const showError =
                       error !== undefined &&
                       (field.state.meta.isTouched ||
                         field.form.state.submissionAttempts > 0);
+
                     const errorId = getFieldErrorId(fieldId);
 
                     return (
@@ -300,6 +308,7 @@ const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
                             const rarity = ULEPA_RARITIES.find(
                               (item) => item === value
                             );
+
                             if (rarity !== undefined) {
                               field.handleChange(rarity);
                             }

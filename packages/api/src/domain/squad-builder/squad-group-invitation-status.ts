@@ -13,6 +13,7 @@ export {
 
 /** HTTP/API schema for squad-group editor invitation status. */
 export const SquadGroupInvitationStatusSchema = InvitationAccessStatusSchema;
+
 /** Lifecycle status of a squad group editor invitation. */
 export type SquadGroupInvitationStatus =
   typeof SquadGroupInvitationStatusSchema.Type;

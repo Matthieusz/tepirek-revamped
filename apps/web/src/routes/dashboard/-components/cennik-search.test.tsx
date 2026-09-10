@@ -51,9 +51,12 @@ const cennikSearchSchema = Schema.Struct({
   monsterName: Schema.optional(Schema.String),
   monsterType: Schema.optional(Schema.Literals(["hero", "elite2"])),
 });
+
 const rootRoute = createRootRoute();
+
 const CennikTestRoute = () => {
   const search = useSearch({ from: "/dashboard/cennik" });
+
   return (
     <CennikContent
       isAdmin={false}
@@ -65,12 +68,14 @@ const CennikTestRoute = () => {
     />
   );
 };
+
 const cennikRoute = createRoute({
   component: CennikTestRoute,
   getParentRoute: () => rootRoute,
   path: "/dashboard/cennik",
   validateSearch: Schema.decodeUnknownSync(cennikSearchSchema),
 });
+
 const cennikRouteTree = rootRoute.addChildren([cennikRoute]);
 
 beforeEach(() => {
@@ -87,9 +92,11 @@ const setNativeInputValue = (input: HTMLInputElement, value: string): void => {
     HTMLInputElement.prototype,
     "value"
   );
+
   if (descriptor?.set === undefined) {
     return;
   }
+
   descriptor.set.call(input, value);
 };
 
@@ -97,12 +104,14 @@ const renderCennik = async () => {
   const container = document.createElement("div");
   document.body.append(container);
   const reactRoot = createRoot(container);
+
   const router = createRouter({
     history: createMemoryHistory({
       initialEntries: ["/dashboard/cennik"],
     }),
     routeTree: cennikRouteTree,
   });
+
   const testClient = makeTestQueryClient();
 
   await router.load();
@@ -122,9 +131,11 @@ describe("Cennik search", () => {
     vi.useFakeTimers();
     const { reactRoot, router, testClient } = await renderCennik();
     const input = document.querySelector<HTMLInputElement>("#legend-item-name");
+
     if (input === null) {
       throw new Error("The item search input was not rendered");
     }
+
     expect(
       document.querySelectorAll(
         "#legend-item-name, #legend-monster-name, #legend-item-level"

@@ -27,6 +27,7 @@ export type AuctionSignup = AuctionSignupSummary;
 export const listAuctionSignups = Effect.fn("Web.Auction.listSignups")(
   function* listAuctionSignupsEffect(payload: AuctionGroupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.auction.getAuctionSignups({ payload });
   }
 );
@@ -35,6 +36,7 @@ export const listAuctionSignups = Effect.fn("Web.Auction.listSignups")(
 export const getAuctionStats = Effect.fn("Web.Auction.getStats")(
   function* getAuctionStatsEffect(payload: AuctionGroupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.auction.getAuctionStats({ payload });
   }
 );
@@ -43,6 +45,7 @@ export const getAuctionStats = Effect.fn("Web.Auction.getStats")(
 export const clearAuctionSignups = Effect.fn("Web.Auction.clearSignups")(
   function* clearAuctionSignupsEffect(payload: AuctionGroupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.auction.clearAuctionSignups({ payload });
   }
 );
@@ -51,6 +54,7 @@ export const clearAuctionSignups = Effect.fn("Web.Auction.clearSignups")(
 export const toggleAuctionSignup = Effect.fn("Web.Auction.toggleSignup")(
   function* toggleAuctionSignupEffect(payload: ToggleAuctionSignupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.auction.toggleAuctionSignup({ payload });
   }
 );
@@ -59,6 +63,7 @@ export const toggleAuctionSignup = Effect.fn("Web.Auction.toggleSignup")(
 export const removeAuctionSignup = Effect.fn("Web.Auction.removeSignup")(
   function* removeAuctionSignupEffect(input: RemoveAuctionSignupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.auction.removeAuctionSignup({
       payload: { id: yield* asAuctionSignupId(input.id) },
     });

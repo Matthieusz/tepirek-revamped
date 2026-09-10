@@ -32,10 +32,12 @@ export const listVault = Effect.fn("Web.Vault.list")(function* listVaultEffect(
   input: VaultInput
 ) {
   const client = yield* AppHttpApiClient;
+
   const payload =
     input.eventId === undefined
       ? {}
       : { eventId: yield* asEventId(input.eventId) };
+
   return yield* client.vault.getVault({ payload });
 });
 
@@ -43,11 +45,14 @@ export const listVault = Effect.fn("Web.Vault.list")(function* listVaultEffect(
 export const distributeGold = Effect.fn("Web.Vault.distributeGold")(
   function* distributeGoldEffect(input: DistributeGoldInput) {
     const client = yield* AppHttpApiClient;
+
     const payload: DistributeGoldPayload = {
       goldAmount: input.goldAmount,
       heroId: yield* asHeroId(input.heroId),
     };
+
     yield* asEventId(input.eventId);
+
     return yield* client.vault.distributeGold({ payload });
   }
 );
@@ -56,11 +61,13 @@ export const distributeGold = Effect.fn("Web.Vault.distributeGold")(
 export const togglePaidOut = Effect.fn("Web.Vault.togglePaidOut")(
   function* togglePaidOutEffect(input: TogglePaidOutInput) {
     const client = yield* AppHttpApiClient;
+
     const payload: TogglePaidOutPayload = {
       eventId: yield* asEventId(input.eventId),
       paidOut: input.paidOut,
       userId: yield* asAppUserId(input.userId),
     };
+
     return yield* client.vault.togglePaidOut({ payload });
   }
 );

@@ -14,8 +14,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import {
-  makeLegendaryEnemyFingerprint,
-  makeLegendaryItemFingerprint,
+  buildLegendaryEnemyFingerprint,
+  buildLegendaryItemFingerprint,
 } from "../../domain/legend-pricing/legend-catalog.ts";
 import {
   LegendCatalogPersistenceUnavailable,
@@ -28,11 +28,11 @@ import type {
   LegendCatalogReconciliationResult,
   ReconcileLegendCatalogInput,
 } from "../../services/legend-pricing/legend-catalog-store.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { buildDirectPersistenceQuery } from "../persistence-query.ts";
 
 const operation = "reconcileLegendCatalog" as const;
 
-const persistenceQuery = makeDirectPersistenceQuery<
+const persistenceQuery = buildDirectPersistenceQuery<
   LegendCatalogPersistenceUnavailable,
   LegendCatalogPersistenceOperation
 >(
@@ -51,6 +51,7 @@ const duplicateValue = <Value>(values: readonly Value[]): Value | undefined => {
     if (seen.has(value)) {
       return value;
     }
+
     seen.add(value);
   }
 
@@ -74,6 +75,7 @@ const validateSnapshot = (
       reason: "synchronization timestamps must form a valid interval",
     });
   }
+
   if (input.enemies.length === 0 || input.items.length === 0) {
     return new LegendCatalogSnapshotInvalid({
       reason: "a complete snapshot must contain enemies and items",
@@ -81,14 +83,17 @@ const validateSnapshot = (
   }
 
   const categories = new Set(input.enemies.map((enemy) => enemy.category));
+
   if (!(categories.has("hero") && categories.has("elite2"))) {
     return new LegendCatalogSnapshotInvalid({
       reason: "a complete snapshot must contain both enemy categories",
     });
   }
+
   const sourcePostCategories = new Set(
     input.sourcePosts.map((post) => post.category)
   );
+
   if (
     input.sourcePosts.length === 0 ||
     !sourcePostCategories.has("hero") ||
@@ -101,6 +106,7 @@ const validateSnapshot = (
   }
 
   const duplicateEnemyKey = duplicateValue(input.enemies.map(enemySourceKey));
+
   if (duplicateEnemyKey !== undefined) {
     return new LegendCatalogSnapshotInvalid({
       reason: `duplicate enemy source key ${duplicateEnemyKey}`,
@@ -110,6 +116,7 @@ const validateSnapshot = (
   const duplicateItemKey = duplicateValue(
     input.items.map((item) => item.sourceIconKey)
   );
+
   if (duplicateItemKey !== undefined) {
     return new LegendCatalogSnapshotInvalid({
       reason: `duplicate item source key ${duplicateItemKey}`,
@@ -118,10 +125,12 @@ const validateSnapshot = (
 
   const enemyKeys = new Set(input.enemies.map(enemySourceKey));
   const itemKeys = new Set(input.items.map((item) => item.sourceIconKey));
+
   const dropKeys = input.drops.map(
     (drop) =>
       `${drop.itemSourceIconKey}:${drop.enemyCategory}:${drop.enemySourceIconKey}`
   );
+
   if (new Set(dropKeys).size !== dropKeys.length) {
     return new LegendCatalogSnapshotInvalid({
       reason: "duplicate item-to-enemy drop relation",
@@ -129,21 +138,25 @@ const validateSnapshot = (
   }
 
   const droppedItemKeys = new Set<string>();
+
   for (const drop of input.drops) {
     const dropEnemyKey = enemySourceKey({
       category: drop.enemyCategory,
       sourceIconKey: drop.enemySourceIconKey,
     });
+
     if (!enemyKeys.has(dropEnemyKey)) {
       return new LegendCatalogSnapshotInvalid({
         reason: `drop references unknown enemy source key ${dropEnemyKey}`,
       });
     }
+
     if (!itemKeys.has(drop.itemSourceIconKey)) {
       return new LegendCatalogSnapshotInvalid({
         reason: `drop references unknown item source key ${drop.itemSourceIconKey}`,
       });
     }
+
     droppedItemKeys.add(drop.itemSourceIconKey);
   }
 
@@ -174,11 +187,13 @@ const countActivityTransitions = (
   const previousActivityByKey = new Map(
     before.map((record) => [record.sourceKey, record.active] as const)
   );
+
   let activated = 0;
   let deactivated = 0;
 
   for (const record of after) {
     const previousActivity = previousActivityByKey.get(record.sourceKey);
+
     if (record.active && previousActivity !== true) {
       activated += 1;
     } else if (!record.active && previousActivity === true) {
@@ -206,6 +221,7 @@ const reconcileWithTransaction = (
         sourceIconKey: legendaryEnemy.sourceIconKey,
       })
       .from(legendaryEnemy);
+
     const itemsBefore = yield* tx
       .select({
         active: legendaryItem.active,
@@ -213,9 +229,11 @@ const reconcileWithTransaction = (
         sourceIconKey: legendaryItem.sourceIconKey,
       })
       .from(legendaryItem);
+
     const existingEnemyByKey = new Map(
       enemiesBefore.map((enemy) => [enemySourceKey(enemy), enemy] as const)
     );
+
     const existingItemByKey = new Map(
       itemsBefore.map((item) => [item.sourceIconKey, item] as const)
     );
@@ -223,7 +241,8 @@ const reconcileWithTransaction = (
     for (const enemy of input.enemies) {
       const sourceKey = enemySourceKey(enemy);
       const existing = existingEnemyByKey.get(sourceKey);
-      const incomingFingerprint = makeLegendaryEnemyFingerprint(enemy);
+      const incomingFingerprint = buildLegendaryEnemyFingerprint(enemy);
+
       if (
         existing !== undefined &&
         existing.sourceFingerprint !== incomingFingerprint
@@ -236,9 +255,11 @@ const reconcileWithTransaction = (
         });
       }
     }
+
     for (const item of input.items) {
       const existing = existingItemByKey.get(item.sourceIconKey);
-      const incomingFingerprint = makeLegendaryItemFingerprint(item);
+      const incomingFingerprint = buildLegendaryItemFingerprint(item);
+
       if (
         existing !== undefined &&
         existing.sourceFingerprint !== incomingFingerprint
@@ -255,8 +276,10 @@ const reconcileWithTransaction = (
     yield* tx.update(legendaryEnemy).set({ active: false });
 
     const enemyDatabaseIds = new Map<string, number>();
+
     for (const enemy of input.enemies) {
-      const sourceFingerprint = makeLegendaryEnemyFingerprint(enemy);
+      const sourceFingerprint = buildLegendaryEnemyFingerprint(enemy);
+
       const rows = yield* tx
         .insert(legendaryEnemy)
         .values({
@@ -288,7 +311,9 @@ const reconcileWithTransaction = (
           id: legendaryEnemy.id,
           sourceIconKey: legendaryEnemy.sourceIconKey,
         });
+
       const [persisted] = rows;
+
       if (persisted === undefined) {
         return yield* new LegendCatalogPersistenceUnavailable({
           cause: new Error("Enemy upsert returned no row"),
@@ -296,12 +321,15 @@ const reconcileWithTransaction = (
           provider: "postgres",
         });
       }
+
       enemyDatabaseIds.set(enemySourceKey(persisted), persisted.id);
     }
 
     const itemDatabaseIds = new Map<string, number>();
+
     for (const item of input.items) {
-      const sourceFingerprint = makeLegendaryItemFingerprint(item);
+      const sourceFingerprint = buildLegendaryItemFingerprint(item);
+
       const rows = yield* tx
         .insert(legendaryItem)
         .values({
@@ -328,7 +356,9 @@ const reconcileWithTransaction = (
           id: legendaryItem.id,
           sourceIconKey: legendaryItem.sourceIconKey,
         });
+
       const [persisted] = rows;
+
       if (persisted === undefined) {
         return yield* new LegendCatalogPersistenceUnavailable({
           cause: new Error("Item upsert returned no row"),
@@ -336,11 +366,13 @@ const reconcileWithTransaction = (
           provider: "postgres",
         });
       }
+
       itemDatabaseIds.set(persisted.sourceIconKey, persisted.id);
     }
 
     yield* tx.delete(legendaryItemDrop);
     const dropRows = [];
+
     for (const drop of input.drops) {
       const enemyId = enemyDatabaseIds.get(
         enemySourceKey({
@@ -348,14 +380,18 @@ const reconcileWithTransaction = (
           sourceIconKey: drop.enemySourceIconKey,
         })
       );
+
       const itemId = itemDatabaseIds.get(drop.itemSourceIconKey);
+
       if (enemyId === undefined || itemId === undefined) {
         return yield* new LegendCatalogSnapshotInvalid({
           reason: "validated drop relation could not be resolved",
         });
       }
+
       dropRows.push({ enemyId, itemId });
     }
+
     yield* tx.insert(legendaryItemDrop).values(dropRows);
 
     yield* tx.update(legendaryItem).set({ active: false });
@@ -387,12 +423,14 @@ const reconcileWithTransaction = (
         sourceIconKey: legendaryEnemy.sourceIconKey,
       })
       .from(legendaryEnemy);
+
     const itemsAfter = yield* tx
       .select({
         active: legendaryItem.active,
         sourceIconKey: legendaryItem.sourceIconKey,
       })
       .from(legendaryItem);
+
     const enemyTransitions = countActivityTransitions(
       enemiesBefore.map((enemy) => ({
         active: enemy.active,
@@ -403,6 +441,7 @@ const reconcileWithTransaction = (
         sourceKey: enemySourceKey(enemy),
       }))
     );
+
     const itemTransitions = countActivityTransitions(
       itemsBefore.map((item) => ({
         active: item.active,
@@ -413,6 +452,7 @@ const reconcileWithTransaction = (
         sourceKey: item.sourceIconKey,
       }))
     );
+
     const result = {
       activatedEnemyCount: enemyTransitions.activated,
       activatedItemCount: itemTransitions.activated,
@@ -438,6 +478,7 @@ const reconcileWithDatabase = (database: EffectPgDatabase) =>
     input: ReconcileLegendCatalogInput
   ) {
     const validationError = validateSnapshot(input);
+
     if (validationError !== undefined) {
       return yield* validationError;
     }

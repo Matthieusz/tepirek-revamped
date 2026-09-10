@@ -16,6 +16,7 @@ export {
   isAuctionProfession,
   isAuctionType,
 } from "@tepirek-revamped/config";
+
 export type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 
 interface AuctionTypeMeta {

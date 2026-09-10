@@ -15,6 +15,7 @@ const asElement = (node: ReactNode): ReactElement<ElementProps> => {
   if (!isValidElement<ElementProps>(node)) {
     throw new Error("Expected a React element");
   }
+
   return node;
 };
 
@@ -24,15 +25,18 @@ const isNodeArray = (
 
 const getChildren = (element: ReactElement<ElementProps>): ReactNode[] => {
   const { children } = element.props;
+
   if (!isNodeArray(children)) {
     throw new TypeError("Expected multiple React children");
   }
+
   return [...children];
 };
 
 describe("RootErrorBoundary", () => {
   it("shows a safe fallback and invokes reset", () => {
     const reset = vi.fn<() => void>();
+
     const boundary = asElement(
       RootErrorBoundary({
         error: new Error("internal database details"),
@@ -54,9 +58,11 @@ describe("RootErrorBoundary", () => {
     expect(message.props.children).toBe(
       "Wystąpił błąd. Spróbuj ponownie później."
     );
+
     if (retryButton.props.onClick === undefined) {
       throw new Error("Expected retry button to have an onClick handler");
     }
+
     retryButton.props.onClick();
 
     expect(reset).toHaveBeenCalledOnce();

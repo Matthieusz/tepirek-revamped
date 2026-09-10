@@ -22,6 +22,7 @@ describe("parseAccountAccessStatus", () => {
       const failure = yield* parseAccountAccessStatus("archived").pipe(
         Effect.flip
       );
+
       expect(failure._tag).toBe("InvalidAccountAccessStatus");
     })
   );

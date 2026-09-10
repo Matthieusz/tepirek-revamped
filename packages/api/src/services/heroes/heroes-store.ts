@@ -10,12 +10,15 @@ export interface CreateHeroInput {
   readonly level?: number | undefined;
   readonly name: string;
 }
+
 export interface DeleteHeroInput {
   readonly id: HeroId;
 }
+
 export interface ListHeroesByEventInput {
   readonly eventId: EventId;
 }
+
 export interface HeroSummary {
   readonly eventId: EventId;
   readonly id: HeroId;

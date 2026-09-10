@@ -43,6 +43,7 @@ describe("core identifiers", () => {
           const failure = yield* Schema.decodeEffect(schema)(value).pipe(
             Effect.flip
           );
+
           expect(failure._tag).toBe("SchemaError");
         }
       }

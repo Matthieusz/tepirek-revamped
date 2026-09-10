@@ -26,6 +26,7 @@ import {
   VaultNotFound,
   VaultPersistenceUnavailable,
 } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -33,6 +34,22 @@ import {
   getErrorMessage,
   getSquadBuilderLineErrorMessage,
 } from "./errors";
+
+const TaggedMessageSchema = Schema.Struct({
+  _tag: Schema.String,
+  message: Schema.String,
+});
+
+const LineErrorSchema = Schema.TaggedUnion({
+  DuplicateProfileInBatch: { firstLineNumber: Schema.Finite },
+  FirecrawlRequestFailed: { profileId: Schema.Finite },
+});
+
+const decodeTaggedMessage = (value: string) =>
+  Schema.decodeUnknownSync(TaggedMessageSchema)(JSON.parse(value));
+
+const decodeLineError = (value: string) =>
+  Schema.decodeUnknownSync(LineErrorSchema)(JSON.parse(value));
 
 const fallback = "Wystąpił błąd. Spróbuj ponownie później.";
 
@@ -92,25 +109,33 @@ describe("getErrorMessage", () => {
 
   it("classifies decoded protocol errors without constructor identity", () => {
     expect(
-      getErrorMessage({ _tag: "UserForbidden", message: "raw server copy" })
+      getErrorMessage(
+        decodeTaggedMessage(
+          '{"_tag":"UserForbidden","message":"raw server copy"}'
+        )
+      )
     ).toBe("Nie masz uprawnień do wykonania tej akcji.");
     expect(
-      getErrorMessage({ _tag: "NotAnApiError", message: "raw server copy" })
+      getErrorMessage(
+        decodeTaggedMessage(
+          '{"_tag":"NotAnApiError","message":"raw server copy"}'
+        )
+      )
     ).toBe(fallback);
   });
 
   it("maps typed squad-builder line failures", () => {
     expect(
-      getSquadBuilderLineErrorMessage({
-        _tag: "DuplicateProfileInBatch",
-        firstLineNumber: 1,
-      })
+      getSquadBuilderLineErrorMessage(
+        decodeLineError(
+          '{"_tag":"DuplicateProfileInBatch","firstLineNumber":1}'
+        )
+      )
     ).toBe("Ten profil występuje na liście więcej niż raz.");
     expect(
-      getSquadBuilderLineErrorMessage({
-        _tag: "FirecrawlRequestFailed",
-        profileId: 123,
-      })
+      getSquadBuilderLineErrorMessage(
+        decodeLineError('{"_tag":"FirecrawlRequestFailed","profileId":123}')
+      )
     ).toBe("Nie udało się pobrać profilu Margonem.");
   });
 

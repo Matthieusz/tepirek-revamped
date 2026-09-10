@@ -29,6 +29,7 @@ export interface DeleteOwnedAccountInput {
 export const listOwnedAccounts = Effect.fn("Web.SquadAccountImport.listOwned")(
   function* listOwnedAccountsEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderAccountImport.listOwnedAccounts({
       payload: {},
     });
@@ -42,6 +43,7 @@ export const previewOwnedAccountImports = Effect.fn(
   input: PreviewOwnedAccountImportsInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountImport.previewOwnedAccountImports({
     payload: { profileUrls: input.profileUrls },
   });
@@ -54,6 +56,7 @@ export const confirmOwnedAccountImport = Effect.fn(
   input: ConfirmOwnedAccountImportInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
     payload: {
       displayName: input.displayName,
@@ -71,6 +74,7 @@ export const updateOwnedAccountDisplayName = Effect.fn(
   input: UpdateOwnedAccountDisplayNameInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountImport.updateOwnedAccountDisplayName({
     payload: {
       accountId: yield* asMargonemAccountId(input.accountId),
@@ -83,6 +87,7 @@ export const updateOwnedAccountDisplayName = Effect.fn(
 export const deleteOwnedAccount = Effect.fn("Web.SquadAccountImport.delete")(
   function* deleteOwnedAccountEffect(input: DeleteOwnedAccountInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderAccountImport.deleteOwnedAccount({
       payload: { accountId: yield* asMargonemAccountId(input.accountId) },
     });

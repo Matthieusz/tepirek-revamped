@@ -4,6 +4,7 @@ import { hydrateDraft, isDraftEqual } from "./squad-group-draft";
 import type { SquadGroupDraft } from "./squad-group-draft";
 
 type SquadGroupDetail = SquadGroupDetailSchema;
+
 type SquadEditorVisibility = "private" | "global";
 
 interface HydratedEditorData {
@@ -84,6 +85,7 @@ export const initialSquadEditorState: SquadEditorState = {
 
 const hydrateState = (detail: SquadGroupDetail): CleanEditorState => {
   const draft = hydrateDraft(detail);
+
   return {
     draft,
     phase: "clean",
@@ -123,15 +125,18 @@ const handleDetailLoaded = (
   if (state.phase !== "loading" && state.draft.groupId !== detail.groupId) {
     return hydrateState(detail);
   }
+
   if (state.phase !== "loading" && state.phase !== "clean") {
     return state;
   }
+
   if (
     state.phase !== "loading" &&
     detail.updatedAt.getTime() <= state.updatedAt.getTime()
   ) {
     return state;
   }
+
   return hydrateState(detail);
 };
 
@@ -147,6 +152,7 @@ const handleSaveStarted = (
   ) {
     return state;
   }
+
   return { ...state, draft, phase: "saving", saveError: null };
 };
 
@@ -164,10 +170,12 @@ const handleVisibilityEvent = (
   if (state.phase === "loading" || state.phase === "saving") {
     return state;
   }
+
   switch (event.type) {
     case "visibilityChangeStarted": {
       return { ...state, visibilityRequest: "pending" };
     }
+
     case "visibilityChanged": {
       return {
         ...state,
@@ -175,9 +183,11 @@ const handleVisibilityEvent = (
         visibilityRequest: "idle",
       };
     }
+
     case "visibilityChangeFailed": {
       return { ...state, visibilityRequest: "idle" };
     }
+
     default: {
       return state;
     }
@@ -192,31 +202,39 @@ export const squadEditorReducer = (
     case "detailLoaded": {
       return handleDetailLoaded(state, event.detail);
     }
+
     case "draftChanged": {
       return state.phase === "loading" || state.phase === "saving"
         ? state
         : stateAfterDraftChange(state, event.draft);
     }
+
     case "saveStarted": {
       return handleSaveStarted(state, event.draft);
     }
+
     case "saveSucceeded": {
       return state.phase === "saving" ? hydrateState(event.detail) : state;
     }
+
     case "saveFailed": {
       return handleSaveResult(state, "error", event.message);
     }
+
     case "saveConflicted": {
       return handleSaveResult(state, "conflict", event.message);
     }
+
     case "reloadLatest": {
       return initialSquadEditorState;
     }
+
     case "visibilityChangeStarted":
     case "visibilityChanged":
     case "visibilityChangeFailed": {
       return handleVisibilityEvent(state, event);
     }
+
     default: {
       return state;
     }

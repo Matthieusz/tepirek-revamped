@@ -11,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ type OwnedAccount = OwnedMargonemAccountSummarySchema;
 const AccountRenameFormSchema = Schema.Struct({
   displayName: AccountDisplayNameSchema,
 });
+
 const AccountRenameFormValidator = Schema.toStandardSchemaV1(
   AccountRenameFormSchema
 );
@@ -63,19 +65,25 @@ const RenameAccountForm = ({
 }: RenameAccountFormProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const updateAccount = useMutation(
     updateOwnedAccountDisplayNameMutationOptions(queryClient)
   );
+
   const form = useAppForm({
     defaultValues: { displayName: account.displayName },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
+
       const decoded =
         await AccountRenameFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
+
       const result = await runFormSubmission(
         async () =>
           await updateAccount.mutateAsync({
@@ -83,15 +91,19 @@ const RenameAccountForm = ({
             displayName: decoded.value.displayName.trim(),
           })
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
+
       form.reset();
       onSuccess();
     },
     validators: { onSubmit: AccountRenameFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
@@ -160,16 +172,19 @@ const DeleteAccountDialog = ({
 }: DeleteAccountDialogProps) => {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
+
   const deleteAccount = useMutation(
     deleteOwnedAccountMutationOptions(queryClient)
   );
 
   const handleDelete = async () => {
     setIsDeleting(true);
+
     try {
       const result = await deleteAccount.mutateAsync({
         accountId: account.accountId,
       });
+
       onOpenChange(false);
       onDeleted();
       toast.success(
@@ -180,6 +195,7 @@ const DeleteAccountDialog = ({
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się usunąć konta"));
     }
+
     setIsDeleting(false);
   };
 

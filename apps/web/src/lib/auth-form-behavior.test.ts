@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 import { beforeEach, vi } from "vitest";
 
 import {
+  AuthFormSubmissionResult,
   authFormSubmission,
   runAuthFormSubmission,
   getAuthProviderErrorMessage,
@@ -11,6 +13,7 @@ import {
 } from "@/lib/auth-form-behavior";
 
 const notifications: string[] = [];
+
 const notifySuccess = (message: string): void => {
   notifications.push(message);
 };
@@ -41,8 +44,8 @@ describe("auth form behavior", () => {
           )
         );
 
+        expect(error).toHaveProperty("_tag", "AuthFormSubmissionError");
         expect(error).toMatchObject({
-          _tag: "AuthFormSubmissionError",
           kind: "request",
           message: "Nie udało się połączyć z usługą uwierzytelniania",
           operation: "login",
@@ -71,8 +74,8 @@ describe("auth form behavior", () => {
         )
       );
 
+      expect(error).toHaveProperty("_tag", "AuthFormSubmissionError");
       expect(error).toMatchObject({
-        _tag: "AuthFormSubmissionError",
         code: "INVALID_EMAIL",
         kind: "provider",
         message: "Niepoprawny e-mail",
@@ -89,7 +92,7 @@ describe("auth form behavior", () => {
         "login",
         async () => await Promise.resolve({ data: null, error: null })
       )
-    ).resolves.toEqual({ _tag: "success" });
+    ).resolves.toEqual(AuthFormSubmissionResult.success());
 
     const result = await runAuthFormSubmission(
       "login",
@@ -99,8 +102,10 @@ describe("auth form behavior", () => {
           error: { message: "Niepoprawne dane", status: 401 },
         })
     );
+
     expect(result._tag).toBe("failure");
-    if (result._tag === "failure") {
+
+    if (Predicate.isTagged("failure")(result)) {
       expect(result.error.message).toBe("Niepoprawne dane");
     }
   });

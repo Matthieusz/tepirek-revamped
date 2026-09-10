@@ -59,6 +59,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { userInitials } from "../user-presenters";
 
 type InviteTarget = SquadEditorInviteTarget;
+
 type EditorGrant = SquadGroupEditorGrant;
 
 interface SquadGroupSettingsProps {
@@ -72,10 +73,12 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
     const timeout = setTimeout(() => {
       setDebounced(value);
     }, delayMs);
+
     return () => {
       clearTimeout(timeout);
     };
   }, [value, delayMs]);
+
   return debounced;
 };
 
@@ -86,42 +89,52 @@ const autocompleteStatus = (
   if (queryLength < 2) {
     return "Wpisz co najmniej 2 znaki";
   }
+
   return loaded ? undefined : "Wyszukiwanie…";
 };
 
 const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
   const [query, setQuery] = useState("");
   const [sendingUserId, setSendingUserId] = useState<string | null>(null);
+
   const [revokingInvitationId, setRevokingInvitationId] = useState<
     number | null
   >(null);
+
   const debouncedQuery = useDebouncedValue(query, 250).trim();
   const queryClient = useQueryClient();
   const grantsResult = useQuery(squadGroupEditorGrantsQueryOptions(groupId));
+
   const searchResult = useQuery(
     squadEditorInviteTargetsQueryOptions(groupId, debouncedQuery)
   );
+
   const refreshGrants = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     grantsResult.refetch();
   };
+
   const refreshSearch = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     searchResult.refetch();
   };
+
   const sendInvite = useMutation(
     sendSquadGroupEditorInviteMutationOptions(queryClient)
   );
+
   const revokeInvite = useMutation(
     revokeSquadGroupEditorMutationOptions(queryClient)
   );
 
   const grants: readonly EditorGrant[] = grantsResult.data ?? [];
+
   const targets: readonly InviteTarget[] =
     debouncedQuery.length >= 2 ? (searchResult.data ?? []) : [];
 
   const send = async (target: InviteTarget) => {
     setSendingUserId(target.userId);
+
     try {
       await sendInvite.mutateAsync({ groupId, invitedUserId: target.userId });
       toast.success(`Zaproszenie wysłane do ${target.name}`);
@@ -129,11 +142,13 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się wysłać zaproszenia"));
     }
+
     setSendingUserId(null);
   };
 
   const revoke = async (grant: EditorGrant) => {
     setRevokingInvitationId(grant.invitationId);
+
     try {
       await revokeInvite.mutateAsync({
         invitationId: grant.invitationId,
@@ -142,6 +157,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się cofnąć dostępu"));
     }
+
     setRevokingInvitationId(null);
   };
 
@@ -375,12 +391,14 @@ export const SquadGroupSettings = ({
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
+
   const deleteSquadGroup = useMutation(
     deleteSquadGroupMutationOptions(queryClient)
   );
 
   const remove = async () => {
     setIsDeleting(true);
+
     try {
       await deleteSquadGroup.mutateAsync({ groupId });
       toast.success("Grupa składów została usunięta");
@@ -388,6 +406,7 @@ export const SquadGroupSettings = ({
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się usunąć grupy składów"));
     }
+
     setIsDeleting(false);
   };
 

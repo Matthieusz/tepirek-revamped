@@ -30,11 +30,14 @@ const assertHeroLedgerInvariant = (heroId: number) =>
         .innerJoin(heroBet, eq(heroBetMember.heroBetId, heroBet.id))
         .where(eq(heroBet.heroId, heroId))
     );
+
     let expected = HashMap.empty<string, { bets: number; points: number }>();
+
     for (const member of members) {
       const current = HashMap.get(expected, member.userId).pipe(
         Option.getOrElse(() => ({ bets: 0, points: 0 }))
       );
+
       expected = HashMap.set(expected, member.userId, {
         bets: current.bets + 1,
         points: current.points + Number(member.points),
@@ -47,6 +50,7 @@ const assertHeroLedgerInvariant = (heroId: number) =>
         .from(hero)
         .where(eq(hero.id, heroId))
     );
+
     const stats = yield* Effect.promise(() =>
       testDb
         .select({
@@ -63,12 +67,15 @@ const assertHeroLedgerInvariant = (heroId: number) =>
       const expectedStat = HashMap.get(expected, stat.userId).pipe(
         Option.getOrElse(() => ({ bets: 0, points: 0 }))
       );
+
       expect(stat.bets).toBe(expectedStat.bets);
       expect(Number(stat.points)).toBeCloseTo(expectedStat.points, 2);
+
       const expectedEarnings =
         Math.round(
           expectedStat.points * Number(heroRow?.pointWorth ?? 0) * 100
         ) / 100;
+
       expect(Number(stat.earnings)).toBeCloseTo(expectedEarnings, 2);
     }
   });
@@ -82,18 +89,21 @@ effectIt.layer(testLayer)("HeroBetLedger concurrency and invariants", (it) => {
             id: "ledger-delete-overlap-admin",
           })
       );
+
       const member = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-delete-overlap-member",
           })
       );
+
       const createdHero = yield* Effect.promise(
         async () =>
           await createHero({
             name: "Ledger Delete Overlap Hero",
           })
       );
+
       const bet = yield* withServices((ledger) =>
         ledger.createBet({
           createdAt: new Date(0),
@@ -126,33 +136,39 @@ effectIt.layer(testLayer)("HeroBetLedger concurrency and invariants", (it) => {
             id: "ledger-two-edits-admin",
           })
       );
+
       const firstMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-two-edits-first",
           })
       );
+
       const secondMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-two-edits-second",
           })
       );
+
       const thirdMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-two-edits-third",
           })
       );
+
       const fourthMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-two-edits-fourth",
           })
       );
+
       const createdHero = yield* Effect.promise(
         async () => await createHero({ name: "Ledger Two Edits Hero" })
       );
+
       const bet = yield* withServices((ledger) =>
         ledger.createBet({
           createdAt: new Date(0),
@@ -183,6 +199,7 @@ effectIt.layer(testLayer)("HeroBetLedger concurrency and invariants", (it) => {
       const members = yield* withServices((ledger) =>
         ledger.getBetMembers(bet.id)
       );
+
       const memberIds = members.map((row) => row.userId).toSorted();
       expect([
         [firstMember.id, thirdMember.id].toSorted(),
@@ -200,21 +217,25 @@ effectIt.layer(testLayer)("HeroBetLedger concurrency and invariants", (it) => {
             id: "ledger-independent-admin",
           })
       );
+
       const firstMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-independent-first",
           })
       );
+
       const secondMember = yield* Effect.promise(
         async () =>
           await createVerifiedMember({
             id: "ledger-independent-second",
           })
       );
+
       const firstHero = yield* Effect.promise(
         async () => await createHero({ name: "Ledger Independent First" })
       );
+
       const secondHero = yield* Effect.promise(
         async () => await createHero({ name: "Ledger Independent Second" })
       );
@@ -265,27 +286,32 @@ effectIt.layer(testLayer)("HeroBetLedger concurrency and invariants", (it) => {
         const creator = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-overlap-admin" })
         );
+
         const firstMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-overlap-first",
             })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-overlap-second",
             })
         );
+
         const thirdMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-overlap-third",
             })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Overlap Hero" })
         );
+
         const bet = yield* withServices((ledger) =>
           ledger.createBet({
             createdAt: new Date(0),

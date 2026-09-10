@@ -24,6 +24,7 @@ describe("auction slot levels", () => {
     expect(AUCTION_SLOT_LEVELS[0]).toBe(30);
     expect(AUCTION_SLOT_LEVELS.at(-1)).toBe(300);
     expect(AUCTION_SLOT_LEVELS).toHaveLength(28);
+
     for (const level of AUCTION_SLOT_LEVELS) {
       expect(level % 10).toBe(0);
     }
@@ -81,6 +82,7 @@ describe("isLegalAuctionSlot", () => {
   it("accepts every rendered level with every round and column", () => {
     const columnCount = getAuctionSlotColumnCount("paladin", "main");
     const columns = Array.from({ length: columnCount }, (_, i) => i + 1);
+
     for (const level of AUCTION_SLOT_LEVELS) {
       for (const round of AUCTION_SLOT_ROUNDS) {
         for (const column of columns) {

@@ -11,16 +11,20 @@ export { EventId, HeroId } from "../../domain/core-identifiers.ts";
 const RankingMetric = Schema.Finite;
 
 export const HeroIdPayload = Schema.Struct({ heroId: HeroId });
+
 export interface HeroIdPayload extends Schema.Schema.Type<
   typeof HeroIdPayload
 > {}
+
 export const RankingPayload = Schema.Struct({
   eventId: Schema.optionalKey(EventId),
   heroId: Schema.optionalKey(HeroId),
 });
+
 export interface RankingPayload extends Schema.Schema.Type<
   typeof RankingPayload
 > {}
+
 export const HeroStats = Schema.Struct({
   currentPointWorth: RankingMetric,
   heroId: HeroId,
@@ -28,7 +32,9 @@ export const HeroStats = Schema.Struct({
   totalBets: RankingMetric,
   totalPoints: RankingMetric,
 });
+
 export interface HeroStats extends Schema.Schema.Type<typeof HeroStats> {}
+
 export const RankingRow = Schema.Struct({
   totalBets: RankingMetric,
   totalEarnings: Schema.String,
@@ -37,12 +43,15 @@ export const RankingRow = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+
 export interface RankingRow extends Schema.Schema.Type<typeof RankingRow> {}
+
 export const RankingResult = Schema.Struct({
   pointWorth: Schema.NullOr(RankingMetric),
   ranking: Schema.Array(RankingRow),
   totalBets: RankingMetric,
 });
+
 export interface RankingResult extends Schema.Schema.Type<
   typeof RankingResult
 > {}
@@ -52,16 +61,19 @@ export class RankingUnauthorized extends Schema.TaggedErrorClass<RankingUnauthor
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class RankingForbidden extends Schema.TaggedErrorClass<RankingForbidden>()(
   "RankingForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class RankingNotFound extends Schema.TaggedErrorClass<RankingNotFound>()(
   "RankingNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
+
 export class RankingPersistenceUnavailable extends Schema.TaggedErrorClass<RankingPersistenceUnavailable>()(
   "RankingPersistenceUnavailable",
   { operation: Schema.String },

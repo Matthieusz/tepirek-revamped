@@ -47,6 +47,7 @@ const getSelectFieldState = (field: SelectFieldApi) => {
   const fieldId = getFieldId(field.name);
   const errorId = getFieldErrorId(fieldId);
   const error = getFieldErrorMessage(field.state.meta.errors);
+
   const showError =
     error !== undefined &&
     (field.state.meta.isTouched || field.form.state.submissionAttempts > 0);

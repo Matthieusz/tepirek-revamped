@@ -6,6 +6,7 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -62,8 +63,10 @@ export type PreviewOwnedAccountImportItem = Data.TaggedEnum<{
     readonly error: PreviewOwnedAccountImportLineError;
   };
 }>;
+
 export const PreviewOwnedAccountImportItem =
   Data.taggedEnum<PreviewOwnedAccountImportItem>();
+
 class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
   "DuplicateProfileInBatch",
   { firstLineNumber: Schema.Finite },
@@ -182,6 +185,7 @@ const persistPendingImport = ({
       DateTime.add({ minutes: pendingImportPolicy.expiresAfterMinutes }),
       DateTime.toDate
     );
+
     const defaultDisplayName = yield* defaultDisplayNameFor(
       preview.suggestedAccountName,
       preview.profileId
@@ -227,6 +231,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
   function* previewBatchEffect(input: PreviewOwnedAccountImportsInput) {
     const store = yield* AccountImportStoreService;
     const now = yield* DateTime.nowAsDate;
+
     const nonBlankLines = input.profileUrls
       .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
       .filter((line) => !isEmpty(line.inputUrl));
@@ -255,6 +260,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
               inputUrl: line.inputUrl,
               lineNumber: line.lineNumber,
             });
+
             return null;
           },
           onSuccess: (value) => value,
@@ -266,6 +272,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
       }
 
       const profileIdNumber = parsedProfileId;
+
       const firstLineNumber = HashMap.get(
         firstLineForProfileId,
         profileIdNumber
@@ -325,7 +332,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
     const availableLines: ParsedLine[] = [];
 
     for (const result of accessResults) {
-      if (result._tag === "LineFailure") {
+      if (Predicate.isTagged("LineFailure")(result)) {
         failures.push({
           error: result.error,
           inputUrl: result.inputUrl,

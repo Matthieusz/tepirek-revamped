@@ -64,10 +64,12 @@ const ItemRaritySchema = Schema.Literals([
   "heroiczny",
   "legendarny",
 ]);
+
 const OdwFormSchema = Schema.Struct({
   itemLevel: CalculatorItemLevelFromStringSchema,
   itemRarity: ItemRaritySchema,
 });
+
 const OdwFormValidator = Schema.toStandardSchemaV1(OdwFormSchema);
 
 interface OdwResult {
@@ -96,10 +98,12 @@ const ODW_DEFAULT_VALUES: OdwFormValues = {
 
 const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
   const [result, setResult] = useState<OdwResult | null>(null);
+
   const form = useAppForm({
     defaultValues: ODW_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       const decoded = await OdwFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -108,6 +112,7 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
         decoded.value.itemLevel,
         decoded.value.itemRarity
       );
+
       const { maxCost, multiplier: rarityMultiplier } = getOdwRarityInfo(
         decoded.value.itemRarity
       );
@@ -124,6 +129,7 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
     },
     validators: { onChange: OdwFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
@@ -162,10 +168,12 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
                   {(field) => {
                     const fieldId = getFieldId(field.name);
                     const error = getFieldErrorMessage(field.state.meta.errors);
+
                     const showError =
                       error !== undefined &&
                       (field.state.meta.isTouched ||
                         field.form.state.submissionAttempts > 0);
+
                     const errorId = getFieldErrorId(fieldId);
 
                     return (
@@ -180,6 +188,7 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
                             const rarity = RARITY_ORDER.find(
                               (item) => item === value
                             );
+
                             if (rarity !== undefined) {
                               field.handleChange(rarity);
                             }

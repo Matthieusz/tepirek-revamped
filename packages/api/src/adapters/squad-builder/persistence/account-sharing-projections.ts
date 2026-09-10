@@ -50,6 +50,7 @@ export const loadAccountAccessInviteSummaryWithDatabase = (
       .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
       .where(eq(margonemAccountAccess.id, accessId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [row] = rows;
@@ -78,6 +79,7 @@ export const loadAccountAccessInviteSummaryWithDatabase = (
       operation,
       row.invitedUserId
     );
+
     const ownerUserId = yield* parsePersistedAppUserId(operation, row.ownerId);
 
     return {

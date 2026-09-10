@@ -12,6 +12,7 @@ import { SquadId } from "../../../domain/squad-builder/squad-id.ts";
 export const SquadGroupIdPayload = Schema.Struct({
   groupId: SquadGroupId,
 });
+
 export interface SquadGroupIdPayload extends Schema.Schema.Type<
   typeof SquadGroupIdPayload
 > {}
@@ -19,6 +20,7 @@ export interface SquadGroupIdPayload extends Schema.Schema.Type<
 export const DeleteSquadGroupSuccessSchema = Schema.Struct({
   groupId: SquadGroupId,
 });
+
 export interface DeleteSquadGroupSuccessSchema extends Schema.Schema.Type<
   typeof DeleteSquadGroupSuccessSchema
 > {}
@@ -26,6 +28,7 @@ export interface DeleteSquadGroupSuccessSchema extends Schema.Schema.Type<
 export const CreateSquadGroupPayload = Schema.Struct({
   name: Schema.String,
 });
+
 export interface CreateSquadGroupPayload extends Schema.Schema.Type<
   typeof CreateSquadGroupPayload
 > {}
@@ -37,6 +40,7 @@ export const SquadGroupSummarySchema = Schema.Struct({
   squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
+
 export interface SquadGroupSummarySchema extends Schema.Schema.Type<
   typeof SquadGroupSummarySchema
 > {}
@@ -51,6 +55,7 @@ export const GlobalSquadGroupSummarySchema = Schema.Struct({
   squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
+
 export interface GlobalSquadGroupSummarySchema extends Schema.Schema.Type<
   typeof GlobalSquadGroupSummarySchema
 > {}
@@ -60,6 +65,7 @@ export const ListGlobalSquadGroupsPayload = Schema.Struct({
   minLevel: Schema.optionalKey(Schema.NullOr(Schema.Finite)),
   nameQuery: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
+
 export interface ListGlobalSquadGroupsPayload extends Schema.Schema.Type<
   typeof ListGlobalSquadGroupsPayload
 > {}
@@ -78,6 +84,7 @@ export const AvailableSquadCharacterSchema = Schema.Struct({
   profession: MargonemProfessionSchema,
   world: Schema.String,
 });
+
 export interface AvailableSquadCharacterSchema extends Schema.Schema.Type<
   typeof AvailableSquadCharacterSchema
 > {}
@@ -96,6 +103,7 @@ export const SquadGroupDetailCharacterSchema = Schema.Struct({
   position: Schema.Finite,
   profession: MargonemProfessionSchema,
 });
+
 export interface SquadGroupDetailCharacterSchema extends Schema.Schema.Type<
   typeof SquadGroupDetailCharacterSchema
 > {}
@@ -106,6 +114,7 @@ export const SquadDetailSchema = Schema.Struct({
   position: Schema.Finite,
   squadId: PositiveInt,
 });
+
 export interface SquadDetailSchema extends Schema.Schema.Type<
   typeof SquadDetailSchema
 > {}
@@ -119,6 +128,7 @@ export const SquadGroupDetailSchema = Schema.Struct({
   updatedAt: Schema.DateFromString,
   visibility: Schema.Literals(["private", "global"]),
 });
+
 export interface SquadGroupDetailSchema extends Schema.Schema.Type<
   typeof SquadGroupDetailSchema
 > {}
@@ -142,6 +152,7 @@ export const SaveSquadGroupPayload = Schema.Struct({
   name: Schema.String,
   squads: Schema.Array(SaveSquadPayload),
 });
+
 export interface SaveSquadGroupPayload extends Schema.Schema.Type<
   typeof SaveSquadGroupPayload
 > {}
@@ -156,6 +167,7 @@ export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
   groupId: SquadGroupId,
   squads: Schema.Array(SaveSharedSquadCharactersPayload),
 });
+
 export interface SaveSharedSquadGroupCharactersPayload extends Schema.Schema.Type<
   typeof SaveSharedSquadGroupCharactersPayload
 > {}
@@ -164,6 +176,7 @@ export const SetSquadGroupVisibilityPayload = Schema.Struct({
   groupId: SquadGroupId,
   visibility: SquadGroupVisibilitySchema,
 });
+
 export interface SetSquadGroupVisibilityPayload extends Schema.Schema.Type<
   typeof SetSquadGroupVisibilityPayload
 > {}
@@ -173,6 +186,7 @@ export const SquadGroupVisibilityChangeSchema = Schema.Struct({
   updatedAt: Schema.DateFromString,
   visibility: SquadGroupVisibilitySchema,
 });
+
 export interface SquadGroupVisibilityChangeSchema extends Schema.Schema.Type<
   typeof SquadGroupVisibilityChangeSchema
 > {}

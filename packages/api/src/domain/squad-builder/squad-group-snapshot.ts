@@ -1,6 +1,8 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -39,12 +41,14 @@ const Position = Schema.Finite.check(
 );
 
 export const SquadPosition = Position.pipe(Schema.brand("SquadPosition"));
+
 export type SquadPosition = typeof SquadPosition.Type;
 
 /** Position of a character inside one squad. */
 export const CharacterPosition = Position.pipe(
   Schema.brand("CharacterPosition")
 );
+
 export type CharacterPosition = typeof CharacterPosition.Type;
 
 /** Available character read model used by validation and UI projections. */
@@ -148,42 +152,43 @@ export const parseCharacterPosition = (input: number) =>
     Effect.mapError(invalidPosition)
   );
 
-const unreachablePlacementError = (error: never): never => {
-  throw new Error(`Unhandled squad placement error: ${String(error)}`);
-};
-
 const toSnapshotValidationError = (
-  error: SquadPlacementValidationError<MargonemAccountId>
-): SquadGroupValidationError => {
-  switch (error._tag) {
-    case "TooManyCharactersInSquad": {
-      return new TooManyCharactersInSquad({
-        maxCharacters: error.maxCharacters,
-        squadClientKey: error.squadClientKey,
-      });
-    }
-    case "DuplicateCharacterInSquad": {
-      return new DuplicateCharacterInSquad({
-        characterId: error.characterId,
-        squadClientKey: error.squadClientKey,
-      });
-    }
-    case "DuplicateCharacterInSquadGroup": {
-      return new DuplicateCharacterInSquadGroup({
-        characterId: error.characterId,
-      });
-    }
-    case "DuplicateAccountInSquad": {
-      return new DuplicateAccountInSquad({
-        accountId: error.accountId,
-        squadClientKey: error.squadClientKey,
-      });
-    }
-    default: {
-      return unreachablePlacementError(error);
-    }
-  }
-};
+  input: SquadPlacementValidationError<MargonemAccountId>
+): SquadGroupValidationError =>
+  Match.value(input).pipe(
+    Match.tag(
+      "TooManyCharactersInSquad",
+      (error) =>
+        new TooManyCharactersInSquad({
+          maxCharacters: error.maxCharacters,
+          squadClientKey: error.squadClientKey,
+        })
+    ),
+    Match.tag(
+      "DuplicateCharacterInSquad",
+      (error) =>
+        new DuplicateCharacterInSquad({
+          characterId: error.characterId,
+          squadClientKey: error.squadClientKey,
+        })
+    ),
+    Match.tag(
+      "DuplicateCharacterInSquadGroup",
+      (error) =>
+        new DuplicateCharacterInSquadGroup({
+          characterId: error.characterId,
+        })
+    ),
+    Match.tag(
+      "DuplicateAccountInSquad",
+      (error) =>
+        new DuplicateAccountInSquad({
+          accountId: error.accountId,
+          squadClientKey: error.squadClientKey,
+        })
+    ),
+    Match.exhaustive
+  );
 
 /** Parse names, positions, and snapshot structure without consulting access state. */
 export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
@@ -215,11 +220,13 @@ export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
         squad.clientKey,
         squad.characters.length
       );
+
       if (placementCountError !== undefined) {
         return yield* toSnapshotValidationError(placementCountError);
       }
 
       const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+
       for (const character of squad.characters) {
         parsedCharacters.push({
           characterId: character.characterId,
@@ -233,6 +240,7 @@ export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
         name: yield* parseSquadName(squad.name),
         position: yield* parseSquadPosition(squad.position),
       };
+
       parsedSquads.push(
         squad.squadId === undefined
           ? parsedSquad
@@ -255,6 +263,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
   input: ValidateParsedSquadGroupSnapshotInput
 ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
   const { availableCharacters, snapshot } = input;
+
   const availableByCharacterId = HashMap.fromIterable(
     availableCharacters.map(
       (character) => [character.characterId, character] as const
@@ -262,6 +271,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
   );
 
   const placementSquads = [];
+
   for (const squad of snapshot.squads) {
     const placementCharacters = [];
 
@@ -270,11 +280,13 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
         availableByCharacterId,
         character.characterId
       );
+
       if (Option.isNone(availableCharacterOption)) {
         return yield* new SquadCharacterNotAccessible({
           characterId: character.characterId,
         });
       }
+
       const availableCharacter = availableCharacterOption.value;
 
       if (availableCharacter.world !== "jaruna") {
@@ -296,6 +308,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
   }
 
   const placementError = validateSquadPlacements(placementSquads);
+
   if (placementError !== undefined) {
     return yield* toSnapshotValidationError(placementError);
   }
@@ -310,6 +323,7 @@ export const validateSquadGroupSnapshot = Effect.fn(
   input: ValidateSquadGroupSnapshotInput
 ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
   const snapshot = yield* parseSquadGroupSnapshot(input);
+
   return yield* validateParsedSquadGroupSnapshot({
     availableCharacters: input.availableCharacters,
     snapshot,

@@ -1,6 +1,7 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
@@ -277,14 +278,18 @@ const HttpJsonBodySchema = Schema.Tree(
     Schema.String,
   ])
 );
+
 type HttpJsonBody = typeof HttpJsonBodySchema.Type;
 
 const JsonDateSchema = Schema.DateFromString.pipe(
   Schema.check(Schema.isDateValid())
 );
+
 const decodeJsonDate = Schema.decodeUnknownOption(JsonDateSchema);
+
 const decodeJsonValue = (_key: string, value: HttpJsonBody): HttpJsonBody =>
   Option.getOrElse(decodeJsonDate(value), () => value);
+
 const decodePayload = (body: Uint8Array): HttpJsonBody =>
   Schema.decodeUnknownSync(HttpJsonBodySchema)(
     JSON.parse(new TextDecoder().decode(body), decodeJsonValue)
@@ -302,20 +307,23 @@ export const makeHttpApiTestLayer = () => {
 
   const httpClient = HttpClient.make((request, url) => {
     const endpoint = endpoints.get(`${request.method} ${url.pathname}`);
+
     if (endpoint === undefined) {
       return Effect.die(new Error(`Unhandled test endpoint: ${url.pathname}`));
     }
 
-    const args =
-      request.body._tag === "Uint8Array"
-        ? decodePayload(request.body.body)
-        : {};
+    const args = Predicate.isTagged("Uint8Array")(request.body)
+      ? decodePayload(request.body.body)
+      : {};
+
     calls.push({ args, ...endpoint });
 
     const responseKey = `${endpoint.group}/${endpoint.method}`;
+
     const responseBody = hasResponseBody(responseKey)
       ? responseBodies[responseKey]
       : undefined;
+
     const response =
       responseBody === undefined
         ? new Response(null, { status: 200 })

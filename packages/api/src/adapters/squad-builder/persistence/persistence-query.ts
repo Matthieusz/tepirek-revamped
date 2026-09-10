@@ -5,7 +5,7 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import type { SquadBuilderPersistenceOperation } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
-import { makeDirectPersistenceQuery } from "../../persistence-query.ts";
+import { buildDirectPersistenceQuery } from "../../persistence-query.ts";
 
 export type EffectSquadGroupPersistenceOperation =
   SquadBuilderPersistenceOperation;
@@ -31,7 +31,7 @@ export const failPersistence = (
     })
   );
 
-export const persistenceQuery = makeDirectPersistenceQuery<
+export const persistenceQuery = buildDirectPersistenceQuery<
   SquadBuilderPersistenceUnavailable,
   EffectSquadGroupPersistenceOperation
 >(

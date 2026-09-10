@@ -12,7 +12,7 @@ import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest"
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 import { DiscordGuildVerifier } from "../../services/user/discord-guild-verifier.ts";
-import { makeDiscordVerificationConfigLayer } from "./discord-verification-config.ts";
+import { buildDiscordVerificationConfigLayer } from "./discord-verification-config.ts";
 import { DiscordGuildVerifierLiveLayer } from "./discord-verification-service.ts";
 
 const TEST_ACCESS_TOKEN = Redacted.make("test-token");
@@ -41,6 +41,7 @@ const emptyResponse =
   (request) => {
     const responseInit =
       headers === undefined ? { status } : { headers, status };
+
     return Effect.succeed(
       HttpClientResponse.fromWeb(request, new Response(null, responseInit))
     );
@@ -51,11 +52,13 @@ const makeSequenceClient = (
   requests: HttpClientRequest.HttpClientRequest[] = []
 ): HttpClient.HttpClient => {
   let attempt = 0;
+
   return HttpClient.make((request) =>
     Effect.suspend(() => {
       requests.push(request);
       const step = steps[attempt];
       attempt += 1;
+
       return step === undefined
         ? Effect.die(new Error("Unexpected Discord HTTP attempt"))
         : step(request);
@@ -67,7 +70,7 @@ const verifierLayer = (client: HttpClient.HttpClient) =>
   DiscordGuildVerifierLiveLayer.pipe(
     Layer.provide(
       Layer.merge(
-        makeDiscordVerificationConfigLayer({ guildId: "guild-1" }),
+        buildDiscordVerificationConfigLayer({ guildId: "guild-1" }),
         Layer.succeed(HttpClient.HttpClient, client)
       )
     )
@@ -79,6 +82,7 @@ const verify = (
 ) =>
   Effect.gen(function* verifyMembership() {
     const verifier = yield* DiscordGuildVerifier;
+
     return yield* verifier.verifyMembership(accessToken);
   }).pipe(Effect.provide(verifierLayer(client)));
 
@@ -88,6 +92,7 @@ const awaitAfter = <A, E>(
 ) =>
   Effect.gen(function* awaitAdjustedFiber() {
     yield* TestClock.adjust(duration);
+
     return yield* Fiber.await(fiber);
   });
 
@@ -95,6 +100,7 @@ describe("DiscordGuildVerifier", () => {
   it.effect("constructs the authenticated Discord guild-list request", () =>
     Effect.gen(function* requestDiscordGuilds() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [jsonResponse([{ id: "guild-1" }])],
         requests
@@ -135,9 +141,9 @@ describe("DiscordGuildVerifier", () => {
       const client = makeSequenceClient([jsonResponse({ id: "guild-1" })]);
       const error = yield* Effect.flip(verify(client));
 
+      expect(error).toHaveProperty("_tag", "ApplicationDependencyUnavailable");
+      expect(error).toHaveProperty("cause._tag", "SchemaError");
       expect(error).toMatchObject({
-        _tag: "ApplicationDependencyUnavailable",
-        cause: { _tag: "SchemaError" },
         operation: "verifyDiscordGuildMembership",
       });
     })
@@ -148,12 +154,10 @@ describe("DiscordGuildVerifier", () => {
       const client = makeSequenceClient([textResponse("{")]);
       const error = yield* Effect.flip(verify(client));
 
+      expect(error).toHaveProperty("_tag", "ApplicationDependencyUnavailable");
+      expect(error).toHaveProperty("cause._tag", "HttpClientError");
+      expect(error).toHaveProperty("cause.reason._tag", "DecodeError");
       expect(error).toMatchObject({
-        _tag: "ApplicationDependencyUnavailable",
-        cause: {
-          _tag: "HttpClientError",
-          reason: { _tag: "DecodeError" },
-        },
         operation: "verifyDiscordGuildMembership",
       });
     })
@@ -166,15 +170,11 @@ describe("DiscordGuildVerifier", () => {
       const error = yield* Effect.flip(verify(client));
 
       expect(requests).toHaveLength(1);
+      expect(error).toHaveProperty("_tag", "ApplicationDependencyUnavailable");
+      expect(error).toHaveProperty("cause._tag", "HttpClientError");
+      expect(error).toHaveProperty("cause.reason._tag", "StatusCodeError");
       expect(error).toMatchObject({
-        _tag: "ApplicationDependencyUnavailable",
-        cause: {
-          _tag: "HttpClientError",
-          reason: {
-            _tag: "StatusCodeError",
-            response: { status: 501 },
-          },
-        },
+        cause: { reason: { response: { status: 501 } } },
       });
     })
   );
@@ -184,6 +184,7 @@ describe("DiscordGuildVerifier", () => {
     (status) =>
       Effect.gen(function* retryTransientStatus() {
         const requests: HttpClientRequest.HttpClientRequest[] = [];
+
         const client = makeSequenceClient(
           [emptyResponse(status), emptyResponse(status), emptyResponse(status)],
           requests
@@ -200,6 +201,7 @@ describe("DiscordGuildVerifier", () => {
   it.effect("recovers after a transient Discord response", () =>
     Effect.gen(function* recoverFromTransientStatus() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [emptyResponse(503), jsonResponse([{ id: "guild-1" }])],
         requests
@@ -217,6 +219,7 @@ describe("DiscordGuildVerifier", () => {
     Effect.gen(function* boundMixedFailures() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
       const transportErrors: HttpClientError.HttpClientError[] = [];
+
       const transportFailure: ClientStep = (request) => {
         const error = new HttpClientError.HttpClientError({
           reason: new HttpClientError.TransportError({
@@ -224,9 +227,12 @@ describe("DiscordGuildVerifier", () => {
             request,
           }),
         });
+
         transportErrors.push(error);
+
         return Effect.fail(error);
       };
+
       const client = makeSequenceClient(
         [transportFailure, emptyResponse(503), transportFailure],
         requests
@@ -244,6 +250,7 @@ describe("DiscordGuildVerifier", () => {
   it.effect("waits for delta-seconds Retry-After guidance", () =>
     Effect.gen(function* honorDeltaSeconds() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [
           emptyResponse(429, { "Retry-After": "2" }),
@@ -266,6 +273,7 @@ describe("DiscordGuildVerifier", () => {
   it.effect("uses the Effect clock for HTTP-date Retry-After guidance", () =>
     Effect.gen(function* honorHttpDate() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [
           emptyResponse(429, {
@@ -292,6 +300,7 @@ describe("DiscordGuildVerifier", () => {
     (retryAfter) =>
       Effect.gen(function* ignoreInvalidRetryAfter() {
         const requests: HttpClientRequest.HttpClientRequest[] = [];
+
         const client = makeSequenceClient(
           [
             emptyResponse(429, { "Retry-After": retryAfter }),
@@ -311,6 +320,7 @@ describe("DiscordGuildVerifier", () => {
   it.effect("cuts off Retry-After guidance at the overall deadline", () =>
     Effect.gen(function* timeOutProviderDelay() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [emptyResponse(429, { "Retry-After": "20" })],
         requests
@@ -324,18 +334,18 @@ describe("DiscordGuildVerifier", () => {
       const error = yield* Effect.flip(Fiber.join(fiber));
 
       expect(requests).toHaveLength(1);
-      expect(error).toMatchObject({
-        _tag: "ApplicationDependencyUnavailable",
-        cause: { _tag: "TimeoutError" },
-      });
+      expect(error).toHaveProperty("_tag", "ApplicationDependencyUnavailable");
+      expect(error).toHaveProperty("cause._tag", "TimeoutError");
     })
   );
 
   it.effect("applies ten seconds to the complete multi-attempt operation", () =>
     Effect.gen(function* enforceOverallDeadline() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const slowFailure: ClientStep = (request) =>
         emptyResponse(503)(request).pipe(Effect.delay("6 seconds"));
+
       const client = makeSequenceClient(
         [slowFailure, slowFailure, slowFailure],
         requests
@@ -349,7 +359,7 @@ describe("DiscordGuildVerifier", () => {
       const error = yield* Effect.flip(Fiber.join(fiber));
 
       expect(requests).toHaveLength(2);
-      expect(error.cause).toMatchObject({ _tag: "TimeoutError" });
+      expect(error.cause).toHaveProperty("_tag", "TimeoutError");
     })
   );
 
@@ -357,6 +367,7 @@ describe("DiscordGuildVerifier", () => {
     Effect.gen(function* interruptHttpClient() {
       const started = yield* Deferred.make<true>();
       const interrupted = yield* Deferred.make<true>();
+
       const client = HttpClient.make((_request) =>
         Deferred.succeed(started, true).pipe(
           Effect.andThen(

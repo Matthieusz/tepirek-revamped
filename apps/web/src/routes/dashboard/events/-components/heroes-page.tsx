@@ -129,6 +129,7 @@ const EventsHeroesContent = ({
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
   const eventNamesById = getEventNamesById(events);
+
   const deleteHero = useMutation(
     deleteHeroMutationOptions(queryClient, runAppHttpApi)
   );

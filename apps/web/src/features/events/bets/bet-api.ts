@@ -51,18 +51,23 @@ export const listPaginatedBets = Effect.fn("Web.Bet.listPaginated")(
   function* listPaginatedBetsEffect(input: PaginatedBetsInput) {
     const client = yield* AppHttpApiClient;
     let payload: PaginatedBetsRequestPayload = {};
+
     if (input.eventId !== undefined) {
       payload = { ...payload, eventId: yield* asEventId(input.eventId) };
     }
+
     if (input.heroId !== undefined) {
       payload = { ...payload, heroId: yield* asHeroId(input.heroId) };
     }
+
     if (input.limit !== undefined) {
       payload = { ...payload, limit: input.limit };
     }
+
     if (input.page !== undefined) {
       payload = { ...payload, page: input.page };
     }
+
     return yield* client.bet.getAllPaginated({ payload });
   }
 );
@@ -71,6 +76,7 @@ export const listPaginatedBets = Effect.fn("Web.Bet.listPaginated")(
 export const getLatestBetForCopy = Effect.fn("Web.Bet.latestForCopy")(
   function* getLatestBetForCopyEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.bet.getLatestForCopy({});
   }
 );
@@ -82,13 +88,16 @@ export const createBet = Effect.fn("Web.Bet.create")(function* createBetEffect(
   const client = yield* AppHttpApiClient;
   yield* asEventId(input.eventId);
   const [firstUserId, ...remainingUserIds] = input.userIds;
+
   const decodedRemainingUserIds = yield* Effect.forEach((userId) =>
     asAppUserId(userId)
   )(remainingUserIds);
+
   const payload: CreateBetPayload = {
     heroId: yield* asHeroId(input.heroId),
     userIds: [yield* asAppUserId(firstUserId), ...decodedRemainingUserIds],
   };
+
   return yield* client.bet.create({ payload });
 });
 
@@ -98,9 +107,11 @@ export const deleteBet = Effect.fn("Web.Bet.delete")(function* deleteBetEffect(
 ) {
   const client = yield* AppHttpApiClient;
   yield* asHeroId(input.heroId);
+
   if (input.eventId !== undefined) {
     yield* asEventId(input.eventId);
   }
+
   return yield* client.bet.delete({
     payload: { id: yield* asBetId(input.id) },
   });
@@ -112,13 +123,17 @@ export const editBet = Effect.fn("Web.Bet.edit")(function* editBetEffect(
 ) {
   const client = yield* AppHttpApiClient;
   yield* asHeroId(input.heroId);
+
   if (input.eventId !== undefined) {
     yield* asEventId(input.eventId);
   }
+
   const [firstUserId, ...remainingUserIds] = input.newUserIds;
+
   const decodedRemainingUserIds = yield* Effect.forEach((userId) =>
     asAppUserId(userId)
   )(remainingUserIds);
+
   return yield* client.bet.edit({
     payload: {
       betId: yield* asBetId(input.betId),

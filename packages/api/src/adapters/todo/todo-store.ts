@@ -19,12 +19,13 @@ import type {
 } from "../../services/todo/todo-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
@@ -62,6 +63,7 @@ const listWithDatabase =
           Effect.gen(function* decodeTodoRow() {
             const id = yield* decodePersisted(TodoId)(row.id);
             const decodedUserId = yield* decodePersisted(AppUserId)(row.userId);
+
             return { ...row, id, userId: decodedUserId };
           })
         )

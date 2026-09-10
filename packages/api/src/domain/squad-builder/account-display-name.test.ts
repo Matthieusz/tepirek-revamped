@@ -31,6 +31,7 @@ describe("parseAccountDisplayName", () => {
       const result = yield* parseAccountDisplayName("a".repeat(81)).pipe(
         Effect.flip
       );
+
       expect(result._tag).toBe("InvalidAccountDisplayName");
     })
   );

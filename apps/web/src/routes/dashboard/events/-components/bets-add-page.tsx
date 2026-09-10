@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { QueryErrorState } from "@/components/ui/query-error-state";
 import { latestBetForCopyQueryOptions } from "@/features/events/bets/bet-queries";
-import type { LastBetState } from "@/features/events/bets/member-selection";
+import { LastBetState } from "@/features/events/bets/member-selection";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
 import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
@@ -26,15 +26,18 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
   const events = isAdminUser ? [...(eventsQuery.data ?? [])] : [];
   const heroes = isAdminUser ? [...(heroesQuery.data ?? [])] : [];
+
   const users =
     isAdminUser && verifiedUsersQuery.data !== undefined
       ? [...verifiedUsersQuery.data]
       : [];
+
   const latestBetRaw = isAdminUser ? (latestBetQuery.data ?? null) : null;
+
   const lastBet: LastBetState =
     latestBetRaw === null
-      ? { _tag: "unavailable" }
-      : { _tag: "available", members: latestBetRaw.members };
+      ? LastBetState.unavailable()
+      : LastBetState.available({ members: latestBetRaw.members });
 
   if (!isAdminUser) {
     return (

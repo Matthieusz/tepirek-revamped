@@ -142,6 +142,7 @@ describe("character pool filters", () => {
 
   it("keeps unknown professions visible until a known profession is selected", () => {
     const allFilters = parseCharacterPoolFilters([], "", "");
+
     const knownFilters = parseCharacterPoolFilters(
       [professionFilter(["mage"])],
       "",
@@ -161,11 +162,14 @@ describe("character pool filters", () => {
       const character = characters.find(
         (candidate) => candidate.characterId === characterId
       );
+
       if (character === undefined) {
         throw new Error(`Missing test character ${characterId}`);
       }
+
       return character;
     };
+
     const source = [getCharacter(3), getCharacter(1), getCharacter(2)];
 
     const groups = groupCharactersByAccount(source);

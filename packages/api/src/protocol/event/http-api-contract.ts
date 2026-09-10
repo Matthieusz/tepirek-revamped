@@ -7,6 +7,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { EventId } from "../../domain/core-identifiers.ts";
 
 export { EventId } from "../../domain/core-identifiers.ts";
+
 export { DEFAULT_EVENT_ICON_ID as defaultEventIcon } from "@tepirek-revamped/config";
 
 const EventIcon = Schema.Literals(EVENT_ICON_IDS);
@@ -17,17 +18,22 @@ export const CreateEventPayload = Schema.Struct({
   icon: Schema.optionalKey(EventIcon),
   name: Schema.NonEmptyString,
 });
+
 export interface CreateEventPayload extends Schema.Schema.Type<
   typeof CreateEventPayload
 > {}
+
 export const DeleteEventPayload = Schema.Struct({ id: EventId });
+
 export interface DeleteEventPayload extends Schema.Schema.Type<
   typeof DeleteEventPayload
 > {}
+
 export const ToggleEventActivePayload = Schema.Struct({
   active: Schema.Boolean,
   id: EventId,
 });
+
 export interface ToggleEventActivePayload extends Schema.Schema.Type<
   typeof ToggleEventActivePayload
 > {}
@@ -40,6 +46,7 @@ export const EventSummary = Schema.Struct({
   id: EventId,
   name: Schema.String,
 });
+
 export interface EventSummary extends Schema.Schema.Type<typeof EventSummary> {}
 
 export class EventUnauthorized extends Schema.TaggedErrorClass<EventUnauthorized>()(
@@ -47,11 +54,13 @@ export class EventUnauthorized extends Schema.TaggedErrorClass<EventUnauthorized
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class EventForbidden extends Schema.TaggedErrorClass<EventForbidden>()(
   "EventForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class EventPersistenceUnavailable extends Schema.TaggedErrorClass<EventPersistenceUnavailable>()(
   "EventPersistenceUnavailable",
   { operation: Schema.String },

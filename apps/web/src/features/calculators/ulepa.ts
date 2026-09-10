@@ -52,16 +52,22 @@ const UPGRADE_LEVEL_FACTORS = [
 ] as const satisfies readonly number[];
 
 const MIN_LEVEL = 1;
+
 const MAX_LEVEL = 300;
+
 const GOLD_COST_LEVEL_MULTIPLIER = 10;
+
 const GOLD_COST_LEVEL_ADDEND = 1300;
+
 const EXTRACTION_GOLD_PER_POINT = 60;
 
 const clampLevel = (n: number): number => {
   const v = Math.trunc(n);
+
   if (Number.isNaN(v)) {
     return MIN_LEVEL;
   }
+
   return Math.min(Math.max(v, MIN_LEVEL), MAX_LEVEL);
 };
 
@@ -70,15 +76,19 @@ const clampLevel = (n: number): number => {
  */
 export const formatGold = (amount: number): string => {
   const value = Math.floor(amount);
+
   if (value >= 1_000_000_000) {
     return `${(value / 1_000_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}mld`;
   }
+
   if (value >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}m`;
   }
+
   if (value >= 1000) {
     return `${(value / 1000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}k`;
   }
+
   return value.toLocaleString("pl-PL");
 };
 
@@ -98,6 +108,7 @@ export const calculateUpgradePoints = (
         : factors.upgradeRarityFactor *
           upgradeLevelFactor *
           (GAME_CONSTANTS.STANDARD_BASE_COST + level);
+
     return cost;
   });
 };
@@ -121,15 +132,19 @@ export const calculateUpgradeSummary = (
 ): UlepaUpgradeSummary => {
   const cumulativeCosts = calculateUpgradePoints(level, rarity);
   const differentialCosts = calculateDifferentialCosts(cumulativeCosts);
+
   const totalUpgradeCost = differentialCosts.reduce(
     (sum, cost) => sum + cost,
     0
   );
+
   const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
+
   const upgradeGoldCost =
     (GOLD_COST_LEVEL_MULTIPLIER * level + GOLD_COST_LEVEL_ADDEND) *
     level *
     rarityFactors[rarity].upgradeGoldFactor;
+
   const extractionGoldCost = EXTRACTION_GOLD_PER_POINT * totalUpgradeCost;
 
   return {

@@ -1,5 +1,6 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,24 +34,31 @@ const HeroFormSchema = Schema.Struct({
   level: Schema.FiniteFromString,
   name: HeroNameSchema,
 });
+
 const HeroFormValidator = Schema.toStandardSchemaV1(HeroFormSchema);
 
 export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createHero = useMutation(
     createHeroMutationOptions(queryClient, runAppHttpApi)
   );
+
   const eventsQuery = useQuery(eventsQueryOptions());
   const events = eventsQuery.data ?? [];
   const eventsLoading = eventsQuery.isPending;
+
   const form = useAppForm({
     defaultValues: { eventId: "", image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await HeroFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -61,14 +69,17 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           level: decoded.value.level,
           name: decoded.value.name,
         };
+
         await createHero.mutateAsync(
           decoded.value.image
             ? { ...heroPayload, image: decoded.value.image }
             : heroPayload
         );
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -79,9 +90,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     },
     validators: { onSubmit: HeroFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
   let submitLabel = "Utwórz herosa";
+
   if (eventsLoading) {
     submitLabel = "Ładowanie...";
   } else if (isSubmitting) {
@@ -93,9 +106,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 

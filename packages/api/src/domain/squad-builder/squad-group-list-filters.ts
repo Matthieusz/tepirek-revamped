@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file -- Filter parsing errors form one closed error algebra. */
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
@@ -30,6 +31,7 @@ export const SquadGroupNameQuery = Schema.String.pipe(
   ),
   Schema.brand("SquadGroupNameQuery")
 );
+
 export type SquadGroupNameQuery = typeof SquadGroupNameQuery.Type;
 
 /** Inclusive character-level bound for browsing squad groups. */
@@ -42,6 +44,7 @@ export const SquadGroupLevelBound = Schema.Int.pipe(
   ),
   Schema.brand("SquadGroupLevelBound")
 );
+
 export type SquadGroupLevelBound = typeof SquadGroupLevelBound.Type;
 
 /** Character-level range for squad group list filtering. */
@@ -52,6 +55,7 @@ export type SquadGroupLevelRange = Data.TaggedEnum<{
     readonly maxLevel?: SquadGroupLevelBound;
   };
 }>;
+
 export const SquadGroupLevelRange = Data.taggedEnum<SquadGroupLevelRange>();
 
 /** Parsed filters for squad group browsing lists. */
@@ -107,6 +111,7 @@ type ParsedNameQuery = Data.TaggedEnum<{
   readonly Absent: Record<never, never>;
   readonly Present: { readonly value: SquadGroupNameQuery };
 }>;
+
 const ParsedNameQuery = Data.taggedEnum<ParsedNameQuery>();
 
 const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
@@ -117,6 +122,7 @@ const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   }
 
   const normalized = normalizeNameQuery(value);
+
   if (normalized.length === 0) {
     return ParsedNameQuery.Absent();
   }
@@ -141,6 +147,7 @@ type ParsedLevelBound = Data.TaggedEnum<{
   readonly Absent: Record<never, never>;
   readonly Present: { readonly value: SquadGroupLevelBound };
 }>;
+
 const ParsedLevelBound = Data.taggedEnum<ParsedLevelBound>();
 
 const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
@@ -177,8 +184,8 @@ export const parseSquadGroupListFilters = Effect.fn(
   const maxLevel = yield* parseLevelBound(input.maxLevel, "maxLevel");
 
   if (
-    minLevel._tag === "Present" &&
-    maxLevel._tag === "Present" &&
+    Predicate.isTagged("Present")(minLevel) &&
+    Predicate.isTagged("Present")(maxLevel) &&
     minLevel.value > maxLevel.value
   ) {
     return yield* new InvalidSquadGroupLevelRange({
@@ -187,22 +194,31 @@ export const parseSquadGroupListFilters = Effect.fn(
   }
 
   let levelRange: SquadGroupLevelRange;
-  if (minLevel._tag === "Absent" && maxLevel._tag === "Absent") {
+
+  if (
+    Predicate.isTagged("Absent")(minLevel) &&
+    Predicate.isTagged("Absent")(maxLevel)
+  ) {
     levelRange = SquadGroupLevelRange.AnyLevel();
   } else {
     const boundedLevelRange: BoundedLevelRangeFields = {};
-    if (maxLevel._tag === "Present") {
+
+    if (Predicate.isTagged("Present")(maxLevel)) {
       boundedLevelRange.maxLevel = maxLevel.value;
     }
-    if (minLevel._tag === "Present") {
+
+    if (Predicate.isTagged("Present")(minLevel)) {
       boundedLevelRange.minLevel = minLevel.value;
     }
+
     levelRange = SquadGroupLevelRange.BoundedLevelRange(boundedLevelRange);
   }
 
   const filters: SquadGroupListFilterProjection = { levelRange };
-  if (nameQuery._tag === "Present") {
+
+  if (Predicate.isTagged("Present")(nameQuery)) {
     filters.nameQuery = nameQuery.value;
   }
+
   return filters;
 });

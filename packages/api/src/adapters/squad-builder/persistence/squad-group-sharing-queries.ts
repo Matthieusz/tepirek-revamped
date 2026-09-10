@@ -45,11 +45,13 @@ export const authorizeSquadGroupOwnerWithDatabase = (
     readonly groupId: SquadGroupId;
   }) {
     const operation = "authorizeSquadGroupOwner" as const;
+
     const select = database
       .select({ ownerUserId: squadGroup.ownerUserId })
       .from(squadGroup)
       .where(eq(squadGroup.id, groupId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [group] = rows;
@@ -79,6 +81,7 @@ export const listIncomingSquadGroupInvitesWithDatabase = (
     readonly actorUserId: AppUserId;
   }) {
     const operation = "listIncomingSquadGroupInvites" as const;
+
     const select = database
       .select({
         createdAt: squadGroupInvitation.createdAt,
@@ -107,6 +110,7 @@ export const listIncomingSquadGroupInvitesWithDatabase = (
         desc(squadGroupInvitation.createdAt),
         desc(squadGroupInvitation.id)
       );
+
     const rows = yield* persistenceQuery(operation, select);
 
     const invites: SquadGroupInvitationSummary[] = [];
@@ -123,10 +127,12 @@ export const listIncomingSquadGroupInvitesWithDatabase = (
       const squadGroupId = yield* parseSquadGroupId(row.squadGroupId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
+
       const squadGroupName = yield* parsePersistedSquadGroupName(
         operation,
         row.squadGroupName
       );
+
       const ownerUserId = yield* parsePersistedAppUserId(
         operation,
         row.ownerId
@@ -158,6 +164,7 @@ export const getPendingSquadGroupInviteCountWithDatabase = (
     readonly actorUserId: AppUserId;
   }) {
     const operation = "getPendingSquadGroupInviteCount" as const;
+
     const select = database
       .select({ inviteCount: count() })
       .from(squadGroupInvitation)
@@ -167,6 +174,7 @@ export const getPendingSquadGroupInviteCountWithDatabase = (
           eq(squadGroupInvitation.status, "pending")
         )
       );
+
     const rows = yield* persistenceQuery(operation, select);
 
     return rows[0]?.inviteCount ?? 0;
@@ -208,6 +216,7 @@ export const listSquadGroupEditorGrantsWithDatabase = (
         )
       )
       .orderBy(desc(squadGroupInvitation.createdAt));
+
     const rows = yield* persistenceQuery(operation, select);
 
     const grants: SquadGroupEditorGrantSummary[] = [];
@@ -254,10 +263,12 @@ export const listSharedSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
     readonly filters: ListGlobalSquadGroupsInput["filters"];
   }) {
     const operation = "listSharedSquadGroups" as const;
+
     const filterPredicates = buildSquadGroupListFilterPredicates(
       database,
       filters
     );
+
     const select = database
       .select({
         characterCount: sql<number>`count(distinct ${squadCharacter.id})::int`,
@@ -286,6 +297,7 @@ export const listSharedSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
       )
       .groupBy(squadGroup.id, user.id)
       .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id));
+
     const rows = yield* persistenceQuery(operation, select);
 
     const groups: SharedSquadGroupSummary[] = [];
@@ -296,6 +308,7 @@ export const listSharedSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
       );
 
       const name = yield* parsePersistedSquadGroupName(operation, row.name);
+
       const ownerUserId = yield* parsePersistedAppUserId(
         operation,
         row.ownerId

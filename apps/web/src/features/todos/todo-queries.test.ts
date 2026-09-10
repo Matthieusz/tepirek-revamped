@@ -29,10 +29,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -78,10 +80,12 @@ const makeTodoTransport = (plans: {
     list: [...(plans.list ?? [])],
     toggle: [...(plans.toggle ?? [])],
   };
+
   const calls = { create: 0, delete: 0, list: 0, toggle: 0 };
 
   const httpClient = HttpClient.make((request, url) => {
     let key: keyof typeof queues;
+
     if (url.pathname === "/todos" && request.method === "GET") {
       key = "list";
     } else if (url.pathname === "/todos" && request.method === "POST") {
@@ -91,18 +95,23 @@ const makeTodoTransport = (plans: {
     } else {
       key = "toggle";
     }
+
     calls[key] += 1;
     const planned = queues[key].shift();
+
     if (planned === undefined) {
       return Effect.die(new Error(`No planned response for todo ${key}`));
     }
+
     if (planned instanceof Promise) {
       return Effect.promise(async () => await planned).pipe(
         Effect.map((response) => HttpClientResponse.fromWeb(request, response))
       );
     }
+
     return Effect.succeed(HttpClientResponse.fromWeb(request, planned));
   });
+
   const client = HttpApiClient.makeWith(AppHttpApi, {
     baseUrl: "http://localhost",
     httpClient,
@@ -118,23 +127,29 @@ describe("todo queries and mutations", () => {
   it("loads through Query and invalidates the list after creating", async () => {
     const firstTodo = makeTodo(1);
     const secondTodo = makeTodo(2);
+
     const transport = makeTodoTransport({
       create: [voidResponse()],
       list: [jsonResponse([firstTodo]), jsonResponse([firstTodo, secondTodo])],
     });
+
     const testClient = makeTestQueryClient();
+
     const queryObserver = new QueryObserver(
       testClient.queryClient,
       todosQueryOptions(transport.runner)
     );
+
     const unsubscribe = queryObserver.subscribe(() => {});
 
     try {
       await queryObserver.refetch();
+
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
         createTodoMutationOptions(testClient.queryClient, transport.runner)
       );
+
       await mutationObserver.mutate({ text: "new task" });
 
       expect(transport.calls).toMatchObject({ create: 1, list: 2 });
@@ -152,19 +167,24 @@ describe("todo queries and mutations", () => {
   it("keeps a successful create successful when list refresh fails", async () => {
     const firstTodo = makeTodo(1);
     const refreshErrors: Error[] = [];
+
     const transport = makeTodoTransport({
       create: [voidResponse()],
       list: [jsonResponse([firstTodo]), new Response(null, { status: 503 })],
     });
+
     const testClient = makeTestQueryClient();
+
     const queryObserver = new QueryObserver(testClient.queryClient, {
       ...todosQueryOptions(transport.runner),
       retry: false,
     });
+
     const unsubscribe = queryObserver.subscribe(() => {});
 
     try {
       await queryObserver.refetch();
+
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
         createTodoMutationOptions(testClient.queryClient, transport.runner, {
@@ -173,6 +193,7 @@ describe("todo queries and mutations", () => {
           },
         })
       );
+
       await expect(mutationObserver.mutate({ text: "new task" })).resolves.toBe(
         undefined
       );
@@ -190,10 +211,12 @@ describe("todo queries and mutations", () => {
   it("rolls back failed toggle and delete mutations", async () => {
     const firstTodo = makeTodo(1);
     const secondTodo = makeTodo(2, true);
+
     const transport = makeTodoTransport({
       delete: [new Response(null, { status: 500 })],
       toggle: [new Response(null, { status: 500 })],
     });
+
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(todosQueryKey, [firstTodo, secondTodo]);
     const errors: unknown[] = [];
@@ -207,6 +230,7 @@ describe("todo queries and mutations", () => {
           },
         })
       );
+
       await expect(
         toggleObserver.mutate({ completed: true, id: firstTodo.id })
       ).rejects.toBeDefined();
@@ -223,6 +247,7 @@ describe("todo queries and mutations", () => {
           },
         })
       );
+
       await expect(
         deleteObserver.mutate({ id: firstTodo.id })
       ).rejects.toBeDefined();
@@ -242,11 +267,14 @@ describe("todo queries and mutations", () => {
     const firstResponse = deferred<Response>();
     const secondResponse = deferred<Response>();
     const firstTodo = makeTodo(1);
+
     const transport = makeTodoTransport({
       toggle: [firstResponse.promise, secondResponse.promise],
     });
+
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(todosQueryKey, [firstTodo]);
+
     const mutationObserver = new MutationObserver(
       testClient.queryClient,
       toggleTodoMutationOptions(testClient.queryClient, transport.runner)
@@ -257,13 +285,16 @@ describe("todo queries and mutations", () => {
         completed: true,
         id: firstTodo.id,
       });
+
       await vi.waitFor(() => {
         expect(transport.calls.toggle).toBe(1);
       });
+
       const secondMutation = mutationObserver.mutate({
         completed: false,
         id: firstTodo.id,
       });
+
       await vi.waitFor(() => {
         expect(transport.calls.toggle).toBe(2);
       });
@@ -288,12 +319,15 @@ describe("todo queries and mutations", () => {
   it("does not let a delayed read overwrite an optimistic toggle", async () => {
     const delayedList = deferred<Response>();
     const firstTodo = makeTodo(1);
+
     const transport = makeTodoTransport({
       list: [delayedList.promise],
       toggle: [voidResponse()],
     });
+
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(todosQueryKey, [firstTodo]);
+
     const delayedRead = testClient.queryClient.query({
       ...todosQueryOptions(transport.runner),
       retry: false,
@@ -304,10 +338,12 @@ describe("todo queries and mutations", () => {
       await vi.waitFor(() => {
         expect(transport.calls.list).toBe(1);
       });
+
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
         toggleTodoMutationOptions(testClient.queryClient, transport.runner)
       );
+
       await mutationObserver.mutate({ completed: true, id: firstTodo.id });
       delayedList.resolve(jsonResponse([firstTodo]));
       await delayedRead;
@@ -327,6 +363,7 @@ describe("todo queries and mutations", () => {
     const transport = makeTodoTransport({ toggle: [response.promise] });
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(todosQueryKey, [firstTodo]);
+
     const mutationObserver = new MutationObserver(
       testClient.queryClient,
       toggleTodoMutationOptions(testClient.queryClient, transport.runner)
@@ -337,6 +374,7 @@ describe("todo queries and mutations", () => {
         completed: true,
         id: firstTodo.id,
       });
+
       mutationObserver.reset();
       response.resolve(voidResponse());
       await expect(mutation).resolves.toBeUndefined();
@@ -362,6 +400,7 @@ describe("todo queries and mutations", () => {
         firstClient.queryClient,
         toggleTodoMutationOptions(firstClient.queryClient, transport.runner)
       );
+
       await mutationObserver.mutate({ completed: true, id: firstTodo.id });
 
       expect(

@@ -55,10 +55,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -72,18 +74,22 @@ describe("legend pricing queries and mutations", () => {
     const { calls, layer } = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(layer);
     const testClient = makeTestQueryClient();
+
     const observer = new QueryObserver(
       testClient.queryClient,
       legendPricesQueryOptions(runner)
     );
+
     const unsubscribe = observer.subscribe(() => {});
 
     try {
       await observer.refetch();
+
       const mutation = new MutationObserver(
         testClient.queryClient,
         updateLegendCostMutationOptions(testClient.queryClient, runner)
       );
+
       await expect(
         mutation.mutate({
           expectedVersion: LegendCostVersion.make(0),
@@ -112,6 +118,7 @@ describe("legend pricing queries and mutations", () => {
     const { calls, layer } = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(layer);
     const testClient = makeTestQueryClient();
+
     const mutation = new MutationObserver(
       testClient.queryClient,
       updateLegendCostMutationOptions(testClient.queryClient, runner)
@@ -135,16 +142,20 @@ describe("legend pricing queries and mutations", () => {
   it("does not retry version conflicts", async () => {
     const conflict = new LegendPricingConflict({ message: "stale version" });
     let attempts = 0;
+
     const runner: LegendPricingApiRunner = async () => {
       attempts += 1;
       await Promise.resolve();
       throw conflict;
     };
+
     const testClient = makeTestQueryClient();
+
     const options = updateLegendCostMutationOptions(
       testClient.queryClient,
       runner
     );
+
     const mutation = new MutationObserver(testClient.queryClient, options);
 
     try {
@@ -155,7 +166,9 @@ describe("legend pricing queries and mutations", () => {
           itemId: LegendaryItemId.make(1),
           priceGold: 100,
         })
-      ).rejects.toMatchObject({ _tag: "LegendPricingConflict" });
+      ).rejects.toMatchObject(
+        new LegendPricingConflict({ message: "stale version" })
+      );
       expect(attempts).toBe(1);
       mutation.reset();
     } finally {
@@ -169,22 +182,27 @@ describe("legend pricing queries and mutations", () => {
     const refresh = deferred<readonly LegendPrice[]>();
     let listCalls = 0;
     const testClient = makeTestQueryClient();
+
     const observer = new QueryObserver(testClient.queryClient, {
       queryFn: async () => {
         listCalls += 1;
+
         return listCalls === 1 ? [firstPrice] : await refresh.promise;
       },
       queryKey: legendPricesQueryKey,
       retry: false,
       staleTime: 0,
     });
+
     const unsubscribe = observer.subscribe(() => {});
 
     try {
       await observer.refetch();
+
       const refetch = testClient.queryClient.invalidateQueries({
         queryKey: legendPricesQueryKey,
       });
+
       await vi.waitFor(() => {
         expect(listCalls).toBe(2);
       });

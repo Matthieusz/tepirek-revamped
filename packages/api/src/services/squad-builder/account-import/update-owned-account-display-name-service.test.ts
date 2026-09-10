@@ -12,6 +12,7 @@ it.effect("updates an owned account display name through the store", () => {
   const actorUserId = Effect.runSync(parseAppUserId("rename-user"));
   const accountId = Effect.runSync(parseMargonemAccountId(7));
   const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+
   const store = makeAccountImportStoreServiceTestService({
     updateOwnedAccountDisplayName: ({ displayName }) =>
       Effect.succeed({
@@ -39,6 +40,7 @@ it.effect("updates an owned account display name through the store", () => {
 it.effect("rejects an empty account display name before persistence", () => {
   const actorUserId = Effect.runSync(parseAppUserId("rename-user"));
   const accountId = Effect.runSync(parseMargonemAccountId(7));
+
   const store = makeAccountImportStoreServiceTestService({
     updateOwnedAccountDisplayName: () =>
       Effect.die(new Error("The store should not be called")),
@@ -49,6 +51,7 @@ it.effect("rejects an empty account display name before persistence", () => {
     Effect.flip,
     Effect.map((error) => {
       expect(error._tag).toBe("InvalidAccountDisplayName");
+
       return null;
     })
   );

@@ -78,6 +78,7 @@ export const AvailableCharacterPoolHeader = ({
           ].map((profession) => {
             const presentation = getProfessionPresentation(profession);
             const selected = HashSet.has(selectedProfessions, profession);
+
             return (
               <Button
                 aria-pressed={selected}

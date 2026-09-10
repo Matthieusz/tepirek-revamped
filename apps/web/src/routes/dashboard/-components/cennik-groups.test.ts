@@ -49,6 +49,7 @@ const goplana = {
   level: 120,
   name: "Goplana",
 } as const;
+
 const morthen = {
   category: "elite2",
   id: 2,

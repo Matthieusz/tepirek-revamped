@@ -18,6 +18,7 @@ export interface VerifiedMember {
   readonly image: string | null;
   readonly name: string;
 }
+
 export interface Player {
   readonly createdAt: Date;
   readonly id: AppUserId;
@@ -27,18 +28,21 @@ export interface Player {
   readonly updatedAt: Date;
   readonly verified: boolean;
 }
+
 export interface SetUserRoleInput {
   readonly actorId: AppUserId;
   readonly role: UserRole;
   readonly updatedAt: Date;
   readonly userId: AppUserId;
 }
+
 export interface SetUserVerifiedInput {
   readonly actorId: AppUserId;
   readonly updatedAt: Date;
   readonly userId: AppUserId;
   readonly verified: boolean;
 }
+
 export interface UpdateUserNameInput {
   readonly name: string;
   readonly updatedAt: Date;

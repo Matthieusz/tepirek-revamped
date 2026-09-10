@@ -6,6 +6,7 @@ import { parseMargonemForumTopic } from "./margonem-forum-parser.ts";
 
 const HERO_URL =
   "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0";
+
 const ELITE2_URL =
   "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0";
 
@@ -74,7 +75,9 @@ describe("Margonem forum topic parser", () => {
           icon: "her/quoted.gif",
           name: "Cytowany Heros",
         });
+
         const replyItem = item({ path: "pie/reply.gif" });
+
         const snapshot = yield* parseMargonemForumTopic(
           page(
             "hero",
@@ -172,12 +175,14 @@ describe("Margonem forum topic parser", () => {
         stats:
           "lvl=160;opis=Można przy jego użyciu wygnać Shakkru.;rarity=unique",
       });
+
       const legendaryReward = item({
         itemClass: 13,
         name: "Miniaturowy portal",
         path: "nas/portal.gif",
         stats: "legbon=curse,160;lvl=160;rarity=legendary;reqp=m",
       });
+
       const sheba = enemy({
         icon: "e2/r_orc_sheba.gif",
         items: key,
@@ -185,6 +190,7 @@ describe("Margonem forum topic parser", () => {
         name: "Sheba Orcza Szamanka",
         profession: "Mag",
       });
+
       const interaction = `
         <BR>${"Opis źródła klucza. ".repeat(20)}<BR>
         <b>Shakkru 160 lvl</b><BR>
@@ -222,6 +228,7 @@ describe("Margonem forum topic parser", () => {
     () =>
       Effect.gen(function* parseTwoEnemies() {
         const sharedItem = item({ itemClass: 13, path: "nas/shared.gif" });
+
         const content = [
           `<blockquote>ELITY II</blockquote>`,
           enemy({
@@ -239,6 +246,7 @@ describe("Margonem forum topic parser", () => {
             profession: "Tropiciel",
           }),
         ].join("");
+
         const snapshot = yield* parseMargonemForumTopic(
           page("elite2", officialPost(201, content))
         );
@@ -260,6 +268,7 @@ describe("Margonem forum topic parser", () => {
         path: "zbr/armor.gif",
         stats: "binds;lvl=300;rarity=legendary;reqp=w",
       });
+
       const snapshot = yield* parseMargonemForumTopic(
         page(
           "hero",
@@ -288,6 +297,7 @@ describe("Margonem forum topic parser", () => {
           stats: "outfit_selector=x;rarity=legendary",
         }),
       ].join("");
+
       const snapshot = yield* parseMargonemForumTopic(
         page(
           "hero",
@@ -324,6 +334,7 @@ describe("Margonem forum topic parser", () => {
           item({ itemClass: 99, path: "neu/unknown.gif" }),
           item(),
         ].join("");
+
         const snapshot = yield* parseMargonemForumTopic(
           page(
             "hero",
@@ -339,6 +350,7 @@ describe("Margonem forum topic parser", () => {
   it.effect("rejects malformed stats without publishing a partial block", () =>
     Effect.gen(function* rejectMalformedStats() {
       const malformed = `<div class=itemborder><IMG src='https://micc.garmory-cdn.cloud/obrazki/itemy/pie/bad.gif' stats='broken' ctip=item></div>`;
+
       const error = yield* parseMargonemForumTopic(
         page(
           "hero",
@@ -346,8 +358,8 @@ describe("Margonem forum topic parser", () => {
         )
       ).pipe(Effect.flip);
 
+      expect(error).toHaveProperty("_tag", "MargonemForumGuideNotParseable");
       expect(error).toMatchObject({
-        _tag: "MargonemForumGuideNotParseable",
         category: "hero",
         postId: 601,
         reason: "item stats must contain four parts",
@@ -358,6 +370,7 @@ describe("Margonem forum topic parser", () => {
   it.effect("rejects legendary equipment with a missing level", () =>
     Effect.gen(function* rejectMissingLevel() {
       const missingLevel = item({ stats: "rarity=legendary;legbon=curse,20" });
+
       const error = yield* parseMargonemForumTopic(
         page(
           "hero",
@@ -375,6 +388,7 @@ describe("Margonem forum topic parser", () => {
         "profile/view,7798898",
         "profile/view,9999999"
       );
+
       const error = yield* parseMargonemForumTopic(
         page("hero", `${headingPost("hero")}${changedAuthor}`)
       ).pipe(Effect.flip);

@@ -18,8 +18,11 @@ const MARGONEM_FORUM_TOPIC_URLS = {
   elite2: "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0",
   hero: "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0",
 } satisfies Record<LegendaryEnemyCategory, string>;
+
 const MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES = 20_000_000;
+
 const loginPagePattern = /(?:task=login|name=["']?login|zaloguj\s+się)/iu;
+
 const postContainerPattern =
   /<table\s+id=["']?posts["']?[^>]*>[\s\S]*?name=["']post\d+/iu;
 
@@ -87,15 +90,19 @@ const validateDocument = (
   html: string
 ): Effect.Effect<string, MargonemForumDocumentRejected> => {
   const { byteLength } = new TextEncoder().encode(html);
+
   if (byteLength > MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES) {
     return Effect.fail(rejectDocument(category, "response exceeds size limit"));
   }
+
   if (html.trim().length === 0) {
     return Effect.fail(rejectDocument(category, "response is empty"));
   }
+
   if (loginPagePattern.test(html) && !postContainerPattern.test(html)) {
     return Effect.fail(rejectDocument(category, "forum returned a login page"));
   }
+
   if (
     !/<html\b/iu.test(html) ||
     !/<\/html\s*>/iu.test(html) ||
@@ -106,6 +113,7 @@ const validateDocument = (
     const reason = /<h2>\s*Momencik\s*<\/h2>/iu.test(html)
       ? "forum returned a waiting or block page"
       : "forum returned incomplete or unsupported HTML";
+
     return Effect.fail(rejectDocument(category, reason));
   }
 
@@ -132,6 +140,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
         url: string
       ) {
         const requestedAt = yield* DateTime.nowAsDate;
+
         const reserved = yield* accounting
           .reserveRequest({
             monthlyRequestBudget: config.monthlyRequestBudget,
@@ -154,6 +163,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
                 .pipe(
                   Effect.mapError((cause) => requestFailed(category, cause))
                 );
+
               return yield* requestFailed(category, error);
             })
           ),
@@ -172,10 +182,13 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
             })
           )
         );
+
         const document = yield* scrape;
+
         const creditsUsed = yield* parseFirecrawlCreditCount(
           document.metadata.creditsUsed ?? 1
         ).pipe(Effect.mapError((cause) => requestFailed(category, cause)));
+
         const completedAt = yield* DateTime.nowAsDate;
 
         yield* accounting
@@ -198,6 +211,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
           const url = MARGONEM_FORUM_TOPIC_URLS[category];
           const document = yield* scrapeTopic(category, url);
           const status = document.metadata.statusCode;
+
           if (status !== undefined && (status < 200 || status >= 300)) {
             return yield* requestFailed(
               category,
@@ -207,6 +221,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
           }
 
           const { contentType } = document.metadata;
+
           if (
             contentType !== undefined &&
             !contentType.toLowerCase().startsWith("text/html")
@@ -218,6 +233,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
           }
 
           yield* validateDocument(category, document.html);
+
           return { category, html: document.html, url };
         }
       ),

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import { describe } from "vitest";
 
@@ -56,6 +57,7 @@ const makeDependencies = (
       Effect.sync(() => {
         const requestId = events.reserved.length + 1;
         events.reserved.push(requestId);
+
         return {
           budgetState: {
             monthlyRequestBudget,
@@ -99,6 +101,7 @@ const fetchTopic = (
 
   return Effect.gen(function* fetchForumTopic() {
     const forum = yield* MargonemForumClientService;
+
     return yield* forum.fetchTopic(category);
   }).pipe(
     Effect.provide(
@@ -130,13 +133,16 @@ describe("Margonem forum client", () => {
   it.effect("fetches both fixed ps=0 topics through budgeted Firecrawl", () =>
     Effect.gen(function* fetchBothTopics() {
       const urls: string[] = [];
+
       const events: AccountingEvents = {
         failed: [],
         reserved: [],
         succeeded: [],
       };
+
       const scrape = (url: string) => {
         urls.push(url);
+
         return scrapedDocument(readFixture("valid-topic.html"));
       };
 
@@ -158,6 +164,7 @@ describe("Margonem forum client", () => {
   it.effect("accepts a complete Firecrawl document larger than 2 MB", () =>
     Effect.gen(function* acceptLargeCompleteDocument() {
       const validHtml = readFixture("valid-topic.html");
+
       const largeValidHtml = validHtml.replace(
         "</body>",
         `${" ".repeat(2_000_000)}</body>`
@@ -183,11 +190,12 @@ describe("Margonem forum client", () => {
         "hero"
       ).pipe(Effect.flip);
 
+      expect(error).toHaveProperty("_tag", "MargonemForumDocumentRejected");
       expect(error).toMatchObject({
-        _tag: "MargonemForumDocumentRejected",
         category: "hero",
       });
-      if (error._tag === "MargonemForumDocumentRejected") {
+
+      if (Predicate.isTagged("MargonemForumDocumentRejected")(error)) {
         expect(error.reason).toContain(expectedReason);
       }
     })
@@ -205,8 +213,8 @@ describe("Margonem forum client", () => {
         "elite2"
       ).pipe(Effect.flip);
 
+      expect(error).toHaveProperty("_tag", "MargonemForumDocumentRejected");
       expect(error).toMatchObject({
-        _tag: "MargonemForumDocumentRejected",
         category: "elite2",
         reason: "response content type is not HTML",
       });
@@ -225,8 +233,8 @@ describe("Margonem forum client", () => {
         "hero"
       ).pipe(Effect.flip);
 
+      expect(error).toHaveProperty("_tag", "MargonemForumRequestFailed");
       expect(error).toMatchObject({
-        _tag: "MargonemForumRequestFailed",
         category: "hero",
         status: 502,
       });
@@ -240,6 +248,7 @@ describe("Margonem forum client", () => {
         reserved: [],
         succeeded: [],
       };
+
       const error = yield* fetchTopic(
         () =>
           Effect.fail(

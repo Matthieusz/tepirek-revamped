@@ -2,6 +2,7 @@ import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ interface EditBetModalProps {
 const EditBetFormSchema = Schema.Struct({
   userIds: NonEmptyUserIdsSchema,
 });
+
 const EditBetFormValidator = Schema.toStandardSchemaV1(EditBetFormSchema);
 
 const EditBetModalContent = ({
@@ -60,25 +62,34 @@ const EditBetModalContent = ({
   trigger,
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const editBet = useMutation(
     editBetMutationOptions(queryClient, runAppHttpApi)
   );
+
   const currentMemberIds: readonly string[] = useMemo(
     () => currentMembers.map((member) => member.userId),
     [currentMembers]
   );
+
   const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
+
   const verifiedUsers =
     verifiedUsersQuery.data === undefined ? [] : [...verifiedUsersQuery.data];
+
   const usersLoading = verifiedUsersQuery.isPending;
+
   const form = useAppForm({
     defaultValues: { userIds: currentMemberIds },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await EditBetFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -92,8 +103,10 @@ const EditBetModalContent = ({
             newUserIds: decoded.value.userIds,
           })
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -103,6 +116,7 @@ const EditBetModalContent = ({
     },
     validators: { onSubmit: EditBetFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
@@ -111,9 +125,11 @@ const EditBetModalContent = ({
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 
@@ -132,6 +148,7 @@ const EditBetModalContent = ({
   }
 
   let submitLabel = "Zapisz zmiany";
+
   if (usersLoading) {
     submitLabel = "Ładowanie...";
   } else if (isSubmitting) {
@@ -168,10 +185,12 @@ const EditBetModalContent = ({
                 const fieldId = getFieldId(field.name);
                 const errorId = getFieldErrorId(fieldId);
                 const error = getFieldErrorMessage(field.state.meta.errors);
+
                 const showError =
                   error !== undefined &&
                   (field.state.meta.isTouched ||
                     field.form.state.submissionAttempts > 0);
+
                 return (
                   <fieldset
                     aria-describedby={showError ? errorId : undefined}

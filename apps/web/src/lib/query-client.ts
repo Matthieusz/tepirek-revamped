@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 
 const queryStaleTime = 30_000;
+
 const queryGcTime = 5 * 60_000;
 
 /**

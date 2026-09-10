@@ -16,6 +16,7 @@ export const AUCTION_SLOT_LEVELS: readonly number[] = Array.from(
 export const AUCTION_SLOT_ROUNDS = [
   1, 2, 3, 4,
 ] as const satisfies readonly number[];
+
 export type AuctionSlotRound = (typeof AUCTION_SLOT_ROUNDS)[number];
 
 export const AUCTION_SLOT_ROUND_LABELS = {

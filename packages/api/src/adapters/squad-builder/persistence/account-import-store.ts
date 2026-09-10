@@ -60,6 +60,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
     profileId,
   }: FindProfileAccessStateInput) {
     const operation = "findProfileAccessState" as const;
+
     const accountSelect = database
       .select({
         id: margonemAccount.id,
@@ -68,6 +69,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
       .from(margonemAccount)
       .where(eq(margonemAccount.profileId, profileId))
       .limit(1);
+
     const accountRows = yield* persistenceQuery(operation, accountSelect);
 
     const [account] = accountRows;
@@ -91,6 +93,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
         )
       )
       .limit(1);
+
     const accessRows = yield* persistenceQuery(operation, accessSelect);
 
     if (accessRows[0] !== undefined) {
@@ -109,6 +112,7 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
     profileId,
   }: CreatePendingMargonemAccountImportInput) {
     const operation = "createPendingImport" as const;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* createPendingImportTransaction(
         tx: TransactionDatabase
@@ -126,6 +130,7 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
             profileId,
           })
           .returning({ id: margonemAccountImportPreview.id });
+
         const insertedRows = yield* insert;
 
         const [preview] = insertedRows;
@@ -151,6 +156,7 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
                 world: character.world,
               }))
             );
+
           yield* characterInsert;
         }
 
@@ -176,6 +182,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
     pendingImportId,
   }: ConfirmPendingImportInput) {
     const operation = "confirmPendingImport" as const;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* confirmPendingImportTransaction(
         tx: TransactionDatabase
@@ -200,6 +207,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
           )
           .limit(1)
           .for("update");
+
         const previewRows = yield* previewSelect;
         const [preview] = previewRows;
 
@@ -223,18 +231,22 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
               preview.id
             )
           );
+
         const jarunaCharacters = [];
 
         for (const row of characterRows) {
           const characterId = yield* parseMargonemCharacterId(
             row.characterId
           ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           const level = yield* parsePositiveLevel(row.level).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
+
           const profession = yield* parseMargonemProfession(
             row.profession
           ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           const world = yield* parseMargonemWorld(row.world).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
@@ -252,6 +264,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
         const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
+
         const pending = {
           fetchedAt: preview.fetchedAt,
           id: pendingImportId,
@@ -264,6 +277,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
           .from(margonemAccount)
           .where(eq(margonemAccount.profileId, pending.profileId))
           .limit(1);
+
         const existingRows = yield* existingSelect;
 
         const [existing] = existingRows;
@@ -286,6 +300,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
             createdAt: margonemAccount.createdAt,
             id: margonemAccount.id,
           });
+
         const accountRows = yield* insert;
 
         const [account] = accountRows;
@@ -309,6 +324,7 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
               world: character.world,
             }))
           );
+
           yield* characterInsert;
         }
 
@@ -374,6 +390,7 @@ const loadOwnedAccountWithDatabase = (
     readonly actorUserId: string;
   }) {
     const operation = "updateOwnedAccountDisplayName" as const;
+
     const accountSelect = database
       .select({
         accountId: margonemAccount.id,
@@ -396,6 +413,7 @@ const loadOwnedAccountWithDatabase = (
       )
       .groupBy(margonemAccount.id)
       .limit(1);
+
     const accountRows = yield* persistenceQuery(operation, accountSelect);
     const [account] = accountRows;
 
@@ -426,9 +444,11 @@ const loadOwnedAccountWithDatabase = (
     const accountIdValue = yield* parseMargonemAccountId(
       account.accountId
     ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
     const displayName = yield* parseAccountDisplayName(
       account.displayName
     ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
     const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
       Effect.catch((error) => failPersistence(operation, error))
     );
@@ -460,6 +480,7 @@ const updateOwnedAccountDisplayNameWithDatabase = (
   }: UpdateOwnedAccountDisplayNameInput) {
     const operation = "updateOwnedAccountDisplayName" as const;
     const accountIdNumber = accountId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* updateOwnedAccountDisplayNameTransaction(
         tx: TransactionDatabase
@@ -472,6 +493,7 @@ const updateOwnedAccountDisplayNameWithDatabase = (
           .where(eq(margonemAccount.id, accountIdNumber))
           .limit(1)
           .for("update");
+
         const accountRows = yield* accountSelect;
         const [account] = accountRows;
 
@@ -508,6 +530,7 @@ const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
   }: DeleteOwnedAccountInput) {
     const operation = "deleteOwnedAccount" as const;
     const accountIdNumber = accountId;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* deleteOwnedAccountTransaction(
         tx: TransactionDatabase
@@ -517,6 +540,7 @@ const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
           .from(margonemAccount)
           .where(eq(margonemAccount.id, accountIdNumber))
           .limit(1);
+
         const accountRows = yield* accountSelect;
         const [account] = accountRows;
 
@@ -534,12 +558,14 @@ const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
           })
           .from(margonemCharacter)
           .where(eq(margonemCharacter.accountId, accountIdNumber));
+
         const squadCharacterRows = yield* tx
           .select({
             count: sql<number>`count(${squadCharacter.id})::int`,
           })
           .from(squadCharacter)
           .where(eq(squadCharacter.accountId, accountIdNumber));
+
         const accessRows = yield* tx
           .select({
             count: sql<number>`count(${margonemAccountAccess.id})::int`,
@@ -576,6 +602,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
     actorUserId,
   }: ListOwnedMargonemAccountsInput) {
     const operation = "listOwnedAccounts" as const;
+
     const select = database
       .select({
         accountId: margonemAccount.id,
@@ -595,8 +622,10 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       .where(eq(margonemAccount.ownerUserId, actorUserId))
       .groupBy(margonemAccount.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
+
     const rows = yield* persistenceQuery(operation, select);
     const accountIds = rows.map((row) => row.accountId);
+
     const characterRows =
       accountIds.length === 0
         ? []
@@ -620,6 +649,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
                 asc(margonemCharacter.id)
               )
           );
+
     const characterRowsByAccount = Arr.groupBy(characterRows, (row) =>
       String(row.accountId)
     );

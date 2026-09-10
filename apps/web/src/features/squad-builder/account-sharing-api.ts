@@ -32,6 +32,7 @@ export const listIncomingAccountInvites = Effect.fn(
   "Web.SquadAccountSharing.listIncomingInvites"
 )(function* listIncomingAccountInvitesEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.listIncomingAccountInvites({
     payload: {},
   });
@@ -42,6 +43,7 @@ export const listSharedAccounts = Effect.fn(
   "Web.SquadAccountSharing.listSharedAccounts"
 )(function* listSharedAccountsEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.listSharedAccounts({
     payload: {},
   });
@@ -52,6 +54,7 @@ export const listAccountAccessGrants = Effect.fn(
   "Web.SquadAccountSharing.listAccessGrants"
 )(function* listAccountAccessGrantsEffect(accountId: number) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.listAccountAccessGrants({
     payload: { accountId: yield* asMargonemAccountId(accountId) },
   });
@@ -64,6 +67,7 @@ export const searchAccountInviteTargets = Effect.fn(
   input: SearchAccountInviteTargetsInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets({
     payload: {
       accountId: yield* asMargonemAccountId(input.accountId),
@@ -77,6 +81,7 @@ export const sendAccountAccessInvite = Effect.fn(
   "Web.SquadAccountSharing.sendInvite"
 )(function* sendAccountAccessInviteEffect(input: SendAccountAccessInviteInput) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
     payload: {
       accountId: yield* asMargonemAccountId(input.accountId),
@@ -92,6 +97,7 @@ export const respondToAccountAccessInvite = Effect.fn(
   input: RespondToAccountAccessInviteInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
     payload: {
       accessId: yield* asMargonemAccountAccessId(input.accessId),
@@ -105,6 +111,7 @@ export const revokeAccountAccess = Effect.fn(
   "Web.SquadAccountSharing.revokeAccess"
 )(function* revokeAccountAccessEffect(input: RevokeAccountAccessInput) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderAccountSharing.revokeAccountAccess({
     payload: {
       accessId: yield* asMargonemAccountAccessId(input.accessId),

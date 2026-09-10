@@ -14,14 +14,15 @@ import {
   listTodos,
   toggleTodo,
 } from "../../services/todo/todo-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireVerifiedSession } = makeAuthorizationPolicy({
+const { requireVerifiedSession } = buildAuthorizationPolicy({
   forbidden: () => new TodoForbidden({ message: "FORBIDDEN" }),
   unauthorized: () => new TodoUnauthorized({ message: "UNAUTHORIZED" }),
   unverified: () =>
     new TodoForbidden({ message: "Konto oczekuje na weryfikację" }),
 });
+
 const mapTodoError = (error: ApplicationDependencyUnavailable) =>
   new TodoPersistenceUnavailable({ operation: error.operation });
 
@@ -50,6 +51,7 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
       .handle("listTodos", () =>
         Effect.gen(function* listTodosHandler() {
           const session = yield* requireVerifiedSession();
+
           return yield* listTodos({ userId: session.user.id }).pipe(
             Effect.mapError(mapTodoError)
           );

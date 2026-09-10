@@ -82,6 +82,7 @@ describe("bet queries", () => {
   it("invalidates later pages and every derived event cache after a create", async () => {
     const testClient = makeTestQueryClient();
     const page = paginatedBetsQueryKey({ limit: 10, page: 2 });
+
     const queryKeys = [
       page,
       latestBetForCopyQueryKey,
@@ -90,9 +91,11 @@ describe("bet queries", () => {
       ["oldest-unpaid-event"],
       ["vault"],
     ] as const;
+
     for (const queryKey of queryKeys) {
       testClient.queryClient.setQueryData(queryKey, []);
     }
+
     const mutation = new MutationObserver(
       testClient.queryClient,
       createBetMutationOptions(testClient.queryClient, makeRunner())
@@ -110,6 +113,7 @@ describe("bet queries", () => {
           testClient.queryClient.getQueryState(queryKey)?.isInvalidated
         ).toBe(true);
       }
+
       mutation.reset();
     } finally {
       testClient.cleanup();
@@ -119,6 +123,7 @@ describe("bet queries", () => {
   it("edits non-empty member selections and refreshes derived data", async () => {
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(latestBetForCopyQueryKey, null);
+
     const mutation = new MutationObserver(
       testClient.queryClient,
       editBetMutationOptions(testClient.queryClient, makeRunner())
@@ -147,6 +152,7 @@ describe("bet queries", () => {
     const pageTwo = paginatedBetsQueryKey({ limit: 10, page: 2 });
     testClient.queryClient.setQueryData(pageOne, []);
     testClient.queryClient.setQueryData(pageTwo, []);
+
     const mutation = new MutationObserver(
       testClient.queryClient,
       deleteBetMutationOptions(testClient.queryClient, makeRunner())

@@ -18,16 +18,19 @@ import type {
 } from "../../services/event/event-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
 const defaultEventColor = "#6366f1";
+
 const defaultEventIcon = DEFAULT_EVENT_ICON_ID;
+
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,

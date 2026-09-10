@@ -14,6 +14,7 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
     const range = await context.queryClient.query(
       skillRangeBySlugQueryOptions(params.rangeName)
     );
+
     await Promise.all([
       context.queryClient.query(skillProfessionsQueryOptions()),
       range === null

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ const EventFormSchema = Schema.Struct({
   icon: EventIconSchema,
   name: EventNameSchema,
 });
+
 const EventFormValidator = Schema.toStandardSchemaV1(EventFormSchema);
 
 interface EventFormValues {
@@ -77,17 +79,22 @@ const eventDefaultValues: EventFormValues = {
 
 export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createEvent = useMutation(
     createEventMutationOptions(queryClient, runAppHttpApi)
   );
+
   const form = useAppForm({
     defaultValues: eventDefaultValues,
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await EventFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -100,8 +107,10 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
           name: decoded.value.name,
         });
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -111,6 +120,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
     },
     validators: { onSubmit: EventFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const selectedColor = useSelector(form.store, (state) => state.values.color);
   const canDiscard = !isSubmitting;
@@ -120,9 +130,11 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       if (!canDiscard) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 
@@ -151,10 +163,12 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                   const fieldId = getFieldId(field.name);
                   const errorId = getFieldErrorId(fieldId);
                   const error = getFieldErrorMessage(field.state.meta.errors);
+
                   const showError =
                     error !== undefined &&
                     (field.state.meta.isTouched ||
                       field.form.state.submissionAttempts > 0);
+
                   return (
                     <FormFieldFrame
                       error={showError ? error : undefined}
@@ -176,6 +190,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                         <div className="grid grid-cols-3 gap-2">
                           {EVENT_ICON_OPTIONS.map((item) => {
                             const icon = EVENT_ICON_MAP[item.id];
+
                             return (
                               <button
                                 aria-pressed={field.state.value === item.id}
@@ -215,10 +230,12 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                 {(field) => {
                   const fieldId = getFieldId(field.name);
                   const error = getFieldErrorMessage(field.state.meta.errors);
+
                   const showError =
                     error !== undefined &&
                     (field.state.meta.isTouched ||
                       field.form.state.submissionAttempts > 0);
+
                   return (
                     <FormFieldFrame
                       error={showError ? error : undefined}
@@ -271,10 +288,12 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                   const fieldId = getFieldId(field.name);
                   const errorId = getFieldErrorId(fieldId);
                   const error = getFieldErrorMessage(field.state.meta.errors);
+
                   const showError =
                     error !== undefined &&
                     (field.state.meta.isTouched ||
                       field.form.state.submissionAttempts > 0);
+
                   return (
                     <FormFieldFrame
                       error={showError ? error : undefined}

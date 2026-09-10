@@ -28,6 +28,7 @@ const AuctionsTypeIndexPage = ({ type }: AuctionsTypeIndexPageProps) => (
       {AUCTION_PROFESSIONS.map((profession) => {
         const professionMeta = AUCTION_PROFESSION_META[profession];
         const Icon = professionMeta.cardIcon[type];
+
         return (
           <Link
             key={profession}

@@ -8,6 +8,7 @@ const routeApi = getRouteApi("/dashboard/player-list");
 
 const PlayerListRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <PlayerListPage session={session} />;
 };
 

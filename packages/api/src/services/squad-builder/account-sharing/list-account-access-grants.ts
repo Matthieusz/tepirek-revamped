@@ -15,6 +15,7 @@ export const listAccountAccessGrants = Effect.fn(
   "AccountSharing.listAccountAccessGrants"
 )(function* listAccountAccessGrants(input: ListAccountAccessGrantsInput) {
   const store = yield* AccountSharingStoreService;
+
   const ownerUserId = yield* store.findAccountOwnerUserId({
     accountId: input.accountId,
   });

@@ -66,17 +66,21 @@ const RawMargonemCharacterRow = Schema.Struct({
   profession: Schema.NullOr(Schema.String),
   world: Schema.NullOr(Schema.String),
 });
+
 type RawMargonemCharacterRow = typeof RawMargonemCharacterRow.Type;
 
 const decodeRawCharacterRow = Schema.decodeUnknownEffect(
   RawMargonemCharacterRow
 );
+
 const decodeText = Schema.decodeUnknownEffect(Schema.String);
+
 const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
 
 // linkedom turns invalid/out-of-range numeric entities into either literal text
 // or U+FFFD. They must not be accepted as character data by the import flow.
 const numericHtmlEntityPattern = /&#(?:[^;]*);/u;
+
 const isMalformedHtmlText = (value: string): boolean =>
   value.includes("\uFFFD") || numericHtmlEntityPattern.test(value);
 
@@ -86,9 +90,11 @@ const decodeHtmlText = <Error>(
 ): Effect.Effect<string, Error> =>
   Effect.gen(function* decodeTextValue() {
     const text = yield* decodeText(value).pipe(Effect.mapError(onInvalidText));
+
     if (isMalformedHtmlText(text)) {
       return yield* Effect.fail(onInvalidText());
     }
+
     return text;
   });
 
@@ -109,23 +115,28 @@ type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
 const decodeCssTextWithHtmlParser = (value: string): string => {
   let decoded = value;
+
   // Firecrawl sometimes returns entities encoded twice in inline styles.
   // Parsing a text node, rather than replacing entity names, handles both
   // that input and the full entity set supported by the HTML parser.
   for (let pass = 0; pass < 2; pass += 1) {
     const parsed = parseHTML(`<span>${decoded}</span>`).document;
     const next = parsed.querySelector("span")?.textContent;
+
     if (next === undefined || next === decoded) {
       break;
     }
+
     decoded = next;
   }
+
   return decoded;
 };
 
 const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
   const image = row.querySelector(".cimg");
   const style = image?.getAttribute("style");
+
   if (
     image === null ||
     image === undefined ||
@@ -138,6 +149,7 @@ const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
   // Let the DOM implementation parse the CSS declaration as well as the HTML.
   image.setAttribute("style", decodeCssTextWithHtmlParser(style));
   const backgroundImage = image.style?.getPropertyValue("background-image");
+
   if (
     backgroundImage === undefined ||
     !backgroundImage.startsWith("url(") ||
@@ -147,10 +159,13 @@ const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
   }
 
   const value = backgroundImage.slice(4, -1).trim();
+
   const hasWrappingQuotes =
     (value.startsWith('"') && value.endsWith('"')) ||
     (value.startsWith("'") && value.endsWith("'"));
+
   const url = hasWrappingQuotes ? value.slice(1, -1).trim() : value;
+
   return url.length === 0 ? null : url;
 };
 
@@ -171,6 +186,7 @@ const extractProfileName = (
     const name = document
       .querySelector(".profile-header__name span")
       ?.textContent?.trim();
+
     if (name === undefined || name.length === 0) {
       return null;
     }
@@ -211,6 +227,7 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
         profileId,
         safeReason: "invalid numeric HTML entity",
       });
+
     const invalidCharacter = () =>
       new MargonemCharacterRowInvalid({
         profileId,
@@ -225,6 +242,7 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
     }
 
     const professionLabel = raw.profession;
+
     if (professionLabel === null || professionLabel.length === 0) {
       return yield* new MargonemCharacterRowInvalid({
         profileId,
@@ -235,15 +253,19 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
     const characterId = yield* decodeNumber(raw.characterId).pipe(
       Effect.mapError(invalidCharacter)
     );
+
     const level = yield* decodeNumber(raw.level).pipe(
       Effect.mapError(invalidCharacter)
     );
+
     const parsedCharacterId = yield* parseMargonemCharacterId(characterId).pipe(
       Effect.mapError(invalidCharacter)
     );
+
     const parsedLevel = yield* parsePositiveLevel(level).pipe(
       Effect.mapError(invalidCharacter)
     );
+
     const parsedProfession = yield* parseMargonemProfession(
       yield* decodeHtmlText(professionLabel, invalidEntity)
     ).pipe(Effect.mapError(invalidCharacter));
@@ -285,6 +307,7 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
     const rowElements: readonly HtmlElement[] = Arr.fromIterable(
       document.querySelectorAll(".char-row")
     );
+
     if (rowElements.length === 0) {
       return yield* new MargonemCharacterRowsNotFound({ profileId });
     }
@@ -293,6 +316,7 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
     const parsedCharacters = yield* Effect.forEach(rowElements, (row) =>
       parseJarunaCharacterRow(profileId, row)
     );
+
     // oxlint-disable-next-line unicorn/no-array-method-this-argument -- Effect Array.filter uses a data-first overload; the second argument is a predicate, not thisArg.
     const jarunaCharacters = Arr.filter(parsedCharacters, Predicate.isNotNull);
 

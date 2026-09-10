@@ -13,6 +13,7 @@ const routeApi = getRouteApi("/dashboard/events/history");
 
 const HistoryRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <HistoryPage session={session} />;
 };
 

@@ -36,6 +36,7 @@ export const deleteAnnouncement = Effect.fn("Announcement.delete")(
 export const listAnnouncements = Effect.fn("Announcement.list")(
   function* listAnnouncements() {
     const store = yield* AnnouncementStore;
+
     return yield* store.list();
   }
 );

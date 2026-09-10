@@ -47,6 +47,7 @@ const formatSignupDate = (createdAt: Date) => {
   if (!isValidDate(createdAt)) {
     return "";
   }
+
   return createdAt.toLocaleString("pl-PL", {
     day: "2-digit",
     hour: "2-digit",
@@ -86,6 +87,7 @@ const CellContent: React.FC<CellContentProps> = ({
 
   if (isOwnSignup) {
     const formattedDate = formatSignupDate(signup.createdAt);
+
     return (
       <button
         className="group/signup bg-primary/10 hover:bg-destructive/10 flex w-full min-w-0 items-center gap-2 rounded-full px-2 py-1 transition-colors"
@@ -125,6 +127,7 @@ const CellContent: React.FC<CellContentProps> = ({
   }
 
   const formattedDate = formatSignupDate(signup.createdAt);
+
   return (
     <div className="bg-muted/50 flex w-full min-w-0 items-center gap-2 rounded-full px-2 py-1">
       <Avatar className="size-6">
@@ -159,6 +162,7 @@ interface AuctionTableContentProps extends AuctionTableProps {
 }
 
 const rounds = AUCTION_SLOT_ROUNDS;
+
 const rowValues = AUCTION_SLOT_LEVELS;
 
 const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
@@ -172,6 +176,7 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
   const columns = getAuctionSlotColumns(profession, type);
   const queryClient = useQueryClient();
   const group = { profession, type };
+
   const toggleMutation = useMutation(
     toggleAuctionSignupMutationOptions(queryClient, group, undefined, {
       onRefreshError: () => {
@@ -179,6 +184,7 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
       },
     })
   );
+
   const removeMutation = useMutation(
     removeAuctionSignupMutationOptions(queryClient, group, undefined, {
       onRefreshError: () => {
@@ -186,6 +192,7 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
       },
     })
   );
+
   const handleToggle = async (params: {
     readonly column: number;
     readonly level: number;
@@ -197,6 +204,7 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
         profession,
         type,
       });
+
       toast.success(
         result.action === "added"
           ? "Zapisano na licytację"
@@ -227,8 +235,10 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
     column: number
   ): AuctionSignup | undefined => {
     const cellSignups = signupMap[`${level}-${round}-${column}`];
+
     if (cellSignups && cellSignups.length > 0) {
       const own = cellSignups.find((signup) => signup.userId === currentUserId);
+
       return own ?? cellSignups[0];
     }
 
@@ -289,11 +299,13 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
                     const column = colIdx + 1;
                     const signup = getSignupForCell(value, round, column);
                     const isOwnSignup = signup?.userId === currentUserId;
+
                     const isTogglingCell =
                       toggleMutation.isPending &&
                       toggleMutation.variables?.level === value &&
                       toggleMutation.variables?.round === round &&
                       toggleMutation.variables?.column === column;
+
                     const isRemovingSignup =
                       removeMutation.isPending &&
                       removeMutation.variables?.id === signup?.id;

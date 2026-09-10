@@ -1,8 +1,10 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable max-classes-per-file -- The synchronizer exposes one cohesive failure algebra. */
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 
@@ -58,37 +60,27 @@ export class LegendCatalogSyncService extends Context.Service<
   LegendCatalogSyncContract
 >()("@tepirek-revamped/api/legend-pricing/LegendCatalogSyncService") {}
 
-const syncErrorMessage = (error: LegendCatalogSyncError): string => {
-  switch (error._tag) {
-    case "LegendCatalogPersistenceUnavailable": {
-      return `persistence failure while ${error.operation}`;
-    }
-    case "LegendCatalogSnapshotInvalid": {
-      return error.reason;
-    }
-    case "LegendCatalogSourceDrift": {
-      return `source drift for ${error.entityType} ${error.sourceKey}`;
-    }
-    case "MargonemForumDocumentRejected": {
-      return error.reason;
-    }
-    case "MargonemForumGuideNotParseable": {
-      return error.reason;
-    }
-    case "MargonemForumRequestFailed": {
-      return error.status === undefined
+const syncErrorMessage = (input: LegendCatalogSyncError): string =>
+  Match.value(input).pipe(
+    Match.tag(
+      "LegendCatalogPersistenceUnavailable",
+      (error) => `persistence failure while ${error.operation}`
+    ),
+    Match.tag("LegendCatalogSnapshotInvalid", (error) => error.reason),
+    Match.tag(
+      "LegendCatalogSourceDrift",
+      (error) => `source drift for ${error.entityType} ${error.sourceKey}`
+    ),
+    Match.tag("MargonemForumDocumentRejected", (error) => error.reason),
+    Match.tag("MargonemForumGuideNotParseable", (error) => error.reason),
+    Match.tag("MargonemForumRequestFailed", (error) =>
+      error.status === undefined
         ? "forum request failed"
-        : `forum request failed with status ${error.status}`;
-    }
-    case "LegendCatalogSyncSnapshotInvalid": {
-      return error.reason;
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
-};
+        : `forum request failed with status ${error.status}`
+    ),
+    Match.tag("LegendCatalogSyncSnapshotInvalid", (error) => error.reason),
+    Match.exhaustive
+  );
 
 const topicUrl = (category: LegendaryEnemyCategory): string =>
   category === "hero"
@@ -104,9 +96,11 @@ const mergeItems = (
   LegendCatalogSyncSnapshotInvalid
 > => {
   const items = new Map<LegendaryItemSourceKey, LegendCatalogItem>();
+
   for (const snapshot of snapshots) {
     for (const item of snapshot.items) {
       const existing = items.get(item.sourceIconKey);
+
       if (
         existing !== undefined &&
         (existing.name !== item.name ||
@@ -119,9 +113,11 @@ const mergeItems = (
           })
         );
       }
+
       items.set(item.sourceIconKey, existing ?? item);
     }
   }
+
   return Effect.succeed([...items.values()]);
 };
 
@@ -188,6 +184,7 @@ export const LegendCatalogSyncLiveLayer: Layer.Layer<
     const synchronizeOnce = Effect.fnUntraced(
       function* synchronizeLegendCatalogOnce() {
         const startedAt = new Date(yield* Clock.currentTimeMillis);
+
         const run = Effect.gen(function* synchronizeCatalog() {
           const topics = yield* Effect.all(
             {
@@ -196,6 +193,7 @@ export const LegendCatalogSyncLiveLayer: Layer.Layer<
             },
             { concurrency: 2 }
           );
+
           const snapshots = yield* Effect.all(
             {
               elite2: parseTopic("elite2", topics.elite2.html),
@@ -203,14 +201,18 @@ export const LegendCatalogSyncLiveLayer: Layer.Layer<
             },
             { concurrency: 2 }
           );
+
           const synchronizedAt = new Date(yield* Clock.currentTimeMillis);
+
           const input = yield* makeInput(
             snapshots.hero,
             snapshots.elite2,
             startedAt,
             synchronizedAt
           );
+
           const reconciliation = yield* store.reconcile(input);
+
           return { reconciliation, synchronizedAt };
         });
 
@@ -227,6 +229,7 @@ export const LegendCatalogSyncLiveLayer: Layer.Layer<
                   startedAt,
                 })
                 .pipe(Effect.ignore());
+
               return yield* error;
             })
           )

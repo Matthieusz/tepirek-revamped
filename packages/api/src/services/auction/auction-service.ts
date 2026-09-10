@@ -7,6 +7,7 @@ export const getAuctionSignups = Effect.fn("Auction.getSignups")(
     input: Parameters<(typeof AuctionStore.Service)["getSignups"]>[0]
   ) {
     const store = yield* AuctionStore;
+
     return yield* store.getSignups(input);
   }
 );
@@ -16,6 +17,7 @@ export const getAuctionStats = Effect.fn("Auction.getStats")(
     input: Parameters<(typeof AuctionStore.Service)["getStats"]>[0]
   ) {
     const store = yield* AuctionStore;
+
     return yield* store.getStats(input);
   }
 );
@@ -25,6 +27,7 @@ export const clearAuctionSignups = Effect.fn("Auction.clearSignups")(
     input: Parameters<(typeof AuctionStore.Service)["clearSignups"]>[0]
   ) {
     const store = yield* AuctionStore;
+
     return yield* store.clearSignups(input);
   }
 );
@@ -34,6 +37,7 @@ export const removeAuctionSignup = Effect.fn("Auction.removeSignup")(
     input: Parameters<(typeof AuctionStore.Service)["removeSignup"]>[0]
   ) {
     const store = yield* AuctionStore;
+
     return yield* store.removeSignup(input);
   }
 );
@@ -43,6 +47,7 @@ export const toggleAuctionSignup = Effect.fn("Auction.toggleSignup")(
     input: Parameters<(typeof AuctionStore.Service)["toggleSignup"]>[0]
   ) {
     const store = yield* AuctionStore;
+
     return yield* store.toggleSignup(input);
   }
 );

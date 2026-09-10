@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { makeBrandedPositiveInt } from "./positive-int.ts";
+import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a pending import id is not a positive integer. */
 export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountImportId>()(
@@ -8,7 +8,7 @@ export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorCla
   {}
 ) {}
 
-const brandedPendingMargonemAccountImportId = makeBrandedPositiveInt(
+const brandedPendingMargonemAccountImportId = buildBrandedPositiveInt(
   "PendingMargonemAccountImportId",
   "PendingMargonemAccountImportId.parse",
   () => new InvalidPendingMargonemAccountImportId()
@@ -17,6 +17,7 @@ const brandedPendingMargonemAccountImportId = makeBrandedPositiveInt(
 /** A validated pending Margonem account import id. */
 export const PendingMargonemAccountImportId =
   brandedPendingMargonemAccountImportId.schema;
+
 export type PendingMargonemAccountImportId =
   typeof PendingMargonemAccountImportId.Type;
 

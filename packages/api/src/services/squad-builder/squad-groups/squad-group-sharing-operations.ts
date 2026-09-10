@@ -23,6 +23,7 @@ export const respond = Effect.fn("SquadGroups.respondToEditorInvite")(
   function* respond(input: RespondToSquadGroupInviteInput) {
     const store = yield* SquadGroupSharingStoreService;
     const now = yield* DateTime.nowAsDate;
+
     return yield* store.respondToSquadGroupInvite({
       invitationId: input.invitationId,
       invitedUserId: input.actorUserId,
@@ -38,6 +39,7 @@ export const revoke = Effect.fn("SquadGroups.revokeEditor")(function* revoke(
 ) {
   const store = yield* SquadGroupSharingStoreService;
   const now = yield* DateTime.nowAsDate;
+
   return yield* store.revokeSquadGroupEditor({
     invitationId: input.invitationId,
     now,

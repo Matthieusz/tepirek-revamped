@@ -113,16 +113,20 @@ const LegendPriceCard = ({
   const [price, setPrice] = useState(
     item.priceGold === null ? "" : formatGoldAmountInput(item.priceGold)
   );
+
   const [saving, setSaving] = useState(false);
 
   const savePrice = async () => {
     const parsedPrice = tryParseGoldAmount(price);
+
     if (parsedPrice === undefined || parsedPrice < 0) {
       toast.error("Podaj nieujemną cenę całkowitą, np. 700m albo 1.2g.");
+
       return;
     }
 
     setSaving(true);
+
     try {
       await handleUpdateCost({
         expectedVersion: item.version,
@@ -134,6 +138,7 @@ const LegendPriceCard = ({
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się zapisać ceny."));
     }
+
     setSaving(false);
   };
 
@@ -332,6 +337,7 @@ export const CennikContent = ({
   readonly search: CennikSearch;
 }) => {
   const queryClient = useQueryClient();
+
   const updateCostMutation = useMutation(
     updateLegendCostMutationOptions(queryClient, runAppHttpApi, {
       onRefreshError: () => {
@@ -341,8 +347,10 @@ export const CennikContent = ({
       },
     })
   );
+
   const handleUpdateCost = async (input: UpdateLegendCostInput) =>
     await updateCostMutation.mutateAsync(input);
+
   const navigate = useNavigate({ from: "/dashboard/cennik" });
   const pendingSearchUpdates = useRef<Partial<CennikSearch>>({});
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -363,9 +371,11 @@ export const CennikContent = ({
         ...pendingSearchUpdates.current,
         ...update,
       };
+
       if (syncTimeout.current !== null) {
         clearTimeout(syncTimeout.current);
       }
+
       syncTimeout.current = setTimeout(() => {
         syncTimeout.current = null;
         const nextUpdates = pendingSearchUpdates.current;
@@ -378,10 +388,12 @@ export const CennikContent = ({
     },
     [navigate]
   );
+
   const groups = useMemo(
     () => groupLegendPricesByEnemy(prices, deferredSearch),
     [deferredSearch, prices]
   );
+
   const itemCount = groups.reduce(
     (count, group) => count + group.items.length,
     0
@@ -516,6 +528,7 @@ const ItemLevelFilter = ({
     const timeout = setTimeout(() => {
       setLocalValue(value ?? "");
     }, 0);
+
     return () => {
       clearTimeout(timeout);
     };
@@ -559,6 +572,7 @@ const SearchFilter = ({
     const timeout = setTimeout(() => {
       setLocalValue(value ?? "");
     }, 0);
+
     return () => {
       clearTimeout(timeout);
     };

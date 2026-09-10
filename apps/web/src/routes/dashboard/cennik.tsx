@@ -9,6 +9,7 @@ const routeApi = getRouteApi("/dashboard/cennik");
 const CennikRoute = () => {
   const { session } = routeApi.useRouteContext();
   const search = routeApi.useSearch();
+
   return <CennikPage search={search} session={session} />;
 };
 

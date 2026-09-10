@@ -112,6 +112,7 @@ export const deleteAnnouncementMutationOptions = (
       context: DeleteAnnouncementContext | undefined
     ) => {
       const previousAnnouncement = context?.previousAnnouncement;
+
       if (previousAnnouncement !== undefined) {
         queryClient.setQueryData<readonly Announcement[]>(
           announcementsQueryKey,
@@ -122,10 +123,12 @@ export const deleteAnnouncementMutationOptions = (
             ) {
               return announcements;
             }
+
             const previousIndex = Math.min(
               context?.previousIndex ?? 0,
               announcements.length
             );
+
             return [
               ...announcements.slice(0, previousIndex),
               previousAnnouncement,
@@ -134,26 +137,32 @@ export const deleteAnnouncementMutationOptions = (
           }
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: DeleteAnnouncementInput) => {
       await queryClient.cancelQueries({ queryKey: announcementsQueryKey });
+
       const announcements = queryClient.getQueryData<readonly Announcement[]>(
         announcementsQueryKey
       );
+
       const previousIndex =
         announcements?.findIndex(
           (announcement) => announcement.id === input.id
         ) ?? -1;
+
       const previousAnnouncement =
         previousIndex >= 0 && announcements !== undefined
           ? announcements[previousIndex]
           : undefined;
+
       queryClient.setQueryData<readonly Announcement[]>(
         announcementsQueryKey,
         (current) =>
           current?.filter((announcement) => announcement.id !== input.id)
       );
+
       return {
         previousAnnouncement,
         previousIndex: Math.max(previousIndex, 0),

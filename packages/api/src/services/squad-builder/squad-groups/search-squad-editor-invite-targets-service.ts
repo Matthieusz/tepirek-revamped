@@ -23,6 +23,7 @@ export const search = EffectRuntime.fn("SquadGroups.searchEditorInviteTargets")(
       actorUserId: input.actorUserId,
       groupId: input.groupId,
     });
+
     return yield* directoryStore.searchSquadEditorInviteTargets({
       groupId: input.groupId,
       maxResults: inviteTargetSearchPolicy.maxResults,

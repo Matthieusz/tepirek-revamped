@@ -22,6 +22,7 @@ const sortRanking = (
   sortBy: "points" | "bets" | "gold"
 ): RankingItem[] => {
   const descendingNumber = Order.flip(Order.Number);
+
   if (sortBy === "bets") {
     return Arr.sortWith(
       ranking ?? [],
@@ -50,12 +51,15 @@ export const useRankingData = ({
   queryInputs,
 }: UseRankingDataParams) => {
   const rankingInput: RankingFilterInput = {};
+
   if (queryInputs.eventId !== undefined) {
     rankingInput.eventId = queryInputs.eventId;
   }
+
   if (queryInputs.heroId !== undefined) {
     rankingInput.heroId = queryInputs.heroId;
   }
+
   const rankingQuery = useQuery(rankingQueryOptions(rankingInput));
   const rankingData = rankingQuery.data;
   const rankingLoading = rankingQuery.isPending;

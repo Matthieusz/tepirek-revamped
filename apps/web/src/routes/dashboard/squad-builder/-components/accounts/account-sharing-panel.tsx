@@ -38,6 +38,7 @@ import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/acc
 import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
+
 type AccountInviteTarget = AccountInviteTargetSchema;
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
@@ -47,6 +48,7 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
     const handle = setTimeout(() => {
       setDebounced(value);
     }, delayMs);
+
     return () => {
       clearTimeout(handle);
     };
@@ -57,6 +59,7 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
 
 const useActorUserId = (): string => {
   const sessionQuery = useQuery(sessionQueryOptions());
+
   return sessionQuery.data?.user.id ?? "";
 };
 
@@ -67,6 +70,7 @@ const getAutocompleteStatus = (
   if (queryLength < 2) {
     return "Wpisz co najmniej 2 znaki";
   }
+
   return hasLoaded ? undefined : "Wyszukiwanie…";
 };
 
@@ -78,6 +82,7 @@ const getAutocompleteAnnouncement = (
   if (queryLength < 2) {
     return "";
   }
+
   return hasLoaded
     ? `Znaleziono ${resultCount} użytkowników`
     : "Wyszukiwanie użytkowników";
@@ -103,12 +108,15 @@ export const AccountSharingPanel = ({
   const grantsQuery = useQuery(
     accountAccessGrantsQueryOptions(accountId, actorUserId)
   );
+
   const searchQuery = useQuery(
     accountInviteTargetsQueryOptions(accountId, actorUserId, trimmedQuery)
   );
+
   const sendInvite = useMutation(
     sendAccountAccessInviteMutationOptions(queryClient)
   );
+
   const revokeAccess = useMutation(
     revokeAccountAccessMutationOptions(queryClient)
   );
@@ -194,8 +202,10 @@ export const AccountSharingPanel = ({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
+
                       const send = async () => {
                         setSendingUserId(target.userId);
+
                         try {
                           await sendInvite.mutateAsync({
                             accountId,
@@ -213,8 +223,10 @@ export const AccountSharingPanel = ({
                             )
                           );
                         }
+
                         setSendingUserId(null);
                       };
+
                       void send();
                     }}
                     size="xs"
@@ -300,10 +312,12 @@ export const AccountSharingPanel = ({
                   onClick={() => {
                     const revoke = async () => {
                       setRevokingAccessId(grant.accessId);
+
                       try {
                         const response = await revokeAccess.mutateAsync({
                           accessId: grant.accessId,
                         });
+
                         toast.success(
                           response.removedSquadCharacterCount > 0
                             ? `Dostęp cofnięty. Usunięto ${response.removedSquadCharacterCount} postaci ze składów.`
@@ -314,6 +328,7 @@ export const AccountSharingPanel = ({
                           getErrorMessage(error, "Nie udało się cofnąć dostępu")
                         );
                       }
+
                       setRevokingAccessId(null);
                     };
 

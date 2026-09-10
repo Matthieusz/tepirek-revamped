@@ -1,4 +1,6 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
@@ -25,38 +27,38 @@ import {
   listRanges,
   listSkillsByRange,
 } from "../../services/skills/skills-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
-  {
+const { requireAdminSession, requireVerifiedSession } =
+  buildAuthorizationPolicy({
     forbidden: () => new SkillsForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new SkillsUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
       new SkillsForbidden({ message: "Konto oczekuje na weryfikację" }),
-  }
-);
+  });
+
 const mapSkillsError = (
-  error:
+  input:
     | ApplicationConflict
     | ApplicationDependencyUnavailable
     | ApplicationInvalidInput
-) => {
-  switch (error._tag) {
-    case "ApplicationConflict": {
-      return new SkillsConflict({ message: error.message });
-    }
-    case "ApplicationInvalidInput": {
-      return new SkillsBadRequest({ message: error.message });
-    }
-    case "ApplicationDependencyUnavailable": {
-      return new SkillsPersistenceUnavailable({ operation: error.operation });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
-};
+) =>
+  Match.value(input).pipe(
+    Match.tag(
+      "ApplicationConflict",
+      (error) => new SkillsConflict({ message: error.message })
+    ),
+    Match.tag(
+      "ApplicationInvalidInput",
+      (error) => new SkillsBadRequest({ message: error.message })
+    ),
+    Match.tag(
+      "ApplicationDependencyUnavailable",
+      (error) =>
+        new SkillsPersistenceUnavailable({ operation: error.operation })
+    ),
+    Match.exhaustive
+  );
 
 export const SkillsHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -100,18 +102,21 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
       .handle("listProfessions", () =>
         Effect.gen(function* listProfessionsHandler() {
           yield* requireVerifiedSession();
+
           return yield* listProfessions().pipe(Effect.mapError(mapSkillsError));
         })
       )
       .handle("listRanges", () =>
         Effect.gen(function* listRangesHandler() {
           yield* requireVerifiedSession();
+
           return yield* listRanges().pipe(Effect.mapError(mapSkillsError));
         })
       )
       .handle("getRangeBySlug", ({ payload }) =>
         Effect.gen(function* getRangeBySlugHandler() {
           yield* requireVerifiedSession();
+
           return yield* getRangeBySlug(payload).pipe(
             Effect.mapError(mapSkillsError)
           );
@@ -120,6 +125,7 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
       .handle("listSkillsByRange", ({ payload }) =>
         Effect.gen(function* listSkillsByRangeHandler() {
           yield* requireVerifiedSession();
+
           return yield* listSkillsByRange(payload).pipe(
             Effect.mapError(mapSkillsError)
           );

@@ -17,6 +17,7 @@ import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 export const getSession = Effect.fn("Web.User.getSession")(
   function* getSessionEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.getSession({});
   }
 );
@@ -25,6 +26,7 @@ export const getSession = Effect.fn("Web.User.getSession")(
 export const listUsers = Effect.fn("Web.User.list")(
   function* listUsersEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.list({});
   }
 );
@@ -33,6 +35,7 @@ export const listUsers = Effect.fn("Web.User.list")(
 export const getVerifiedUsers = Effect.fn("Web.User.getVerified")(
   function* getVerifiedUsersEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.getVerified({});
   }
 );
@@ -41,6 +44,7 @@ export const getVerifiedUsers = Effect.fn("Web.User.getVerified")(
 export const updateProfile = Effect.fn("Web.User.updateProfile")(
   function* updateProfileEffect(payload: UpdateProfilePayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.updateProfile({ payload });
   }
 );
@@ -49,6 +53,7 @@ export const updateProfile = Effect.fn("Web.User.updateProfile")(
 export const setVerified = Effect.fn("Web.User.setVerified")(
   function* setVerifiedEffect(payload: SetVerifiedPayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.setVerified({
       payload: {
         userId: yield* asAppUserId(payload.userId),
@@ -63,6 +68,7 @@ export const setRole = Effect.fn("Web.User.setRole")(function* setRoleEffect(
   payload: SetRolePayload
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.user.setRole({
     payload: {
       role: payload.role,
@@ -75,6 +81,7 @@ export const setRole = Effect.fn("Web.User.setRole")(function* setRoleEffect(
 export const updateUserName = Effect.fn("Web.User.updateName")(
   function* updateUserNameEffect(payload: UpdateUserNamePayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.updateUserName({
       payload: {
         name: payload.name,
@@ -88,6 +95,7 @@ export const updateUserName = Effect.fn("Web.User.updateName")(
 export const deleteUser = Effect.fn("Web.User.delete")(
   function* deleteUserEffect(userId: string) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.user.deleteUser({
       payload: { userId: yield* asAppUserId(userId) },
     });
@@ -99,6 +107,7 @@ export const verifyDiscordGuildMembership = Effect.fn(
   "Web.User.verifyDiscordGuildMembership"
 )(function* verifyDiscordGuildMembershipEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.user.verifyDiscordGuildMembership({});
 });
 

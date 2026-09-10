@@ -37,6 +37,7 @@ describe("parseMargonemAccountAccessId", () => {
         const result = yield* parseMargonemAccountAccessId(value).pipe(
           Effect.flip
         );
+
         expect(result._tag).toBe("InvalidMargonemAccountAccessId");
       }
     })

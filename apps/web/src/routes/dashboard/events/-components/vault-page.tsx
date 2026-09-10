@@ -61,9 +61,11 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const effectiveEventId = urlEventId ?? ALL_FILTER;
   const eventQueryInput = toQueryInput(effectiveEventId);
   const hasSpecificEvent = eventQueryInput !== undefined;
+
   const refreshEvents = () => {
     void eventsQuery.refetch();
   };
+
   useEffect(() => {
     if (hasInitializedRef.current || oldestUnpaidQuery.data === undefined) {
       return;
@@ -72,6 +74,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
     const oldestUnpaidEventId = oldestUnpaidQuery.data;
     hasInitializedRef.current = true;
     setHasInitialized(true);
+
     if (urlEventId === undefined && oldestUnpaidEventId !== null) {
       void navigate({
         replace: true,
@@ -154,21 +157,28 @@ const VaultContent = ({
 }: VaultContentProps) => {
   const queryClient = useQueryClient();
   let vaultInput: VaultInput = {};
+
   if (vaultEventId !== undefined) {
     vaultInput = { eventId: vaultEventId };
   }
+
   const vaultQuery = useQuery(vaultQueryOptions(vaultInput));
+
   const togglePaidOut = useMutation(
     togglePaidOutMutationOptions(queryClient, vaultEventId ?? 0, runAppHttpApi)
   );
+
   const vault = vaultQuery.data ?? [];
+
   const toggleMutation = {
     isPending: togglePaidOut.isPending,
     mutate: ({ userId, paidOut }: { userId: string; paidOut: boolean }) => {
       if (!hasSpecificEvent || vaultEventId === undefined) {
         toast.error("Wybierz konkretny event przed zmianą statusu wypłaty");
+
         return;
       }
+
       void (async () => {
         try {
           await togglePaidOut.mutateAsync({
@@ -187,6 +197,7 @@ const VaultContent = ({
   if (vaultQuery.isPending && vaultQuery.data === undefined) {
     return <LoadingSpinner />;
   }
+
   if (vaultQuery.isError && vaultQuery.data === undefined) {
     return (
       <QueryErrorState
@@ -203,9 +214,11 @@ const VaultContent = ({
 
   const isAdminUser = isAdmin(session);
   const nextToPay = Arr.findFirst(vault, (entry) => !entry.paidOut);
+
   const unpaidUsers = Arr.filter<(typeof vault)[number]>(
     (entry) => !entry.paidOut
   )(vault);
+
   const paidUsers = Arr.filter<(typeof vault)[number]>(
     (entry) => entry.paidOut
   )(vault);

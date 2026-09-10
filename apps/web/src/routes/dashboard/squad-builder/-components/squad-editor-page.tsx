@@ -90,7 +90,7 @@ interface SquadBuilderEditorContentProps {
 }
 
 const isSquadBuilderConflict = (error: CaughtError): boolean =>
-  Predicate.isTagged(error, "SquadBuilderConflict");
+  Predicate.isTagged("SquadBuilderConflict")(error);
 
 const SquadBuilderEditorContent = ({
   groupId,
@@ -102,36 +102,46 @@ const SquadBuilderEditorContent = ({
   const isOwner = role === "owner";
   const isViewer = role === "viewer";
   const canEditPlacements = isOwner || role === "editor";
+
   const availableCharactersQuery = useQuery({
     ...availableSquadCharactersQueryOptions(groupId),
     enabled: canEditPlacements,
   });
+
   const [editorState, dispatchEditor] = useReducer(
     squadEditorReducer,
     initialSquadEditorState
   );
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const isLoading = editorState.phase === "loading";
   const isSaving = editorState.phase === "saving";
+
   const isDirty =
     editorState.phase === "dirty" ||
     editorState.phase === "error" ||
     editorState.phase === "conflict";
+
   const draft = isLoading ? null : editorState.draft;
   const updatedAt = isLoading ? null : editorState.updatedAt;
   const visibility = isLoading ? "private" : editorState.visibility;
   const isVisibilityPending = editorState.visibilityRequest === "pending";
+
   const saveError =
     editorState.phase === "error" || editorState.phase === "conflict"
       ? editorState.saveError
       : null;
+
   const isSaveConflict = editorState.phase === "conflict";
+
   const saveSquadGroup = useMutation(
     saveSquadGroupMutationOptions(queryClient)
   );
+
   const saveSharedSquadGroupCharacters = useMutation(
     saveSharedSquadGroupCharactersMutationOptions(queryClient)
   );
+
   const setSquadGroupVisibility = useMutation(
     setSquadGroupVisibilityMutationOptions(queryClient)
   );
@@ -171,6 +181,7 @@ const SquadBuilderEditorContent = ({
     if (draft === null || !isOwner) {
       return;
     }
+
     updateDraft({
       ...draft,
       squads: [
@@ -188,6 +199,7 @@ const SquadBuilderEditorContent = ({
     if (draft === null || !isOwner) {
       return;
     }
+
     updateDraft({
       ...draft,
       squads: draft.squads.map((squad) =>
@@ -200,6 +212,7 @@ const SquadBuilderEditorContent = ({
     if (draft === null || !isOwner) {
       return;
     }
+
     updateDraft({
       ...draft,
       squads: draft.squads.filter((squad) => squad.clientKey !== squadKey),
@@ -210,6 +223,7 @@ const SquadBuilderEditorContent = ({
     if (draft === null || !canEditPlacements) {
       return;
     }
+
     updateDraft(removeCharacter(draft, characterId, true));
   };
 
@@ -217,13 +231,17 @@ const SquadBuilderEditorContent = ({
     if (draft === null || updatedAt === null || isViewer || isSaving) {
       return;
     }
+
     const trimmedName = draft.name.trim();
+
     if (isOwner && trimmedName.length === 0) {
       toast.error("Podaj nazwę grupy");
+
       return;
     }
 
     dispatchEditor({ draft, type: "saveStarted" });
+
     const normalizedDraft: SquadGroupDraft = isOwner
       ? {
           ...draft,
@@ -234,6 +252,7 @@ const SquadBuilderEditorContent = ({
           })),
         }
       : draft;
+
     try {
       const savedDetail = await (role === "editor"
         ? saveSharedSquadGroupCharacters.mutateAsync({
@@ -244,6 +263,7 @@ const SquadBuilderEditorContent = ({
             ...projectOwnerPayload(normalizedDraft),
             expectedUpdatedAt: updatedAt,
           }));
+
       dispatchEditor({ detail: savedDetail, type: "saveSucceeded" });
       toast.success("Grupa składów została zapisana");
     } catch (error: unknown) {
@@ -251,6 +271,7 @@ const SquadBuilderEditorContent = ({
         error,
         "Nie udało się zapisać grupy składów"
       );
+
       dispatchEditor({
         message,
         type: isSquadBuilderConflict(error) ? "saveConflicted" : "saveFailed",
@@ -275,6 +296,7 @@ const SquadBuilderEditorContent = ({
     }
 
     dispatchEditor({ type: "visibilityChangeStarted" });
+
     try {
       await setSquadGroupVisibility.mutateAsync({
         groupId,

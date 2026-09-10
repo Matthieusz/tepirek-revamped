@@ -14,6 +14,7 @@ interface DistributeGoldSuccess {
   readonly totalPoints: number;
   readonly usersUpdated: number;
 }
+
 interface VaultRow {
   readonly paidOut: boolean;
   readonly totalEarnings: string;
@@ -21,6 +22,7 @@ interface VaultRow {
   readonly userImage: string | null;
   readonly userName: string | null;
 }
+
 interface MutationSuccess {
   readonly success: boolean;
 }

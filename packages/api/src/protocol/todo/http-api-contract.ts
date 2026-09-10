@@ -11,6 +11,7 @@ export { TodoId } from "../../domain/core-identifiers.ts";
 export const CreateTodoPayload = Schema.Struct({
   text: Schema.NonEmptyString,
 });
+
 export interface CreateTodoPayload extends Schema.Schema.Type<
   typeof CreateTodoPayload
 > {}
@@ -18,6 +19,7 @@ export interface CreateTodoPayload extends Schema.Schema.Type<
 export const DeleteTodoPayload = Schema.Struct({
   id: TodoId,
 });
+
 export interface DeleteTodoPayload extends Schema.Schema.Type<
   typeof DeleteTodoPayload
 > {}
@@ -26,6 +28,7 @@ export const ToggleTodoPayload = Schema.Struct({
   completed: Schema.Boolean,
   id: TodoId,
 });
+
 export interface ToggleTodoPayload extends Schema.Schema.Type<
   typeof ToggleTodoPayload
 > {}
@@ -36,6 +39,7 @@ export const TodoSummary = Schema.Struct({
   text: Schema.String,
   userId: AppUserId,
 });
+
 export interface TodoSummary extends Schema.Schema.Type<typeof TodoSummary> {}
 
 export class TodoUnauthorized extends Schema.TaggedErrorClass<TodoUnauthorized>()(

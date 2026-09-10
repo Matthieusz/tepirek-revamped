@@ -25,7 +25,7 @@ function projectPersistenceError<E, PersistenceError, Operation extends string>(
 }
 
 /** Builds a persistence failure projector while preserving callback errors. */
-export const makeDirectPersistenceQuery =
+export const buildDirectPersistenceQuery =
   <PersistenceError, Operation extends string>(
     makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
   ) =>
@@ -56,6 +56,7 @@ export const decodePersistedValue = <
   }) => PersistenceError
 ) => {
   const decode = Schema.decodeUnknownEffect(schema);
+
   return (input: Parameters<typeof decode>[0]) =>
     decode(input).pipe(
       Effect.mapError((cause) => makeError({ cause, operation }))

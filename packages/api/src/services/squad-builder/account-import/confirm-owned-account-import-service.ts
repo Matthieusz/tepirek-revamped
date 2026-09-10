@@ -37,6 +37,7 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
     const displayName = yield* parseAccountDisplayName(input.displayName);
 
     const now = yield* currentDate;
+
     return yield* store.confirmPendingImport({
       actorUserId: input.actorUserId,
       displayName,

@@ -89,12 +89,14 @@ const PlayerListContent = ({
   const verifiedPlayers = filteredPlayers.filter(
     (player: Player) => player.verified
   );
+
   const notVerifiedPlayers = filteredPlayers.filter(
     (player: Player) => !player.verified
   );
 
   // Stats based on all players (not filtered)
   const totalVerified = playersData.filter((p: Player) => p.verified).length;
+
   const totalNotVerified = playersData.filter(
     (p: Player) => !p.verified
   ).length;

@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { makeBrandedPositiveInt } from "./positive-int.ts";
+import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Failure returned when a numeric id is not valid for the domain. */
 export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPositiveInteger>()(
@@ -10,17 +10,19 @@ export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPosit
   }
 ) {}
 
-const brandedMargonemProfileId = makeBrandedPositiveInt(
+const brandedMargonemProfileId = buildBrandedPositiveInt(
   "MargonemProfileId",
   "MargonemProfileId.parse",
   () => new InvalidPositiveInteger({ field: "profileId" })
 );
-const brandedMargonemCharacterId = makeBrandedPositiveInt(
+
+const brandedMargonemCharacterId = buildBrandedPositiveInt(
   "MargonemCharacterId",
   "MargonemCharacterId.parse",
   () => new InvalidPositiveInteger({ field: "characterId" })
 );
-const brandedPositiveLevel = makeBrandedPositiveInt(
+
+const brandedPositiveLevel = buildBrandedPositiveInt(
   "PositiveLevel",
   "PositiveLevel.parse",
   () => new InvalidPositiveInteger({ field: "level" })
@@ -28,14 +30,17 @@ const brandedPositiveLevel = makeBrandedPositiveInt(
 
 /** A parsed Margonem profile id. */
 export const MargonemProfileId = brandedMargonemProfileId.schema;
+
 export type MargonemProfileId = typeof MargonemProfileId.Type;
 
 /** A parsed Margonem character id. */
 export const MargonemCharacterId = brandedMargonemCharacterId.schema;
+
 export type MargonemCharacterId = typeof MargonemCharacterId.Type;
 
 /** A positive character level. */
 export const PositiveLevel = brandedPositiveLevel.schema;
+
 export type PositiveLevel = typeof PositiveLevel.Type;
 
 /** Parse a positive integer as a Margonem profile id. */

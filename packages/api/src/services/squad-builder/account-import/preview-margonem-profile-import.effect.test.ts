@@ -15,7 +15,10 @@ import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
-import { AccountImportStoreService } from "./account-import-store.ts";
+import {
+  AccountImportStoreService,
+  ProfileAccessState,
+} from "./account-import-store.ts";
 import { preview } from "./preview-margonem-profile-import-service.ts";
 
 const parseTestUserId = () =>
@@ -32,6 +35,7 @@ const htmlWithJarunaCharacter = `
 it.effect("previews an available Margonem profile through services", () => {
   const actorUserId = parseTestUserId();
   const succeededRequestIds: number[] = [];
+
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
       Effect.succeed({
@@ -45,13 +49,17 @@ it.effect("previews an available Margonem profile through services", () => {
     scrapeUrlHtml: () =>
       Effect.die(new Error("URL scraping is not used by this test")),
   };
+
   const store = makeAccountImportStoreServiceTestService({
-    findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
+    findProfileAccessState: () =>
+      Effect.succeed(ProfileAccessState.Available()),
   });
+
   const requestAccounting =
     makeFirecrawlRequestAccountingStoreServiceTestService({
       markRequestSucceeded: (input) => {
         succeededRequestIds.push(input.requestId);
+
         return Effect.void;
       },
       reserveRequest: (input) =>
@@ -98,6 +106,7 @@ it.effect("marks a reserved import request failed when interrupted", () =>
     const scrapeStarted = yield* Deferred.make<boolean>();
     const pendingScrape = yield* Deferred.make<never>();
     const failedRequests: { errorTag: string; requestId: number }[] = [];
+
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
         Deferred.succeed(scrapeStarted, true).pipe(
@@ -106,9 +115,12 @@ it.effect("marks a reserved import request failed when interrupted", () =>
       scrapeUrlHtml: () =>
         Effect.die(new Error("URL scraping is not used by this test")),
     };
+
     const store = makeAccountImportStoreServiceTestService({
-      findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
+      findProfileAccessState: () =>
+        Effect.succeed(ProfileAccessState.Available()),
     });
+
     const requestAccounting =
       makeFirecrawlRequestAccountingStoreServiceTestService({
         markRequestFailed: (input) =>
@@ -126,6 +138,7 @@ it.effect("marks a reserved import request failed when interrupted", () =>
             requestId: 123,
           }),
       });
+
     const operation = preview({
       actorUserId,
       profileUrl: "https://www.margonem.pl/profile/view,7298897",
@@ -141,6 +154,7 @@ it.effect("marks a reserved import request failed when interrupted", () =>
         requestAccounting
       )
     );
+
     const fiber = yield* Effect.forkChild(operation);
 
     yield* Deferred.await(scrapeStarted);
@@ -148,9 +162,11 @@ it.effect("marks a reserved import request failed when interrupted", () =>
     const exit = yield* Fiber.await(fiber);
 
     expect(Exit.isFailure(exit)).toBe(true);
+
     if (Exit.isFailure(exit)) {
       expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true);
     }
+
     expect(failedRequests).toHaveLength(1);
     expect(failedRequests[0]).toMatchObject({
       errorTag: "Interrupted",

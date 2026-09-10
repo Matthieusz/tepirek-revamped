@@ -12,9 +12,8 @@ import * as Redacted from "effect/Redacted";
 import { readLegendCatalogSyncConfig } from "./startup-config.js";
 
 const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
-  Effect.catchIf(
-    (error) => error.reason._tag === "NotFound",
-    () => Effect.succeed(ConfigProvider.fromUnknown({}))
+  Effect.catchReason("PlatformError", "NotFound", () =>
+    Effect.succeed(ConfigProvider.fromUnknown({}))
   ),
   Effect.provide(NodeFileSystem.layer)
 );

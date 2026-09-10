@@ -42,9 +42,11 @@ const SquadBuilderAccountsPage = () => {
                   const field = document.querySelector<HTMLTextAreaElement>(
                     'textarea[name="profileUrls"]'
                   );
+
                   const prefersReducedMotion = window.matchMedia(
                     "(prefers-reduced-motion: reduce)"
                   ).matches;
+
                   field?.scrollIntoView({
                     behavior: prefersReducedMotion ? "auto" : "smooth",
                     block: "center",

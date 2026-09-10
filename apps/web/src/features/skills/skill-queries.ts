@@ -94,9 +94,11 @@ const invalidateSkillQueries = async (
       await queryClient.invalidateQueries({ queryKey }, { throwOnError: true });
     })
   );
+
   const failure = results.find(
     (result): result is PromiseRejectedResult => result.status === "rejected"
   );
+
   if (failure !== undefined) {
     callbacks.onRefreshError?.(
       failure.reason instanceof Error ? failure.reason : new Error(fallback)
@@ -113,6 +115,7 @@ const invalidateSkillQueriesAfterMutation = async (
   if (hasConcurrentSkillMutation(queryClient)) {
     return;
   }
+
   await invalidateSkillQueries(queryClient, queryKeys, callbacks, fallback);
 };
 
@@ -141,12 +144,14 @@ export const skillRangeBySlugQueryOptions = (
   runner: SkillApiRunner = runAppHttpApi
 ) => {
   const normalizedSlug = slug.trim();
+
   return queryOptions({
     enabled: normalizedSlug.length > 0,
     queryFn: async ({ signal }) => {
       if (normalizedSlug.length === 0) {
         return null;
       }
+
       return await runner(getSkillRangeBySlug(normalizedSlug), { signal });
     },
     queryKey: skillRangeBySlugQueryKey(normalizedSlug),
@@ -164,6 +169,7 @@ export const skillsByRangeQueryOptions = (
       if (rangeId <= 0) {
         return [];
       }
+
       return await runner(listSkillsByRange(rangeId), { signal });
     },
     queryKey: skillsByRangeQueryKey(rangeId),
@@ -254,6 +260,7 @@ export const deleteSkillRangeMutationOptions = (
       context: RangeDeleteContext | undefined
     ) => {
       const previousRange = context?.previousRange;
+
       if (previousRange !== undefined) {
         queryClient.setQueryData<readonly SkillRange[]>(
           skillRangesQueryKey,
@@ -264,7 +271,9 @@ export const deleteSkillRangeMutationOptions = (
             ) {
               return ranges;
             }
+
             const index = Math.min(context?.previousIndex ?? 0, ranges.length);
+
             return [
               ...ranges.slice(0, index),
               previousRange,
@@ -273,18 +282,22 @@ export const deleteSkillRangeMutationOptions = (
           }
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (id: number) => {
       await queryClient.cancelQueries({ queryKey: skillRangesQueryKey });
+
       const ranges =
         queryClient.getQueryData<readonly SkillRange[]>(skillRangesQueryKey);
+
       const index = ranges?.findIndex((range) => range.id === id) ?? -1;
       const previousRange = getRangeAtIndex(ranges, index);
       queryClient.setQueryData<readonly SkillRange[]>(
         skillRangesQueryKey,
         (current) => current?.filter((range) => range.id !== id)
       );
+
       return { previousIndex: Math.max(index, 0), previousRange };
     },
     onSettled: async () => {
@@ -328,7 +341,9 @@ export const deleteSkillMutationOptions = (
             ) {
               return skills;
             }
+
             const index = Math.min(snapshot.index, skills.length);
+
             return [
               ...skills.slice(0, index),
               snapshot.previousSkill,
@@ -337,6 +352,7 @@ export const deleteSkillMutationOptions = (
           }
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (id: number) => {
@@ -344,12 +360,15 @@ export const deleteSkillMutationOptions = (
         queryKey: skillsByRangeQueryKeyPrefix,
       });
       const snapshots: SkillCacheSnapshot[] = [];
+
       for (const [queryKey, skills] of queryClient.getQueriesData<
         readonly Skill[]
       >({ queryKey: skillsByRangeQueryKeyPrefix })) {
         const index = skills?.findIndex((skill) => skill.id === id) ?? -1;
+
         const previousSkill =
           index >= 0 && skills !== undefined ? skills[index] : undefined;
+
         if (previousSkill !== undefined) {
           snapshots.push({
             index: Math.max(index, 0),
@@ -357,10 +376,12 @@ export const deleteSkillMutationOptions = (
             queryKey,
           });
         }
+
         queryClient.setQueryData<readonly Skill[]>(queryKey, (current) =>
           current?.filter((skill) => skill.id !== id)
         );
       }
+
       return { snapshots };
     },
     onSettled: async () => {

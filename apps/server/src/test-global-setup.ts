@@ -24,7 +24,9 @@ export const setup = async () => {
   const configuredTestDatabaseUrl = await Effect.runPromise(
     Config.option(Config.string("TEST_DATABASE_URL"))
   );
+
   const isManagedTestDatabase = Option.isNone(configuredTestDatabaseUrl);
+
   const testDatabaseUrl = Option.getOrElse(
     configuredTestDatabaseUrl,
     () => defaultTestDatabaseUrl
@@ -50,6 +52,7 @@ export const setup = async () => {
     if (isManagedTestDatabase) {
       runDockerCompose(["down"]);
     }
+
     throw new Error("Could not connect to the smoke test database", {
       cause: error,
     });

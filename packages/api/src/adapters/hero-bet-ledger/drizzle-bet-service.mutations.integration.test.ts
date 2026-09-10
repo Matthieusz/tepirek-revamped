@@ -45,14 +45,17 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-split-admin" })
         );
+
         const firstMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-split-first" })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-split-second" })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Oldest Split Hero" })
         );
@@ -75,6 +78,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const vault = yield* withServices((ledger) =>
           ledger.getVault(createdHero.eventId)
         );
+
         const oldestUnpaidEvent = yield* withServices((ledger) =>
           ledger.getOldestUnpaidEvent()
         );
@@ -92,13 +96,16 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-combined-admin" })
         );
+
         const member = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-combined-member" })
         );
+
         const firstHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Oldest Combined First" })
         );
+
         const secondHero = yield* Effect.promise(
           async () =>
             await createHero({
@@ -146,6 +153,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const vault = yield* withServices((ledger) =>
           ledger.getVault(firstHero.eventId)
         );
+
         const oldestUnpaidEvent = yield* withServices((ledger) =>
           ledger.getOldestUnpaidEvent()
         );
@@ -171,21 +179,26 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-order-admin" })
         );
+
         const member = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "ledger-oldest-order-member" })
         );
+
         const olderEvent = yield* Effect.promise(
           async () =>
             await createTestEvent(new Date("2030-01-01T00:00:00.000Z"))
         );
+
         const newerEvent = yield* Effect.promise(
           async () =>
             await createTestEvent(new Date("2030-01-02T00:00:00.000Z"))
         );
+
         const olderHero = yield* Effect.promise(
           async () => await createHero({ eventId: olderEvent.id })
         );
+
         const newerHero = yield* Effect.promise(
           async () => await createHero({ eventId: newerEvent.id })
         );
@@ -222,6 +235,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const oldestUnpaidEvent = yield* withServices((ledger) =>
           ledger.getOldestUnpaidEvent()
         );
+
         expect(oldestUnpaidEvent).toBe(olderEvent.id);
 
         yield* withServices((ledger) =>
@@ -240,15 +254,19 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         );
 
         const tiedEndTime = new Date("2030-01-03T00:00:00.000Z");
+
         const firstTiedEvent = yield* Effect.promise(
           async () => await createTestEvent(tiedEndTime)
         );
+
         const secondTiedEvent = yield* Effect.promise(
           async () => await createTestEvent(tiedEndTime)
         );
+
         const firstTiedHero = yield* Effect.promise(
           async () => await createHero({ eventId: firstTiedEvent.id })
         );
+
         const secondTiedHero = yield* Effect.promise(
           async () => await createHero({ eventId: secondTiedEvent.id })
         );
@@ -285,6 +303,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const tiedOldestUnpaidEvent = yield* withServices((ledger) =>
           ledger.getOldestUnpaidEvent()
         );
+
         expect(tiedOldestUnpaidEvent).toBe(firstTiedEvent.id);
       })
   );
@@ -298,24 +317,28 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const creator = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-create-admin" })
         );
+
         const firstMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-create-first",
             })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-create-second",
             })
         );
+
         const thirdMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-create-third",
             })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Create Hero" })
         );
@@ -342,6 +365,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const members = yield* withServices((ledger) =>
           ledger.getBetMembers(bet.id)
         );
+
         expect(members.every((member) => Number.isInteger(member.id))).toBe(
           true
         );
@@ -405,9 +429,11 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const creator = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-errors-admin" })
         );
+
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-errors-member" })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Errors Hero" })
         );
@@ -459,6 +485,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const creator = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-dist-admin" })
         );
+
         const firstMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -467,6 +494,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
               name: "First Ledger Member",
             })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -475,9 +503,11 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
               name: "Second Ledger Member",
             })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Distribution Hero" })
         );
+
         yield* withServices((ledger) =>
           ledger.createBet({
             createdAt: new Date(0),
@@ -510,11 +540,13 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             .from(hero)
             .where(eq(hero.id, createdHero.id))
         );
+
         expect(heroStats).toEqual({ pointWorth: "100000000.000000" });
 
         const ranking = yield* withServices((ledger) =>
           ledger.getRanking({ heroId: createdHero.id })
         );
+
         expect(ranking.pointWorth).toBe(100_000_000);
         expect(ranking.totalBets).toBe(1);
         expect(ranking.ranking).toEqual(
@@ -541,6 +573,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const vaultBeforeToggle = yield* withServices((ledger) =>
           ledger.getVault(createdHero.eventId)
         );
+
         expect(sortByUserId(vaultBeforeToggle)).toEqual([
           {
             paidOut: false,
@@ -565,11 +598,13 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             userId: firstMember.id,
           })
         );
+
         expect(toggleResult).toEqual({ success: true });
 
         const vaultAfterToggle = yield* withServices((ledger) =>
           ledger.getVault(createdHero.eventId)
         );
+
         expect(
           vaultAfterToggle.find((row) => row.userId === firstMember.id)
         ).toMatchObject({ paidOut: true });
@@ -586,21 +621,26 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const creator = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-edit-admin" })
         );
+
         const firstMember = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-edit-first" })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
               id: "ledger-edit-second",
             })
         );
+
         const thirdMember = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "ledger-edit-third" })
         );
+
         const createdHero = yield* Effect.promise(
           async () => await createHero({ name: "Ledger Edit Hero" })
         );
+
         const bet = yield* withServices((ledger) =>
           ledger.createBet({
             createdAt: new Date(0),
@@ -609,6 +649,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             userIds: [firstMember.id, secondMember.id],
           })
         );
+
         yield* withServices((ledger) =>
           ledger.distributeGold({
             goldAmount: 2_000_000_000,
@@ -622,11 +663,13 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             newUserIds: [secondMember.id, thirdMember.id],
           })
         );
+
         expect(editResult).toEqual({ success: true });
 
         const editedMembers = yield* withServices((ledger) =>
           ledger.getBetMembers(bet.id)
         );
+
         expect(
           editedMembers.every((member) => Number.isInteger(member.id))
         ).toBe(true);
@@ -646,6 +689,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             .from(userStats)
             .where(eq(userStats.heroId, createdHero.id))
         );
+
         expect(sortByUserId(editedStats)).toEqual([
           { bets: 0, earnings: "0.00", points: "0.00", userId: firstMember.id },
           {
@@ -665,6 +709,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const deleteResult = yield* withServices((ledger) =>
           ledger.deleteBet(bet.id)
         );
+
         expect(deleteResult).toEqual({ success: true });
 
         const remainingMembers = yield* Effect.promise(() =>
@@ -673,6 +718,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             .from(heroBetMember)
             .where(eq(heroBetMember.heroBetId, bet.id))
         );
+
         expect(remainingMembers).toEqual([]);
 
         const deletedStats = yield* Effect.promise(() =>
@@ -686,6 +732,7 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
             .from(userStats)
             .where(eq(userStats.heroId, createdHero.id))
         );
+
         expect(sortByUserId(deletedStats)).toEqual([
           { bets: 0, earnings: "0.00", points: "0.00", userId: firstMember.id },
           {

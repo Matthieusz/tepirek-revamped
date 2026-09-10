@@ -33,16 +33,20 @@ describe("squad group sharing queries", () => {
         testClient.queryClient,
         squadGroupEditorGrantsQueryOptions(0, runner)
       );
+
       const incompleteSearchObserver = new QueryObserver(
         testClient.queryClient,
         squadEditorInviteTargetsQueryOptions(7, "a", runner)
       );
+
       const invalidGrantsUnsubscribe = invalidGrantsObserver.subscribe(
         () => {}
       );
+
       const incompleteSearchUnsubscribe = incompleteSearchObserver.subscribe(
         () => {}
       );
+
       await testClient.queryClient.query(
         squadEditorInviteTargetsQueryOptions(7, "  al  ", runner)
       );
@@ -113,6 +117,7 @@ describe("squad group sharing queries", () => {
         queryClient,
         sendSquadGroupEditorInviteMutationOptions(queryClient, runner)
       );
+
       await send.mutate({ groupId: 1, invitedUserId: "user" });
       send.reset();
 
@@ -120,6 +125,7 @@ describe("squad group sharing queries", () => {
         queryClient,
         respondToSquadGroupInviteMutationOptions(queryClient, runner)
       );
+
       await respond.mutate({ invitationId: 1, response: "accept" });
       await respond.mutate({ invitationId: 1, response: "decline" });
       respond.reset();
@@ -128,6 +134,7 @@ describe("squad group sharing queries", () => {
         queryClient,
         revokeSquadGroupEditorMutationOptions(queryClient, runner)
       );
+
       await revoke.mutate({ invitationId: 1 });
       revoke.reset();
 

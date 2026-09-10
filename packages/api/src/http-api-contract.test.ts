@@ -9,10 +9,13 @@ import { AppHttpApi } from "./protocol/http-api-contract.ts";
 import { LegendPriceSummary } from "./protocol/legend-pricing/http-api-contract.ts";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
+
 type OpenApiPath = keyof OpenApiDocument["paths"];
+
 type HttpMethod = keyof OpenApiDocument["paths"][OpenApiPath];
 
 const appOpenApi = OpenApi.fromApi(AppHttpApi);
+
 const healthOpenApi = OpenApi.fromApi(HealthHttpApi);
 
 const expectRoute = (method: HttpMethod, path: OpenApiPath) => {

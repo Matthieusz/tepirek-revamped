@@ -15,6 +15,7 @@ export const FirecrawlCreditCount = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
 ).pipe(Schema.brand("FirecrawlCreditCount"));
+
 export type FirecrawlCreditCount = typeof FirecrawlCreditCount.Type;
 
 /** Runtime config for Firecrawl-backed scraping. */

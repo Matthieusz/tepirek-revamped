@@ -29,13 +29,17 @@ import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-
 
 const InviteInboxPanel = () => {
   const queryClient = useQueryClient();
+
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(
     null
   );
+
   const invitesQuery = useQuery(incomingAccountInvitesQueryOptions());
+
   const respondToInvite = useMutation(
     respondToAccountAccessInviteMutationOptions(queryClient)
   );
+
   const invites = invitesQuery.data ?? [];
 
   if (invitesQuery.isError && invitesQuery.data === undefined) {
@@ -121,6 +125,7 @@ const InviteInboxPanel = () => {
                   onClick={() => {
                     void (async () => {
                       setRespondingAccessId(invite.accessId);
+
                       try {
                         await respondToInvite.mutateAsync({
                           accessId: invite.accessId,
@@ -135,6 +140,7 @@ const InviteInboxPanel = () => {
                           )
                         );
                       }
+
                       setRespondingAccessId(null);
                     })();
                   }}
@@ -153,6 +159,7 @@ const InviteInboxPanel = () => {
                   onClick={() => {
                     void (async () => {
                       setRespondingAccessId(invite.accessId);
+
                       try {
                         await respondToInvite.mutateAsync({
                           accessId: invite.accessId,
@@ -167,6 +174,7 @@ const InviteInboxPanel = () => {
                           )
                         );
                       }
+
                       setRespondingAccessId(null);
                     })();
                   }}

@@ -68,9 +68,11 @@ const invalidateQueries = async (
       await queryClient.invalidateQueries({ queryKey }, { throwOnError: true });
     })
   );
+
   const failure = results.find(
     (result): result is PromiseRejectedResult => result.status === "rejected"
   );
+
   if (failure !== undefined) {
     callbacks.onRefreshError?.(
       failure.reason instanceof Error

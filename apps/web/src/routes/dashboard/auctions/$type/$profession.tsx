@@ -34,6 +34,7 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
         profession: params.profession,
         type: params.type,
       };
+
       await Promise.all([
         context.queryClient.query(auctionSignupsQueryOptions(auctionGroup)),
         context.queryClient.query(auctionStatsQueryOptions(auctionGroup)),

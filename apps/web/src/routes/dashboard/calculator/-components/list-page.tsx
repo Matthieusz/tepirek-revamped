@@ -35,12 +35,14 @@ const SingleFormSchema = Schema.Struct({
   attackerLevel: CalculatorLevelFromStringSchema,
   victimLevel: CalculatorLevelFromStringSchema,
 });
+
 const SingleFormValidator = Schema.toStandardSchemaV1(SingleFormSchema);
 
 const GroupFormSchema = Schema.Struct({
   attackerLevels: CalculatorLevelsSchema,
   defenderLevels: CalculatorLevelsSchema,
 });
+
 const GroupFormValidator = Schema.toStandardSchemaV1(GroupFormSchema);
 
 const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
@@ -232,16 +234,20 @@ interface CalculatorListPageProps {
 
 const CalculatorListPage = (_props: CalculatorListPageProps) => {
   const [mode, setMode] = useState<"single" | "group">("single");
+
   const [singleResult, setSingleResult] = useState<SinglePenaltyResult | null>(
     null
   );
+
   const [groupResult, setGroupResult] = useState<GroupPenaltyResult | null>(
     null
   );
+
   const singleForm = useAppForm({
     defaultValues: { attackerLevel: "200", victimLevel: "150" },
     onSubmit: async ({ value }) => {
       const decoded = await SingleFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -268,6 +274,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
     },
     validators: { onChange: SingleFormValidator },
   });
+
   const groupForm = useAppForm({
     defaultValues: {
       attackerLevels: "200, 180, 160",
@@ -275,6 +282,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
     },
     onSubmit: async ({ value }) => {
       const decoded = await GroupFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -289,10 +297,12 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
     },
     validators: { onChange: GroupFormValidator },
   });
+
   const singleIsSubmitting = useSelector(
     singleForm.store,
     (state) => state.isSubmitting
   );
+
   const groupIsSubmitting = useSelector(
     groupForm.store,
     (state) => state.isSubmitting

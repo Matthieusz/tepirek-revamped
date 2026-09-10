@@ -48,6 +48,7 @@ export const loadSquadGroupInvitationSummaryWithDatabase = (
       .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
       .where(eq(squadGroupInvitation.id, invitationId))
       .limit(1);
+
     const rows = yield* persistenceQuery(operation, select);
 
     const [row] = rows;
@@ -72,6 +73,7 @@ export const loadSquadGroupInvitationSummaryWithDatabase = (
       operation,
       row.squadGroupName
     );
+
     const ownerUserId = yield* parsePersistedAppUserId(operation, row.ownerId);
 
     return {

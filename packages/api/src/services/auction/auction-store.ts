@@ -14,10 +14,12 @@ export interface AuctionGroupInput {
   readonly profession: string;
   readonly type: string;
 }
+
 export interface RemoveSignupInput {
   readonly actorUserId: AppUserId;
   readonly id: AuctionSignupId;
 }
+
 export interface ToggleSignupInput {
   readonly actorUserId: AppUserId;
   readonly column: number;
@@ -26,6 +28,7 @@ export interface ToggleSignupInput {
   readonly round: number;
   readonly type: string;
 }
+
 export interface AuctionSignupSummary {
   readonly column: number;
   readonly createdAt: Date;

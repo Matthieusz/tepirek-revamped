@@ -7,9 +7,11 @@ const pluralize = (
   if (count === 1) {
     return singular;
   }
+
   if (count < 5) {
     return few;
   }
+
   return many;
 };
 

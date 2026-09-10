@@ -29,6 +29,7 @@ let userSequence = 0;
 
 const nextUserId = () => {
   userSequence += 1;
+
   return `test-user-${userSequence}`;
 };
 
@@ -41,6 +42,7 @@ const createTestUser = async ({
   verified = false,
 }: CreateTestUserOptions = {}): Promise<TestUser> => {
   const now = new Date();
+
   const testUser = {
     email: email ?? `${id}@example.com`,
     id,

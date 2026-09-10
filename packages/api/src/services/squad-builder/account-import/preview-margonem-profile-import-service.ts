@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
+import * as Match from "effect/Match";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
@@ -61,28 +63,24 @@ export type PreviewMargonemProfileImportError =
   | ParseMargonemProfileHtmlError
   | SquadBuilderPersistenceUnavailable;
 
+const noDuplicateAccountError = undefined;
+
 const profileAccessStateToDuplicateError = (
   state: ProfileAccessState
-): DuplicateMargonemAccountError | undefined => {
-  switch (state._tag) {
-    case "Available": {
-      return undefined;
-    }
-    case "OwnedByActor": {
-      return new MargonemAccountAlreadyOwnedByActor();
-    }
-    case "OwnedByAnotherUser": {
-      return new MargonemAccountOwnedByAnotherUser();
-    }
-    case "SharedWithActor": {
-      return new MargonemAccountAlreadySharedWithActor();
-    }
-    default: {
-      const exhaustive: never = state;
-      return exhaustive;
-    }
-  }
-};
+): DuplicateMargonemAccountError | undefined =>
+  Match.value(state).pipe(
+    Match.tag("Available", () => noDuplicateAccountError),
+    Match.tag("OwnedByActor", () => new MargonemAccountAlreadyOwnedByActor()),
+    Match.tag(
+      "OwnedByAnotherUser",
+      () => new MargonemAccountOwnedByAnotherUser()
+    ),
+    Match.tag(
+      "SharedWithActor",
+      () => new MargonemAccountAlreadySharedWithActor()
+    ),
+    Match.exhaustive
+  );
 
 const currentDate = DateTime.nowAsDate;
 
@@ -94,10 +92,12 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
     const profileId = yield* parseMargonemProfileUrl(input.profileUrl);
+
     const accessState = yield* store.findProfileAccessState({
       actorUserId: input.actorUserId,
       profileId,
     });
+
     const duplicateError = profileAccessStateToDuplicateError(accessState);
 
     if (duplicateError !== undefined) {
@@ -106,6 +106,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
 
     const requestTime = yield* DateTime.nowAsDate;
     const yearMonth = firecrawlYearMonthFromDate(requestTime);
+
     const reservedRequest = yield* requestAccounting.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
       perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
@@ -113,6 +114,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       requestedByUserId: input.actorUserId,
       yearMonth,
     });
+
     const finalizedRequest = yield* EffectRuntime.gen(
       function* finalizeReservedRequest() {
         const scrapedProfile = yield* firecrawl
@@ -126,10 +128,12 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
                   errorTag: error._tag,
                   requestId: reservedRequest.requestId,
                 });
+
                 return yield* error;
               })
             )
           );
+
         const creditsUsed = yield* parseFirecrawlCreditCount(
           scrapedProfile.metadata.creditsUsed ?? 1
         ).pipe(
@@ -141,6 +145,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
                 errorTag: "FirecrawlResponseNotParseable",
                 requestId: reservedRequest.requestId,
               });
+
               return yield* new FirecrawlResponseNotParseable({
                 cause: new Error("Invalid Firecrawl creditsUsed"),
                 profileId,
@@ -148,6 +153,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
             })
           )
         );
+
         const completedAt = yield* currentDate;
         yield* requestAccounting.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
@@ -156,6 +162,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
           firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
           requestId: reservedRequest.requestId,
         });
+
         return { creditsUsed, scrapedProfile };
       }
     ).pipe(
@@ -170,6 +177,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
         })
       )
     );
+
     const { creditsUsed, scrapedProfile } = finalizedRequest;
 
     const parsedHtml = yield* parseMargonemProfileHtml({

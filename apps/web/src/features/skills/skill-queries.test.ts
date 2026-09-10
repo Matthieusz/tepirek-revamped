@@ -36,10 +36,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need manually controlled responses
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -88,18 +90,22 @@ describe("skill queries and mutations", () => {
     const { calls, layer } = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(layer);
     const testClient = makeTestQueryClient();
+
     const observer = new QueryObserver(
       testClient.queryClient,
       skillRangesQueryOptions(runner)
     );
+
     const unsubscribe = observer.subscribe(() => {});
 
     try {
       await observer.refetch();
+
       const mutation = new MutationObserver(
         testClient.queryClient,
         createSkillRangeMutationOptions(testClient.queryClient, runner)
       );
+
       await mutation.mutate({ image: "image", level: 30, name: "Range" });
 
       expect(calls.filter((call) => call.method === "listRanges")).toHaveLength(
@@ -115,10 +121,12 @@ describe("skill queries and mutations", () => {
   it("optimistically removes a skill and restores it after failure", async () => {
     const skill = makeSkill(1);
     const failure = deferred<null>();
+
     const failingRunner: SkillApiRunner = async () => {
       await failure.promise;
       throw new Error("Skill request failed");
     };
+
     const testClient = makeTestQueryClient();
     const queryKey = skillsByRangeQueryKey(10);
     testClient.queryClient.setQueryData(queryKey, [skill]);
@@ -128,6 +136,7 @@ describe("skill queries and mutations", () => {
         testClient.queryClient,
         deleteSkillMutationOptions(testClient.queryClient, failingRunner)
       );
+
       const request = mutation.mutate(skill.id);
 
       await vi.waitFor(() => {

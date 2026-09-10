@@ -56,9 +56,11 @@ const invalidateVaultRelatedData = async (
       await queryClient.invalidateQueries({ queryKey }, { throwOnError: true });
     })
   );
+
   const failure = results.find(
     (result): result is PromiseRejectedResult => result.status === "rejected"
   );
+
   if (failure !== undefined) {
     callbacks.onRefreshError?.(
       failure.reason instanceof Error
@@ -114,15 +116,18 @@ export const togglePaidOutMutationOptions = (
       context: TogglePaidOutContext | undefined
     ) => {
       const previousRows = context?.previousRows;
+
       if (previousRows !== undefined) {
         const queryKey = vaultByEventQueryKey(eventId);
         queryClient.setQueryData<readonly VaultRow[]>(queryKey, (current) => {
           const currentRow = current?.find(
             (row) => row.userId === input.userId
           );
+
           const previousRow = previousRows.find(
             (row) => row.userId === input.userId
           );
+
           if (
             currentRow === undefined ||
             previousRow === undefined ||
@@ -130,23 +135,28 @@ export const togglePaidOutMutationOptions = (
           ) {
             return current;
           }
+
           return current?.map((row) =>
             row.userId === input.userId ? previousRow : row
           );
         });
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: TogglePaidOutInput) => {
       const queryKey = vaultByEventQueryKey(eventId);
       await queryClient.cancelQueries({ queryKey });
+
       const previousRows =
         queryClient.getQueryData<readonly VaultRow[]>(queryKey);
+
       queryClient.setQueryData<readonly VaultRow[]>(queryKey, (current) =>
         current?.map((row) =>
           row.userId === input.userId ? { ...row, paidOut: input.paidOut } : row
         )
       );
+
       return { previousRows };
     },
     onSettled: async () => {

@@ -28,6 +28,7 @@ const assertSafeEncoding = <A, I>(schema: Schema.Codec<A, I>, value: A) => {
   for (const fragment of sensitiveFragments) {
     expect(responseBody).not.toContain(fragment);
   }
+
   expect(responseBody).not.toContain("cause");
   expect(responseBody).not.toContain("stack");
 };

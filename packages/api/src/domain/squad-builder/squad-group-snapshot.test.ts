@@ -15,8 +15,14 @@ import type {
   ValidateSquadGroupSnapshotInput,
 } from "./squad-group-snapshot.ts";
 import {
+  DuplicateAccountInSquad,
+  DuplicateCharacterInSquad,
+  DuplicateCharacterInSquadGroup,
   InvalidSquadSnapshot,
+  SquadCharacterNotAccessible,
+  SquadCharacterNotJaruna,
   SquadGroupValidationErrorSchema,
+  TooManyCharactersInSquad,
 } from "./squad-group-validation-errors.ts";
 
 const character = (
@@ -86,10 +92,11 @@ describe("validateSquadGroupSnapshot", () => {
         SquadGroupValidationErrorSchema
       )(new InvalidSquadSnapshot({ message: "invalid" }));
 
-      expect(encoded).toEqual({
-        _tag: "InvalidSquadSnapshot",
-        message: "invalid",
-      });
+      const expected = yield* Schema.encodeEffect(
+        SquadGroupValidationErrorSchema
+      )(new InvalidSquadSnapshot({ message: "invalid" }));
+
+      expect(encoded).toEqual(expected);
     })
   );
 
@@ -102,10 +109,11 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "InvalidSquadSnapshot",
-        message: "Każdy skład musi mieć klucz klienta",
-      });
+      expect(error).toMatchObject(
+        new InvalidSquadSnapshot({
+          message: "Każdy skład musi mieć klucz klienta",
+        })
+      );
     })
   );
 
@@ -125,11 +133,12 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "TooManyCharactersInSquad",
-        maxCharacters: 10,
-        squadClientKey: "squad-1",
-      });
+      expect(error).toMatchObject(
+        new TooManyCharactersInSquad({
+          maxCharacters: 10,
+          squadClientKey: "squad-1",
+        })
+      );
     })
   );
 
@@ -139,10 +148,9 @@ describe("validateSquadGroupSnapshot", () => {
         input([squad([{ characterId: 2, position: 0 }])], [character(1)])
       );
 
-      expect(error).toMatchObject({
-        _tag: "SquadCharacterNotAccessible",
-        characterId: 2,
-      });
+      expect(error).toMatchObject(
+        new SquadCharacterNotAccessible({ characterId: 2 })
+      );
     })
   );
 
@@ -155,10 +163,9 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "SquadCharacterNotJaruna",
-        characterId: 1,
-      });
+      expect(error).toMatchObject(
+        new SquadCharacterNotJaruna({ characterId: 1 })
+      );
     })
   );
 
@@ -176,11 +183,12 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "DuplicateCharacterInSquad",
-        characterId: 1,
-        squadClientKey: "squad-1",
-      });
+      expect(error).toMatchObject(
+        new DuplicateCharacterInSquad({
+          characterId: 1,
+          squadClientKey: "squad-1",
+        })
+      );
     })
   );
 
@@ -200,10 +208,9 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "DuplicateCharacterInSquadGroup",
-        characterId: 1,
-      });
+      expect(error).toMatchObject(
+        new DuplicateCharacterInSquadGroup({ characterId: 1 })
+      );
     })
   );
 
@@ -224,11 +231,12 @@ describe("validateSquadGroupSnapshot", () => {
         )
       );
 
-      expect(error).toMatchObject({
-        _tag: "DuplicateAccountInSquad",
-        accountId: 10,
-        squadClientKey: "squad-1",
-      });
+      expect(error).toMatchObject(
+        new DuplicateAccountInSquad({
+          accountId: MargonemAccountId.make(10),
+          squadClientKey: "squad-1",
+        })
+      );
     })
   );
 });

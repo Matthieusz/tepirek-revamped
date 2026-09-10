@@ -47,6 +47,7 @@ const invalidateTodos = async (
   } catch (error: unknown) {
     const refreshError =
       error instanceof Error ? error : new Error("Todo list refresh failed");
+
     callbacks.onRefreshError?.(refreshError);
   }
 };
@@ -113,23 +114,28 @@ export const toggleTodoMutationOptions = (
       context: { readonly previousTodo: Todo | undefined } | undefined
     ) => {
       const previousTodo = context?.previousTodo;
+
       if (previousTodo !== undefined) {
         queryClient.setQueryData<readonly Todo[]>(todosQueryKey, (todos) =>
           replaceTodo(todos, input, previousTodo)
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: ToggleTodoInput) => {
       await queryClient.cancelQueries({ queryKey: todosQueryKey });
+
       const previousTodo = queryClient
         .getQueryData<readonly Todo[]>(todosQueryKey)
         ?.find((todo) => todo.id === input.id);
+
       queryClient.setQueryData<readonly Todo[]>(todosQueryKey, (todos) =>
         todos?.map((todo) =>
           todo.id === input.id ? { ...todo, completed: input.completed } : todo
         )
       );
+
       return { previousTodo };
     },
     onSettled: async () => {
@@ -161,6 +167,7 @@ export const deleteTodoMutationOptions = (
     ) => {
       const previousTodo = context?.previousTodo;
       const previousIndex = context?.index ?? 0;
+
       if (previousTodo !== undefined) {
         queryClient.setQueryData<readonly Todo[]>(todosQueryKey, (todos) => {
           if (
@@ -169,7 +176,9 @@ export const deleteTodoMutationOptions = (
           ) {
             return todos;
           }
+
           const index = Math.min(previousIndex, todos.length);
+
           return [
             ...todos.slice(0, index),
             previousTodo,
@@ -177,17 +186,21 @@ export const deleteTodoMutationOptions = (
           ];
         });
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: TodoIdInput) => {
       await queryClient.cancelQueries({ queryKey: todosQueryKey });
       const todos = queryClient.getQueryData<readonly Todo[]>(todosQueryKey);
       const index = todos?.findIndex((todo) => todo.id === input.id) ?? -1;
+
       const previousTodo =
         index >= 0 && todos !== undefined ? todos[index] : undefined;
+
       queryClient.setQueryData<readonly Todo[]>(todosQueryKey, (current) =>
         current?.filter((todo) => todo.id !== input.id)
       );
+
       return { index: Math.max(index, 0), previousTodo };
     },
     onSettled: async () => {

@@ -1,6 +1,7 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateProfessionPayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,13 +26,17 @@ interface AddProfessionModalProps {
 const ProfessionFormSchema = Schema.Struct({
   name: CreateProfessionPayload.fields.name,
 });
+
 const ProfessionFormValidator = Schema.toStandardSchemaV1(ProfessionFormSchema);
 
 export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createSkillProfession = useMutation(
     createSkillProfessionMutationOptions(queryClient, undefined, {
       onRefreshError: () => {
@@ -41,12 +46,15 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       },
     })
   );
+
   const form = useAppForm({
     defaultValues: { name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
+
       const decoded =
         await ProfessionFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -54,8 +62,10 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       const result = await runFormSubmission(async () => {
         await createSkillProfession.mutateAsync(decoded.value);
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -65,6 +75,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
     },
     validators: { onSubmit: ProfessionFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
@@ -73,9 +84,11 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 

@@ -8,6 +8,7 @@ import {
 
 const healthCheck = Effect.gen(function* healthCheckEffect() {
   const client = yield* HealthHttpApiClient;
+
   return yield* client.health.healthCheck({});
 });
 

@@ -32,13 +32,16 @@ import { userInitials } from "../user-presenters";
 export const SquadGroupInvitations = () => {
   const queryClient = useQueryClient();
   const result = useQuery(incomingSquadGroupInvitesQueryOptions());
+
   const respond = useMutation(
     respondToSquadGroupInviteMutationOptions(queryClient)
   );
+
   const refresh = () => {
     // oxlint-disable-next-line no-floating-promises -- retry result is rendered by the query observer
     result.refetch();
   };
+
   const [respondingInvitationId, setRespondingInvitationId] = useState<
     number | null
   >(null);
@@ -85,6 +88,7 @@ export const SquadGroupInvitations = () => {
     response: "accept" | "decline"
   ) => {
     setRespondingInvitationId(invitationId);
+
     try {
       await respond.mutateAsync({ invitationId, response });
       toast.success(
@@ -95,6 +99,7 @@ export const SquadGroupInvitations = () => {
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się zapisać odpowiedzi"));
     }
+
     setRespondingInvitationId(null);
   };
 
@@ -113,6 +118,7 @@ export const SquadGroupInvitations = () => {
         <ul className="divide-border divide-y">
           {result.data.map((invite) => {
             const isResponding = respondingInvitationId === invite.invitationId;
+
             return (
               <li
                 className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"

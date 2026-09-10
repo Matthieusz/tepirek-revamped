@@ -1,5 +1,7 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
@@ -28,20 +30,27 @@ import {
 import { withRequestCorrelation } from "../request-correlation.ts";
 
 type SearchAccountInviteTargetsError = Effect.Error<ReturnType<typeof search>>;
+
 type SendAccountAccessInviteError = Effect.Error<ReturnType<typeof send>>;
+
 type RespondToAccountAccessInviteError = Effect.Error<
   ReturnType<typeof respond>
 >;
+
 type RevokeAccountAccessError = Effect.Error<ReturnType<typeof revoke>>;
+
 type ListIncomingAccountInvitesError = Effect.Error<
   ReturnType<typeof listIncomingAccountInvitesWorkflow>
 >;
+
 type ListSharedAccountsError = Effect.Error<
   ReturnType<typeof listSharedAccountsWorkflow>
 >;
+
 type ListAccountAccessGrantsError = Effect.Error<
   ReturnType<typeof listAccountAccessGrantsWorkflow>
 >;
+
 type AccountSharingHandlerError =
   | SearchAccountInviteTargetsError
   | SendAccountAccessInviteError
@@ -55,14 +64,17 @@ type SearchAccountInviteTargetsProtocolError =
   | SquadBuilderForbidden
   | SquadBuilderInvalidInput
   | SquadBuilderPersistenceUnavailable;
+
 type SendAccountAccessInviteProtocolError =
   | SearchAccountInviteTargetsProtocolError
   | SquadBuilderConflict;
+
 type RespondToAccountAccessInviteProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
   | SquadBuilderConflict
   | SquadBuilderPersistenceUnavailable;
+
 type ListAccountAccessGrantsProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
@@ -86,54 +98,63 @@ function mapAccountSharingError(
 function mapAccountSharingError(
   error: AccountSharingHandlerError
 ): SendAccountAccessInviteProtocolError {
-  switch (error._tag) {
-    case "MargonemAccountNotFound":
-    case "AccountAccessInviteNotFound":
-    case "InviteTargetNotFound": {
-      return new SquadBuilderNotFound({ message: error._tag });
-    }
-    case "ActorDoesNotOwnMargonemAccount":
-    case "InviteTargetNotVerified":
-    case "ActorIsNotInviteRecipient": {
-      return new SquadBuilderForbidden({ message: error._tag });
-    }
-    case "AccountAccessTransitionNotAllowed": {
-      return new SquadBuilderConflict({ message: error._tag });
-    }
-    case "CannotInviteSelf":
-    case "InvalidAccountInviteTargetQuery": {
-      return new SquadBuilderInvalidInput({ message: error._tag });
-    }
-    case "SquadBuilderPersistenceUnavailable": {
-      return new SquadBuilderPersistenceUnavailable({
-        operation: error.operation,
-      });
-    }
-    default: {
-      const exhaustive: never = error;
-      return exhaustive;
-    }
-  }
+  return Match.value(error).pipe(
+    Match.tag(
+      "MargonemAccountNotFound",
+      "AccountAccessInviteNotFound",
+      "InviteTargetNotFound",
+      (error) => new SquadBuilderNotFound({ message: error._tag })
+    ),
+    Match.tag(
+      "ActorDoesNotOwnMargonemAccount",
+      "InviteTargetNotVerified",
+      "ActorIsNotInviteRecipient",
+      (error) => new SquadBuilderForbidden({ message: error._tag })
+    ),
+    Match.tag(
+      "AccountAccessTransitionNotAllowed",
+      (error) => new SquadBuilderConflict({ message: error._tag })
+    ),
+    Match.tag(
+      "CannotInviteSelf",
+      "InvalidAccountInviteTargetQuery",
+      (error) => new SquadBuilderInvalidInput({ message: error._tag })
+    ),
+    Match.tag(
+      "SquadBuilderPersistenceUnavailable",
+      (error) =>
+        new SquadBuilderPersistenceUnavailable({
+          operation: error.operation,
+        })
+    ),
+    Match.exhaustive
+  );
 }
 
 const mapSearchAccountInviteTargetsError = (
   error: SearchAccountInviteTargetsError
 ): SearchAccountInviteTargetsProtocolError => mapAccountSharingError(error);
+
 const mapSendAccountAccessInviteError = (
   error: SendAccountAccessInviteError
 ): SendAccountAccessInviteProtocolError => mapAccountSharingError(error);
+
 const mapRespondToAccountAccessInviteError = (
   error: RespondToAccountAccessInviteError
 ): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+
 const mapRevokeAccountAccessError = (
   error: RevokeAccountAccessError
 ): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+
 const mapListIncomingAccountInvitesError = (
   error: ListIncomingAccountInvitesError
 ): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+
 const mapListSharedAccountsError = (
   error: ListSharedAccountsError
 ): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+
 const mapListAccountAccessGrantsError = (
   error: ListAccountAccessGrantsError
 ): ListAccountAccessGrantsProtocolError => mapAccountSharingError(error);
@@ -148,6 +169,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.searchAccountInviteTargets")(
           function* searchAccountInviteTargets({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               search({
@@ -164,6 +186,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.sendAccountAccessInvite")(
           function* sendAccountAccessInvite({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               send({
@@ -180,6 +203,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.respondToAccountAccessInvite")(
           function* respondToAccountAccessInvite({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               respond({
@@ -196,6 +220,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.revokeAccountAccess")(
           function* revokeAccountAccess({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               revoke({
@@ -211,6 +236,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.listIncomingAccountInvites")(
           function* listIncomingAccountInvitesHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listIncomingAccountInvitesWorkflow({
@@ -225,6 +251,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.listSharedAccounts")(
           function* listSharedAccountsHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listSharedAccountsWorkflow({
@@ -239,6 +266,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("SquadBuilderAccountSharing.listAccountAccessGrants")(
           function* listAccountAccessGrants({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
+
             return yield* withRequestCorrelation(
               request,
               listAccountAccessGrantsWorkflow({

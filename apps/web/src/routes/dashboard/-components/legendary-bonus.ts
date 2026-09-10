@@ -24,5 +24,6 @@ const trailingBonusLevelPattern = /,\d+$/u;
  */
 export const formatLegendaryBonus = (value: string): string => {
   const bonusCode = value.trim().replace(trailingBonusLevelPattern, "");
+
   return legendaryBonusLabels.get(bonusCode) ?? bonusCode;
 };

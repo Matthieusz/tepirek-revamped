@@ -20,6 +20,7 @@ export type Announcement = AnnouncementSummary;
 export const listAnnouncements = Effect.fn("Web.Announcement.list")(
   function* listAnnouncementsEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.announcement.listAnnouncements({});
   }
 );
@@ -28,6 +29,7 @@ export const listAnnouncements = Effect.fn("Web.Announcement.list")(
 export const createAnnouncement = Effect.fn("Web.Announcement.create")(
   function* createAnnouncementEffect(payload: CreateAnnouncementPayload) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.announcement.createAnnouncement({ payload });
   }
 );
@@ -36,6 +38,7 @@ export const createAnnouncement = Effect.fn("Web.Announcement.create")(
 export const deleteAnnouncement = Effect.fn("Web.Announcement.delete")(
   function* deleteAnnouncementEffect(input: DeleteAnnouncementInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.announcement.deleteAnnouncement({
       payload: { id: yield* asAnnouncementId(input.id) },
     });

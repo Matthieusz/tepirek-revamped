@@ -29,6 +29,7 @@ export interface ToggleEventActiveInput {
 export const listEvents = Effect.fn("Web.Event.list")(
   function* listEventsEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.event.listEvents({});
   }
 );
@@ -37,6 +38,7 @@ export const listEvents = Effect.fn("Web.Event.list")(
 export const createEvent = Effect.fn("Web.Event.create")(
   function* createEventEffect(payload: CreateEventInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.event.createEvent({ payload });
   }
 );
@@ -45,6 +47,7 @@ export const createEvent = Effect.fn("Web.Event.create")(
 export const deleteEvent = Effect.fn("Web.Event.delete")(
   function* deleteEventEffect(input: DeleteEventInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.event.deleteEvent({
       payload: { id: yield* asEventId(input.id) },
     });
@@ -55,6 +58,7 @@ export const deleteEvent = Effect.fn("Web.Event.delete")(
 export const toggleEventActive = Effect.fn("Web.Event.toggleActive")(
   function* toggleEventActiveEffect(input: ToggleEventActiveInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.event.toggleEventActive({
       payload: { active: input.active, id: yield* asEventId(input.id) },
     });

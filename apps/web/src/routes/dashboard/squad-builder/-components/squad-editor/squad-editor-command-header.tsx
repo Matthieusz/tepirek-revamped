@@ -52,12 +52,15 @@ const getSaveStatus = (
   if (isViewer) {
     return "Możesz przeglądać zapisane składy.";
   }
+
   if (isSaving) {
     return "Zapisywanie";
   }
+
   if (isDirty) {
     return "Niezapisane zmiany";
   }
+
   return "Zapisano";
 };
 

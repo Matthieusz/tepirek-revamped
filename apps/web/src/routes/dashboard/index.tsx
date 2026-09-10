@@ -7,6 +7,7 @@ const routeApi = getRouteApi("/dashboard/");
 
 const DashboardHomeRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <DashboardHomePage session={session} />;
 };
 

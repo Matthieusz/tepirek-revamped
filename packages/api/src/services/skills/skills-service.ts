@@ -50,6 +50,7 @@ export const deleteSkill = Effect.fn("Skills.deleteSkill")(
 export const listProfessions = Effect.fn("Skills.listProfessions")(
   function* listProfessions() {
     const store = yield* SkillsStore;
+
     return yield* store.listProfessions();
   }
 );
@@ -57,6 +58,7 @@ export const listProfessions = Effect.fn("Skills.listProfessions")(
 export const listRanges = Effect.fn("Skills.listRanges")(
   function* listRanges() {
     const store = yield* SkillsStore;
+
     return yield* store.listRanges();
   }
 );
@@ -66,6 +68,7 @@ export const getRangeBySlug = Effect.fn("Skills.getRangeBySlug")(
     input: Parameters<(typeof SkillsStore.Service)["getRangeBySlug"]>[0]
   ) {
     const store = yield* SkillsStore;
+
     return yield* store.getRangeBySlug(input);
   }
 );
@@ -75,6 +78,7 @@ export const listSkillsByRange = Effect.fn("Skills.listSkillsByRange")(
     input: Parameters<(typeof SkillsStore.Service)["listSkillsByRange"]>[0]
   ) {
     const store = yield* SkillsStore;
+
     return yield* store.listSkillsByRange(input);
   }
 );

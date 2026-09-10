@@ -56,6 +56,7 @@ const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
   }) {
     const operation = "getAccountForRefetch" as const;
     const accountIdNumber = accountId;
+
     const accountSelect = database
       .select({
         displayName: margonemAccount.displayName,
@@ -65,6 +66,7 @@ const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
       .from(margonemAccount)
       .where(eq(margonemAccount.id, accountIdNumber))
       .limit(1);
+
     const accountRows = yield* persistenceQuery(operation, accountSelect);
 
     const [account] = accountRows;
@@ -95,6 +97,7 @@ const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
       )
       .where(eq(margonemCharacter.accountId, accountIdNumber))
       .groupBy(margonemCharacter.id);
+
     const characterRows = yield* persistenceQuery(operation, characterSelect);
 
     const displayName = yield* parseAccountDisplayName(
@@ -155,6 +158,7 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
     profileId,
   }: CreatePendingMargonemAccountRefetchInput) {
     const operation = "createPendingRefetch" as const;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* createPendingRefetchTransaction(
         tx: TransactionDatabase
@@ -173,6 +177,7 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
             profileId,
           })
           .returning({ id: margonemAccountRefetchPreview.id });
+
         const insertedRows = yield* insert;
 
         const [preview] = insertedRows;
@@ -198,6 +203,7 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
                 world: character.world,
               }))
             );
+
           yield* characterInsert;
         }
 
@@ -219,6 +225,7 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
     refetchPreviewId,
   }: ApplyPendingRefetchInput) {
     const operation = "applyPendingRefetch" as const;
+
     const transaction = database.transaction(
       Effect.fnUntraced(function* applyPendingRefetchTransaction(
         tx: TransactionDatabase
@@ -244,6 +251,7 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
           )
           .limit(1)
           .for("update");
+
         const previewRows = yield* previewSelect;
         const [preview] = previewRows;
 
@@ -267,18 +275,22 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
               preview.id
             )
           );
+
         const latestCharacters = [];
 
         for (const row of characterRows) {
           const characterId = yield* parseMargonemCharacterId(
             row.characterId
           ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           const level = yield* parsePositiveLevel(row.level).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
+
           const profession = yield* parseMargonemProfession(
             row.profession
           ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           const world = yield* parseMargonemWorld(row.world).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
@@ -296,9 +308,11 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
         const accountId = yield* parseMargonemAccountId(preview.accountId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
+
         const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
+
         const pendingRefetch = {
           accountId,
           fetchedAt: preview.fetchedAt,
@@ -306,6 +320,7 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
           latestCharacters,
           profileId,
         };
+
         const accountIdNumber = pendingRefetch.accountId;
 
         yield* tx.execute(
@@ -320,6 +335,7 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
           .from(margonemAccount)
           .where(eq(margonemAccount.id, accountIdNumber))
           .limit(1);
+
         const accountRows = yield* accountSelect;
         const [account] = accountRows;
 
@@ -342,6 +358,7 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
           })
           .from(margonemCharacter)
           .where(eq(margonemCharacter.accountId, accountIdNumber));
+
         const currentRows = yield* currentSelect;
 
         const currentByCharacterId = HashMap.fromIterable(
@@ -356,10 +373,12 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
         for (const latest of pendingRefetch.latestCharacters) {
           const latestCharacterId = latest.characterId;
           const latestLevel = latest.level;
+
           const current = HashMap.get(
             currentByCharacterId,
             latestCharacterId
           ).pipe(Option.getOrUndefined);
+
           latestCharacterIds = HashSet.add(
             latestCharacterIds,
             latestCharacterId
@@ -430,17 +449,20 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
             .where(
               inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
             );
+
           const affectedGroups = yield* affectedGroupSelect;
 
           const affectedGroupIds = Arr.dedupe(
             affectedGroups.map((group) => group.groupId)
           );
+
           const removedPlacementsDelete = tx
             .delete(squadCharacter)
             .where(
               inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
             )
             .returning({ id: squadCharacter.id });
+
           const removedPlacements = yield* removedPlacementsDelete;
 
           removedSquadCharacterCount = removedPlacements.length;

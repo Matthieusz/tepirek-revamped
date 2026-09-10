@@ -7,6 +7,7 @@ const routeApi = getRouteApi("/dashboard/tasks");
 
 const TasksRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <TasksPage session={session} />;
 };
 

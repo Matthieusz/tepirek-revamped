@@ -15,6 +15,7 @@ export const list = Effect.fn("SquadGroups.listGlobal")(
     readonly filters?: SquadGroupListFilters;
   }) {
     const store = yield* SquadGroupDirectoryStoreService;
+
     return yield* store.listGlobalSquadGroups({
       actorUserId: input.actorUserId,
       filters: input.filters ?? emptySquadGroupListFilters,

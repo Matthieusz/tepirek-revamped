@@ -12,18 +12,17 @@ import {
 import type { VaultError } from "../../services/vault/vault-errors.ts";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { VaultService } from "../../services/vault/vault-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
-  {
+const { requireAdminSession, requireVerifiedSession } =
+  buildAuthorizationPolicy({
     forbidden: () => new VaultForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new VaultUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
       new VaultForbidden({
         message: "Konto oczekuje na weryfikację",
       }),
-  }
-);
+  });
 
 const mapVaultError = <A>(
   operation: string,
@@ -51,6 +50,7 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
           function* distributeGold({ payload }) {
             const vaultService = yield* VaultService;
             yield* requireAdminSession();
+
             return yield* mapVaultError(
               "distributeGold",
               vaultService.distributeGold(payload)
@@ -65,6 +65,7 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
         }) {
           const vaultService = yield* VaultService;
           yield* requireVerifiedSession();
+
           return yield* mapVaultError(
             "getVault",
             vaultService.getVault(payload.eventId)
@@ -77,6 +78,7 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
           function* togglePaidOut({ payload }) {
             const vaultService = yield* VaultService;
             yield* requireAdminSession();
+
             return yield* mapVaultError(
               "togglePaidOut",
               vaultService.togglePaidOut(payload)

@@ -14,40 +14,52 @@ const PositiveInt = Schema.Finite.check(
 );
 
 const UserId = AppUserId;
+
 const PaginationMetric = Schema.Finite;
 
 export const CreateBetPayload = Schema.Struct({
   heroId: HeroId,
   userIds: Schema.NonEmptyArray(UserId),
 });
+
 export interface CreateBetPayload extends Schema.Schema.Type<
   typeof CreateBetPayload
 > {}
+
 export const DeleteBetPayload = Schema.Struct({ id: BetId });
+
 export interface DeleteBetPayload extends Schema.Schema.Type<
   typeof DeleteBetPayload
 > {}
+
 export const EditBetPayload = Schema.Struct({
   betId: BetId,
   newUserIds: Schema.NonEmptyArray(UserId),
 });
+
 export interface EditBetPayload extends Schema.Schema.Type<
   typeof EditBetPayload
 > {}
+
 export const GetAllPaginatedBetsPayload = Schema.Struct({
   eventId: Schema.optionalKey(EventId),
   heroId: Schema.optionalKey(HeroId),
   limit: Schema.optionalKey(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   page: Schema.optionalKey(PositiveInt),
 });
+
 export interface GetAllPaginatedBetsPayload extends Schema.Schema.Type<
   typeof GetAllPaginatedBetsPayload
 > {}
+
 export const GetBetMembersPayload = Schema.Struct({ betId: BetId });
+
 export interface GetBetMembersPayload extends Schema.Schema.Type<
   typeof GetBetMembersPayload
 > {}
+
 export const GetBetsByEventPayload = Schema.Struct({ eventId: EventId });
+
 export interface GetBetsByEventPayload extends Schema.Schema.Type<
   typeof GetBetsByEventPayload
 > {}
@@ -59,9 +71,11 @@ export const BetMemberSummary = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+
 export interface BetMemberSummary extends Schema.Schema.Type<
   typeof BetMemberSummary
 > {}
+
 export const BetSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
   createdBy: AppUserId,
@@ -76,7 +90,9 @@ export const BetSummary = Schema.Struct({
   memberCount: PositiveInt,
   members: Schema.Array(BetMemberSummary),
 });
+
 export interface BetSummary extends Schema.Schema.Type<typeof BetSummary> {}
+
 export const BetByEventSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
   createdBy: AppUserId,
@@ -86,17 +102,21 @@ export const BetByEventSummary = Schema.Struct({
   id: BetId,
   memberCount: PositiveInt,
 });
+
 export interface BetByEventSummary extends Schema.Schema.Type<
   typeof BetByEventSummary
 > {}
+
 export const StoredBetMember = Schema.Struct({
   id: PositiveInt,
   points: Schema.String,
   userId: AppUserId,
 });
+
 export interface StoredBetMember extends Schema.Schema.Type<
   typeof StoredBetMember
 > {}
+
 export const CreatedBet = Schema.Struct({
   createdAt: Schema.DateFromString,
   createdBy: UserId,
@@ -104,13 +124,16 @@ export const CreatedBet = Schema.Struct({
   id: BetId,
   memberCount: PositiveInt,
 });
+
 export interface CreatedBet extends Schema.Schema.Type<typeof CreatedBet> {}
+
 export const LatestBetForCopy = Schema.NullOr(
   Schema.Struct({
     id: BetId,
     members: Schema.Array(BetMemberSummary),
   })
 );
+
 export const PaginatedBets = Schema.Struct({
   items: Schema.Array(BetSummary),
   pagination: Schema.Struct({
@@ -121,10 +144,13 @@ export const PaginatedBets = Schema.Struct({
     totalPages: PaginationMetric,
   }),
 });
+
 export interface PaginatedBets extends Schema.Schema.Type<
   typeof PaginatedBets
 > {}
+
 export const MutationSuccess = Schema.Struct({ success: Schema.Boolean });
+
 export interface MutationSuccess extends Schema.Schema.Type<
   typeof MutationSuccess
 > {}
@@ -134,21 +160,25 @@ export class BetUnauthorized extends Schema.TaggedErrorClass<BetUnauthorized>()(
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class BetForbidden extends Schema.TaggedErrorClass<BetForbidden>()(
   "BetForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class BetBadRequest extends Schema.TaggedErrorClass<BetBadRequest>()(
   "BetBadRequest",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
+
 export class BetNotFound extends Schema.TaggedErrorClass<BetNotFound>()(
   "BetNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
+
 export class BetPersistenceUnavailable extends Schema.TaggedErrorClass<BetPersistenceUnavailable>()(
   "BetPersistenceUnavailable",
   { operation: Schema.String },

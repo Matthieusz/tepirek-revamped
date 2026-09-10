@@ -111,6 +111,7 @@ export const deleteEventMutationOptions = (
       context: DeleteEventContext | undefined
     ) => {
       const previousEvent = context?.previousEvent;
+
       if (previousEvent !== undefined) {
         queryClient.setQueryData<readonly Event[]>(eventsQueryKey, (events) => {
           if (
@@ -119,7 +120,9 @@ export const deleteEventMutationOptions = (
           ) {
             return events;
           }
+
           const index = Math.min(context?.previousIndex ?? 0, events.length);
+
           return [
             ...events.slice(0, index),
             previousEvent,
@@ -127,20 +130,25 @@ export const deleteEventMutationOptions = (
           ];
         });
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: DeleteEventInput) => {
       await queryClient.cancelQueries({ queryKey: eventsQueryKey });
       const events = queryClient.getQueryData<readonly Event[]>(eventsQueryKey);
+
       const previousIndex =
         events?.findIndex((event) => event.id === input.id) ?? -1;
+
       const previousEvent =
         previousIndex >= 0 && events !== undefined
           ? events[previousIndex]
           : undefined;
+
       queryClient.setQueryData<readonly Event[]>(eventsQueryKey, (current) =>
         current?.filter((event) => event.id !== input.id)
       );
+
       return {
         previousEvent,
         previousIndex: Math.max(previousIndex, 0),
@@ -169,6 +177,7 @@ export const toggleEventActiveMutationOptions = (
       context: ToggleEventContext | undefined
     ) => {
       const previousEvent = context?.previousEvent;
+
       if (previousEvent !== undefined) {
         queryClient.setQueryData<readonly Event[]>(eventsQueryKey, (events) =>
           events?.map((event) =>
@@ -176,18 +185,22 @@ export const toggleEventActiveMutationOptions = (
           )
         );
       }
+
       callbacks.onError?.(error);
     },
     onMutate: async (input: ToggleEventActiveInput) => {
       await queryClient.cancelQueries({ queryKey: eventsQueryKey });
+
       const previousEvent = queryClient
         .getQueryData<readonly Event[]>(eventsQueryKey)
         ?.find((event) => event.id === input.id);
+
       queryClient.setQueryData<readonly Event[]>(eventsQueryKey, (events) =>
         events?.map((event) =>
           event.id === input.id ? { ...event, active: input.active } : event
         )
       );
+
       return { previousEvent };
     },
     onSettled: async () => {

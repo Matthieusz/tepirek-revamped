@@ -8,7 +8,7 @@ import { AnnouncementId } from "../domain/core-identifiers.ts";
 import { ApplicationDependencyUnavailable } from "../services/application-errors.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "./persistence-query.ts";
 
 interface ProjectedError {
@@ -23,7 +23,7 @@ const testProjection = (
     readonly operation: string;
   }) => ProjectedError
 ): void => {
-  const persistenceQuery = makeDirectPersistenceQuery(makeError);
+  const persistenceQuery = buildDirectPersistenceQuery(makeError);
 
   it.effect("projects direct query failures", () =>
     Effect.gen(function* directQueryProjectionTest() {
@@ -44,14 +44,15 @@ const testProjection = (
   );
 };
 
-describe("makeDirectPersistenceQuery", () => {
+describe("buildDirectPersistenceQuery", () => {
   testProjection((input) => new ApplicationDependencyUnavailable(input));
 
   it.effect("projects transaction-level SQL failures", () =>
     Effect.gen(function* transactionFailureTest() {
-      const persistenceQuery = makeDirectPersistenceQuery(
+      const persistenceQuery = buildDirectPersistenceQuery(
         (input) => new ApplicationDependencyUnavailable(input)
       );
+
       const cause = new SqlError({
         reason: new UnknownError({ cause: new Error("transaction failed") }),
       });
@@ -68,9 +69,10 @@ describe("makeDirectPersistenceQuery", () => {
 
   it.effect("preserves callback domain errors", () =>
     Effect.gen(function* callbackFailureTest() {
-      const persistenceQuery = makeDirectPersistenceQuery(
+      const persistenceQuery = buildDirectPersistenceQuery(
         (input) => new ApplicationDependencyUnavailable(input)
       );
+
       const domainError = { _tag: "DomainError" as const };
 
       const error = yield* Effect.flip(

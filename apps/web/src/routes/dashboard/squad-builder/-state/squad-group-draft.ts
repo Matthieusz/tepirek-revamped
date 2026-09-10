@@ -1,3 +1,4 @@
+/* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import { validateSquadPlacements } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import type {
   AvailableSquadCharacterSchema,
@@ -5,9 +6,11 @@ import type {
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as Data from "effect/Data";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 
 type SquadGroupDetail = SquadGroupDetailSchema;
+
 export type AvailableCharacter = AvailableSquadCharacterSchema;
 
 interface DraftCharacter {
@@ -42,12 +45,14 @@ export type PlacementError = Data.TaggedEnum<{
   };
   readonly duplicateCharacterInGroup: { readonly characterId: number };
 }>;
+
 export const PlacementError = Data.taggedEnum<PlacementError>();
 
 type PlacementResult = Data.TaggedEnum<{
   readonly success: { readonly draft: SquadGroupDraft };
   readonly failure: { readonly error: PlacementError };
 }>;
+
 const PlacementResult = Data.taggedEnum<PlacementResult>();
 
 interface SaveSquadGroupPayload {
@@ -112,6 +117,7 @@ export const isDraftEqual = (
   left.squads.length === right.squads.length &&
   left.squads.every((squad, index) => {
     const other = right.squads[index];
+
     return (
       other !== undefined &&
       squad.clientKey === other.clientKey &&
@@ -144,14 +150,17 @@ const toPlacementSquads = (
       readonly accountId?: string | number;
       readonly characterId: number;
     }[] = [];
+
     for (const draftCharacter of squad.characters) {
       if (draftCharacter.characterId === characterId) {
         continue;
       }
+
       const accountInfo = HashMap.get(
         charactersById,
         draftCharacter.characterId
       ).pipe(Option.getOrUndefined);
+
       characters.push(
         accountInfo === undefined
           ? { characterId: draftCharacter.characterId }
@@ -161,6 +170,7 @@ const toPlacementSquads = (
             }
       );
     }
+
     if (squad.clientKey === targetSquadKey) {
       characters.push({ accountId: character.accountId, characterId });
     }
@@ -171,44 +181,38 @@ const toPlacementSquads = (
     };
   });
 
-const unreachablePlacementError = (error: never): never => {
-  throw new Error(`Unhandled squad placement error: ${String(error)}`);
-};
-
 const policyErrorToPlacementError = (
-  error: ReturnType<typeof validateSquadPlacements>,
+  input: ReturnType<typeof validateSquadPlacements>,
   targetSquadName: string,
   character: CharacterAccountInfo
 ): PlacementError | undefined => {
-  if (error === undefined) {
+  if (input === undefined) {
     return undefined;
   }
 
-  switch (error._tag) {
-    case "TooManyCharactersInSquad": {
-      return PlacementError.squadFull({ squadName: targetSquadName });
-    }
-    case "DuplicateAccountInSquad": {
-      return PlacementError.accountAlreadyRepresented({
+  return Match.value(input).pipe(
+    Match.tag("TooManyCharactersInSquad", () =>
+      PlacementError.squadFull({ squadName: targetSquadName })
+    ),
+    Match.tag("DuplicateAccountInSquad", () =>
+      PlacementError.accountAlreadyRepresented({
         accountDisplayName: character.accountDisplayName,
         squadName: targetSquadName,
-      });
-    }
-    case "DuplicateCharacterInSquad": {
-      return PlacementError.duplicateCharacterInSquad({
+      })
+    ),
+    Match.tag("DuplicateCharacterInSquad", (error) =>
+      PlacementError.duplicateCharacterInSquad({
         characterId: error.characterId,
         squadName: targetSquadName,
-      });
-    }
-    case "DuplicateCharacterInSquadGroup": {
-      return PlacementError.duplicateCharacterInGroup({
+      })
+    ),
+    Match.tag("DuplicateCharacterInSquadGroup", (error) =>
+      PlacementError.duplicateCharacterInGroup({
         characterId: error.characterId,
-      });
-    }
-    default: {
-      return unreachablePlacementError(error);
-    }
-  }
+      })
+    ),
+    Match.exhaustive
+  );
 };
 
 export const getPlacementError = (
@@ -225,16 +229,19 @@ export const getPlacementError = (
   const character = HashMap.get(charactersById, characterId).pipe(
     Option.getOrUndefined
   );
+
   if (character === undefined) {
     return PlacementError.unknownCharacter({ characterId });
   }
 
   const squad = draft.squads.find((item) => item.clientKey === squadKey);
+
   if (squad === undefined) {
     return PlacementError.unknownSquad({ squadKey });
   }
 
   const currentSquad = getCurrentSquad(draft, characterId);
+
   if (currentSquad?.clientKey === squadKey) {
     return undefined;
   }
@@ -262,11 +269,13 @@ export const applyPlacement = (
     charactersById,
     canEdit
   );
+
   if (error !== undefined) {
     return PlacementResult.failure({ error });
   }
 
   const currentSquad = getCurrentSquad(draft, characterId);
+
   if (currentSquad?.clientKey === squadKey) {
     return PlacementResult.success({ draft });
   }
@@ -278,6 +287,7 @@ export const applyPlacement = (
         const withoutCharacter = squad.characters.filter(
           (character) => character.characterId !== characterId
         );
+
         if (squad.clientKey !== squadKey) {
           return withoutCharacter.length === squad.characters.length
             ? squad
@@ -332,6 +342,7 @@ export const projectOwnerPayload = (
       name: squad.name.trim(),
       position,
     };
+
     return squad.squadId === undefined
       ? payload
       : { ...payload, squadId: squad.squadId };

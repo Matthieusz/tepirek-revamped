@@ -20,6 +20,7 @@ const StoredMargonemCharacterSnapshotSchema = Schema.Struct({
   profession: MargonemProfessionSchema,
   world: Schema.String,
 });
+
 const MargonemCharacterFieldChangeSchema = Schema.Union([
   Schema.Struct({
     after: Schema.String,
@@ -42,9 +43,11 @@ const MargonemCharacterFieldChangeSchema = Schema.Union([
     field: Schema.Literal("avatarUrl"),
   }),
 ]);
+
 const AddedMargonemCharacterDiffSchema = Schema.TaggedStruct("AddedCharacter", {
   latest: MargonemCharacterPreviewSchema,
 });
+
 const RemovedMargonemCharacterDiffSchema = Schema.TaggedStruct(
   "RemovedCharacter",
   {
@@ -52,6 +55,7 @@ const RemovedMargonemCharacterDiffSchema = Schema.TaggedStruct(
     reason: Schema.Literal("missingFromLatestJarunaProfile"),
   }
 );
+
 const ChangedMargonemCharacterDiffSchema = Schema.TaggedStruct(
   "ChangedCharacter",
   {
@@ -72,6 +76,7 @@ export const MargonemAccountRefetchDiffSchema = Schema.Struct({
   removed: Schema.Array(RemovedMargonemCharacterDiffSchema),
   unchangedCount: Schema.Finite,
 });
+
 export interface MargonemAccountRefetchDiffSchema extends Schema.Schema.Type<
   typeof MargonemAccountRefetchDiffSchema
 > {}
@@ -79,9 +84,11 @@ export interface MargonemAccountRefetchDiffSchema extends Schema.Schema.Type<
 export const PreviewAccountRefetchPayload = Schema.Struct({
   accountId: MargonemAccountId,
 });
+
 export interface PreviewAccountRefetchPayload extends Schema.Schema.Type<
   typeof PreviewAccountRefetchPayload
 > {}
+
 export const PreviewAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountId,
   diff: MargonemAccountRefetchDiffSchema,
@@ -91,6 +98,7 @@ export const PreviewAccountRefetchSuccess = Schema.Struct({
   profileId: MargonemProfileId,
   refetchPreviewId: PendingMargonemAccountRefetchId,
 });
+
 export interface PreviewAccountRefetchSuccess extends Schema.Schema.Type<
   typeof PreviewAccountRefetchSuccess
 > {}
@@ -98,9 +106,11 @@ export interface PreviewAccountRefetchSuccess extends Schema.Schema.Type<
 export const ApplyAccountRefetchPayload = Schema.Struct({
   refetchPreviewId: PendingMargonemAccountRefetchId,
 });
+
 export interface ApplyAccountRefetchPayload extends Schema.Schema.Type<
   typeof ApplyAccountRefetchPayload
 > {}
+
 export const ApplyAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountId,
   addedCharacterCount: Schema.Finite,
@@ -110,6 +120,7 @@ export const ApplyAccountRefetchSuccess = Schema.Struct({
   removedSquadCharacterCount: Schema.Finite,
   updatedCharacterCount: Schema.Finite,
 });
+
 export interface ApplyAccountRefetchSuccess extends Schema.Schema.Type<
   typeof ApplyAccountRefetchSuccess
 > {}

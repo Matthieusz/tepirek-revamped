@@ -11,20 +11,25 @@ import {
 import { InviteResponseSchema } from "../account-sharing/account-sharing-schema.ts";
 
 export { AccountInviteTargetSchema as SquadEditorInviteTargetSchema } from "../account-sharing/account-sharing-schema.ts";
+
 export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({
   groupId: SquadGroupId,
   query: Schema.String,
 });
+
 export interface SearchSquadEditorInviteTargetsPayload extends Schema.Schema.Type<
   typeof SearchSquadEditorInviteTargetsPayload
 > {}
+
 export const SendSquadGroupEditorInvitePayload = Schema.Struct({
   groupId: SquadGroupId,
   invitedUserId: AppUserId,
 });
+
 export interface SendSquadGroupEditorInvitePayload extends Schema.Schema.Type<
   typeof SendSquadGroupEditorInvitePayload
 > {}
+
 export const SquadGroupInvitationSummarySchema = Schema.Struct({
   createdAt: Schema.DateFromString,
   invitationId: SquadGroupInvitationId,
@@ -36,28 +41,36 @@ export const SquadGroupInvitationSummarySchema = Schema.Struct({
   status: SquadGroupInvitationStatusSchema,
   updatedAt: Schema.DateFromString,
 });
+
 export interface SquadGroupInvitationSummarySchema extends Schema.Schema.Type<
   typeof SquadGroupInvitationSummarySchema
 > {}
+
 export const RespondToSquadGroupInvitePayload = Schema.Struct({
   invitationId: SquadGroupInvitationId,
   response: InviteResponseSchema,
 });
+
 export interface RespondToSquadGroupInvitePayload extends Schema.Schema.Type<
   typeof RespondToSquadGroupInvitePayload
 > {}
+
 export const RevokeSquadGroupEditorPayload = Schema.Struct({
   invitationId: SquadGroupInvitationId,
 });
+
 export interface RevokeSquadGroupEditorPayload extends Schema.Schema.Type<
   typeof RevokeSquadGroupEditorPayload
 > {}
+
 export const SquadGroupEditorGrantsPayload = Schema.Struct({
   groupId: SquadGroupId,
 });
+
 export interface SquadGroupEditorGrantsPayload extends Schema.Schema.Type<
   typeof SquadGroupEditorGrantsPayload
 > {}
+
 export const SharedSquadGroupSummarySchema = Schema.Struct({
   characterCount: Schema.Finite,
   groupId: SquadGroupId,
@@ -68,9 +81,11 @@ export const SharedSquadGroupSummarySchema = Schema.Struct({
   squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
+
 export interface SharedSquadGroupSummarySchema extends Schema.Schema.Type<
   typeof SharedSquadGroupSummarySchema
 > {}
+
 export const SquadGroupEditorGrantSummarySchema = Schema.Struct({
   createdAt: Schema.DateFromString,
   invitationId: SquadGroupInvitationId,
@@ -80,6 +95,7 @@ export const SquadGroupEditorGrantSummarySchema = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.String,
 });
+
 export interface SquadGroupEditorGrantSummarySchema extends Schema.Schema.Type<
   typeof SquadGroupEditorGrantSummarySchema
 > {}

@@ -20,6 +20,7 @@ export const listTodos = Effect.fn("Todo.list")(function* listTodos(
   input: Parameters<(typeof TodoStore.Service)["list"]>[0]
 ) {
   const store = yield* TodoStore;
+
   return yield* store.list(input);
 });
 

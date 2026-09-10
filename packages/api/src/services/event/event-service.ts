@@ -18,6 +18,7 @@ export const deleteEvent = Effect.fn("Event.delete")(function* deleteEvent(
 
 export const listEvents = Effect.fn("Event.list")(function* listEvents() {
   const store = yield* EventStore;
+
   return yield* store.list();
 });
 

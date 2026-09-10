@@ -1,3 +1,5 @@
+import * as Data from "effect/Data";
+
 export interface HeroStats {
   readonly heroId: number;
   readonly heroName: string;
@@ -6,12 +8,15 @@ export interface HeroStats {
   readonly totalPoints: number;
 }
 
-export type HeroStatsPreviewState =
-  | { readonly _tag: "hidden" }
-  | { readonly _tag: "loading" }
-  | { readonly _tag: "failure"; readonly onRetry: () => void }
-  | { readonly _tag: "empty" }
-  | { readonly _tag: "success"; readonly heroStats: HeroStats };
+export type HeroStatsPreviewState = Data.TaggedEnum<{
+  readonly hidden: Record<never, never>;
+  readonly loading: Record<never, never>;
+  readonly failure: { readonly onRetry: () => void };
+  readonly empty: Record<never, never>;
+  readonly success: { readonly heroStats: HeroStats };
+}>;
+
+export const HeroStatsPreviewState = Data.taggedEnum<HeroStatsPreviewState>();
 
 export const getHeroStatsPreviewState = (params: {
   readonly data: HeroStats | undefined;
@@ -21,16 +26,20 @@ export const getHeroStatsPreviewState = (params: {
   readonly onRetry: () => void;
 }): HeroStatsPreviewState => {
   if (!params.enabled) {
-    return { _tag: "hidden" };
+    return HeroStatsPreviewState.hidden();
   }
+
   if (params.isError) {
-    return { _tag: "failure", onRetry: params.onRetry };
+    return HeroStatsPreviewState.failure({ onRetry: params.onRetry });
   }
+
   if (params.isLoading) {
-    return { _tag: "loading" };
+    return HeroStatsPreviewState.loading();
   }
+
   if (params.data === undefined) {
-    return { _tag: "empty" };
+    return HeroStatsPreviewState.empty();
   }
-  return { _tag: "success", heroStats: params.data };
+
+  return HeroStatsPreviewState.success({ heroStats: params.data });
 };

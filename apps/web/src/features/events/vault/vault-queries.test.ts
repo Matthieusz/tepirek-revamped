@@ -85,12 +85,14 @@ describe("vault queries", () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(fixture.layer);
+
     const keys = [
       allVaultQueryKey,
       [...rankingQueryKeyPrefix, "list", null, null],
       [...heroStatsQueryKeyPrefix, 2],
       oldestUnpaidEventQueryKey,
     ] as const;
+
     for (const key of keys) {
       testClient.queryClient.setQueryData(key, {});
     }
@@ -100,6 +102,7 @@ describe("vault queries", () => {
         testClient.queryClient,
         distributeGoldMutationOptions(testClient.queryClient, runner)
       );
+
       await mutation.mutate({ eventId: 5, goldAmount: 1, heroId: 2 });
 
       for (const key of keys) {
@@ -107,6 +110,7 @@ describe("vault queries", () => {
           true
         );
       }
+
       mutation.reset();
     } finally {
       testClient.cleanup();

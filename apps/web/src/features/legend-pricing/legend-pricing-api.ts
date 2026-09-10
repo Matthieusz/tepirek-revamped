@@ -20,6 +20,7 @@ export interface UpdateLegendCostInput {
 export const listLegendPrices = Effect.fn("Web.LegendPricing.list")(
   function* listLegendPricesEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.legendPricing.listLegendPrices({});
   }
 );
@@ -28,6 +29,7 @@ export const listLegendPrices = Effect.fn("Web.LegendPricing.list")(
 export const updateLegendCost = Effect.fn("Web.LegendPricing.updateCost")(
   function* updateLegendCostEffect(input: UpdateLegendCostInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.legendPricing.updateLegendCost({
       payload: {
         expectedVersion: input.expectedVersion,

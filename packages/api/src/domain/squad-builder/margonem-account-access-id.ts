@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { makeBrandedPositiveInt } from "./positive-int.ts";
+import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when an account access id is not a positive integer. */
 export class InvalidMargonemAccountAccessId extends Schema.TaggedErrorClass<InvalidMargonemAccountAccessId>()(
@@ -8,7 +8,7 @@ export class InvalidMargonemAccountAccessId extends Schema.TaggedErrorClass<Inva
   {}
 ) {}
 
-const brandedMargonemAccountAccessId = makeBrandedPositiveInt(
+const brandedMargonemAccountAccessId = buildBrandedPositiveInt(
   "MargonemAccountAccessId",
   "MargonemAccountAccessId.parse",
   () => new InvalidMargonemAccountAccessId()
@@ -16,6 +16,7 @@ const brandedMargonemAccountAccessId = makeBrandedPositiveInt(
 
 /** A persisted Margonem account access row id. */
 export const MargonemAccountAccessId = brandedMargonemAccountAccessId.schema;
+
 export type MargonemAccountAccessId = typeof MargonemAccountAccessId.Type;
 
 /** Parse a positive integer as a Margonem account access id. */

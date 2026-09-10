@@ -30,10 +30,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -100,6 +102,7 @@ const makeUserTransport = (plans: {
     verified: [...(plans.verified ?? [])],
     "verify-discord": [...(plans.verifyDiscord ?? [])],
   } satisfies Record<UserOperation, PlannedResponse[]>;
+
   const calls = {
     delete: 0,
     profile: 0,
@@ -113,6 +116,7 @@ const makeUserTransport = (plans: {
 
   const httpClient = HttpClient.make((request, url) => {
     let operation: UserOperation;
+
     if (url.pathname.endsWith("/session")) {
       operation = "session";
     } else if (url.pathname.endsWith("/verified")) {
@@ -133,16 +137,20 @@ const makeUserTransport = (plans: {
 
     calls[operation] += 1;
     const planned = queues[operation].shift();
+
     if (planned === undefined) {
       return Effect.die(new Error(`No planned response for user ${operation}`));
     }
+
     if (planned instanceof Promise) {
       return Effect.promise(async () => await planned).pipe(
         Effect.map((response) => HttpClientResponse.fromWeb(request, response))
       );
     }
+
     return Effect.succeed(HttpClientResponse.fromWeb(request, planned));
   });
+
   const client = HttpApiClient.makeWith(AppHttpApi, {
     baseUrl: "http://localhost",
     httpClient,
@@ -172,6 +180,7 @@ describe("user queries", () => {
     const transport = makeUserTransport({
       session: [jsonResponse(sessionBody("user-1", "First user"))],
     });
+
     const testClient = makeTestQueryClient();
 
     try {
@@ -231,6 +240,7 @@ describe("user queries", () => {
     const transport = makeUserTransport({
       verifyDiscord: [jsonResponse({ valid: true })],
     });
+
     const testClient = makeTestQueryClient();
     const routeRefreshes: string[] = [];
     testClient.queryClient.setQueryData(
@@ -278,6 +288,7 @@ describe("user queries", () => {
     const transport = makeUserTransport({
       delete: [new Response(null, { status: 500 })],
     });
+
     const testClient = makeTestQueryClient();
 
     try {
@@ -298,6 +309,7 @@ describe("user queries", () => {
     const staleResponse = deferred<Response>();
     let aborted = false;
     const testClient = makeTestQueryClient();
+
     const staleRead = testClient.queryClient.query({
       queryFn: async ({ signal }) =>
         // oxlint-disable-next-line promise/avoid-new -- this test needs a manually cancellable transport
@@ -332,6 +344,7 @@ describe("user queries", () => {
       const secondUser = makeUserTransport({
         session: [jsonResponse(sessionBody("user-2", "Second user"))],
       });
+
       await expect(
         testClient.queryClient.query(sessionQueryOptions(secondUser.runner))
       ).resolves.toMatchObject({ user: { id: "user-2" } });

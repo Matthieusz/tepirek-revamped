@@ -10,10 +10,13 @@ const LOG_LEVELS = {
   INFO: "Info",
   WARN: "Warn",
 } as const satisfies Record<string, LogLevel>;
+
 const LOG_LEVELS_BY_NAME = LOG_LEVELS satisfies Readonly<
   Record<string, LogLevel>
 >;
+
 type LogValue = Parameters<typeof Formatter.format>[0];
+
 type LogObject = Record<string, LogValue>;
 
 const SIMPLE_LOG_VALUE_PATTERN = /^[^\s="\\]+$/u;
@@ -24,6 +27,7 @@ const isPlainObject = (input: LogValue): input is LogObject => {
   }
 
   const prototype = Reflect.getPrototypeOf(input);
+
   return prototype === Object.prototype || prototype === null;
 };
 
@@ -39,12 +43,14 @@ const flatten = (
   seen.add(input);
 
   const entries = RecordUtils.toEntries(input);
+
   if (Arr.isArrayEmpty(entries) && prefix) {
     return [[prefix, input]];
   }
 
   return Arr.flatMap(([key, value]: readonly [string, LogValue]) => {
     const path = prefix ? `${prefix}.${key}` : key;
+
     return isPlainObject(value)
       ? flatten(value, path, seen)
       : [[path, value] as const];
@@ -53,6 +59,7 @@ const flatten = (
 
 const formatValue = (input: LogValue): string => {
   const value = Predicate.isString(input) ? input : Formatter.format(input);
+
   return SIMPLE_LOG_VALUE_PATTERN.test(value) ? value : JSON.stringify(value);
 };
 
@@ -97,5 +104,6 @@ const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
 /** Parse a configured minimum log level. */
 export const parseLogLevel = (value: string): LogLevel | undefined => {
   const normalized = value.toUpperCase();
+
   return isLogLevelName(normalized) ? LOG_LEVELS[normalized] : undefined;
 };

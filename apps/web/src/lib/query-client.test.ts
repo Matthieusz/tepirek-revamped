@@ -12,6 +12,7 @@ import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 const listTodos = Effect.gen(function* listTodosEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.todo.listTodos({});
 });
 
@@ -19,6 +20,7 @@ const withTestQueryClient = async (
   test: (queryClient: ReturnType<typeof createQueryClient>) => Promise<void>
 ): Promise<void> => {
   const testClient = makeTestQueryClient();
+
   try {
     await test(testClient.queryClient);
   } finally {
@@ -46,11 +48,14 @@ describe("QueryClient", () => {
 
   it("keeps fresh data cached until stale time and then refetches", async () => {
     vi.useFakeTimers();
+
     try {
       await withTestQueryClient(async (queryClient) => {
         let requests = 0;
+
         const fetchValue = () => {
           requests += 1;
+
           return requests;
         };
 
@@ -79,15 +84,18 @@ describe("QueryClient", () => {
 
   it("removes unused queries after the configured cache lifetime", async () => {
     vi.useFakeTimers();
+
     try {
       await withTestQueryClient(async (queryClient) => {
         const observer = new QueryObserver(queryClient, {
           queryFn: () => "cached",
           queryKey: ["garbage-collected"],
         });
+
         const unsubscribe = observer.subscribe((result) => {
           expect(result.status).toBeDefined();
         });
+
         await observer.refetch();
         unsubscribe();
 

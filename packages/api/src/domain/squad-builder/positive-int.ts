@@ -12,12 +12,13 @@ export const brandedPositiveInt = <const Brand extends string>(
   identifier: Brand = brand
 ) => PositiveInt.pipe(Schema.brand(brand)).annotate({ identifier });
 
-export const makeBrandedPositiveInt = <const Brand extends string, Error>(
+export const buildBrandedPositiveInt = <const Brand extends string, Error>(
   brand: Brand,
   parseName: string,
   onError: () => Error
 ) => {
   const schema = brandedPositiveInt(brand);
+
   const parse = Effect.fn(parseName)(function* parsePositiveInt(input: number) {
     return yield* Schema.decodeEffect(schema)(input).pipe(
       Effect.catchTag("SchemaError", () => Effect.fail(onError()))

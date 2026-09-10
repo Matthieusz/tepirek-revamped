@@ -43,8 +43,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-firecrawl-user" })
           );
+
           const accountingStore = yield* FirecrawlRequestAccountingStoreService;
           const profileId = parseTestProfileId(8_100_201);
+
           const yearMonth = firecrawlYearMonthFromDate(
             new Date("2026-06-29T12:00:00.000Z")
           );
@@ -94,7 +96,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "effect-firecrawl-budget-user" })
         );
+
         const store = yield* FirecrawlRequestAccountingStoreService;
+
         const input = {
           monthlyRequestBudget: 10,
           perUserMonthlyRequestBudget: 2,
@@ -108,8 +112,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         yield* store.reserveRequest(input);
         const failure = yield* Effect.flip(store.reserveRequest(input));
 
+        expect(failure).toHaveProperty(
+          "_tag",
+          "FirecrawlUserMonthlyBudgetExhausted"
+        );
         expect(failure).toMatchObject({
-          _tag: "FirecrawlUserMonthlyBudgetExhausted",
           monthlyRequestBudget: 2,
           usedRequests: 2,
           yearMonth: "2026-07",
@@ -123,14 +130,18 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "effect-firecrawl-budget-first" })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "effect-firecrawl-budget-second" })
         );
+
         const store = yield* FirecrawlRequestAccountingStoreService;
+
         const yearMonth = firecrawlYearMonthFromDate(
           new Date("2026-08-01T12:00:00.000Z")
         );
+
         const reserve = (userId: string, profileId: number) =>
           store.reserveRequest({
             monthlyRequestBudget: 10,
@@ -141,9 +152,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           });
 
         yield* reserve(firstMember.id, 8_100_210);
+
         const firstUserFailure = yield* Effect.flip(
           reserve(firstMember.id, 8_100_211)
         );
+
         const secondUserReservation = yield* reserve(
           secondMember.id,
           8_100_212
@@ -162,14 +175,18 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           async () =>
             await createVerifiedMember({ id: "effect-firecrawl-global-first" })
         );
+
         const secondMember = yield* Effect.promise(
           async () =>
             await createVerifiedMember({ id: "effect-firecrawl-global-second" })
         );
+
         const store = yield* FirecrawlRequestAccountingStoreService;
+
         const yearMonth = firecrawlYearMonthFromDate(
           new Date("2026-09-01T12:00:00.000Z")
         );
+
         const reserve = (userId: string, profileId: number) =>
           store.reserveRequest({
             monthlyRequestBudget: 1,
@@ -180,15 +197,20 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           });
 
         yield* reserve(firstMember.id, 8_100_220);
+
         const secondUserFailure = yield* Effect.flip(
           reserve(secondMember.id, 8_100_221)
         );
+
         const firstUserFailure = yield* Effect.flip(
           reserve(firstMember.id, 8_100_222)
         );
 
+        expect(secondUserFailure).toHaveProperty(
+          "_tag",
+          "FirecrawlMonthlyBudgetExhausted"
+        );
         expect(secondUserFailure).toMatchObject({
-          _tag: "FirecrawlMonthlyBudgetExhausted",
           monthlyRequestBudget: 1,
           usedRequests: 1,
         });
@@ -204,10 +226,13 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               id: "effect-firecrawl-concurrent-user",
             })
         );
+
         const store = yield* FirecrawlRequestAccountingStoreService;
+
         const yearMonth = firecrawlYearMonthFromDate(
           new Date("2026-10-01T12:00:00.000Z")
         );
+
         const outcomes = yield* Effect.all(
           Array.from({ length: 6 }, (_, index) =>
             Effect.exit(
@@ -231,9 +256,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
     it.effect("applies only the global budget to requests without a user", () =>
       Effect.gen(function* testEffect() {
         const store = yield* FirecrawlRequestAccountingStoreService;
+
         const yearMonth = firecrawlYearMonthFromDate(
           new Date("2026-11-01T12:00:00.000Z")
         );
+
         const input = {
           monthlyRequestBudget: 2,
           perUserMonthlyRequestBudget: 1,
@@ -257,6 +284,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Search Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -264,6 +292,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Search Target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -284,6 +313,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           query: "Store Search",
         });
+
         const targetIds = targets.map((item) => item.userId);
 
         expect(targetIds).toContain(parseTestUserId(target.id));
@@ -300,6 +330,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Send Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -307,6 +338,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Send Target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -353,9 +385,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        expect(duplicateFailure).toMatchObject({
-          _tag: "AccountAccessTransitionNotAllowed",
-        });
+        expect(duplicateFailure).toHaveProperty(
+          "_tag",
+          "AccountAccessTransitionNotAllowed"
+        );
       })
     );
 
@@ -368,6 +401,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Respond Owner",
             })
         );
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -375,6 +409,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Respond Target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -395,6 +430,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           invitedUserId: parseTestUserId(target.id),
         });
+
         const accepted = yield* respond({
           accessId: invite.accessId,
           actorUserId: parseTestUserId(target.id),
@@ -428,7 +464,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Shared Owner",
             })
         );
+
         const accountSharingStore = yield* AccountSharingStoreService;
+
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -436,6 +474,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Shared Target",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -495,6 +534,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Grants Owner",
             })
         );
+
         const invited = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -502,6 +542,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Grants Invited",
             })
         );
+
         const declined = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -509,6 +550,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Grants Declined",
             })
         );
+
         const [account] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccount)
@@ -566,6 +608,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
                 name: "Effect Store Revoke Owner",
               })
           );
+
           const target = yield* Effect.promise(
             async () =>
               await createVerifiedMember({
@@ -573,6 +616,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
                 name: "Effect Store Revoke Target",
               })
           );
+
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -642,6 +686,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             actorUserId: parseTestUserId(owner.id),
             invitedUserId: parseTestUserId(target.id),
           });
+
           yield* respond({
             accessId: invite.accessId,
             actorUserId: parseTestUserId(target.id),
@@ -676,6 +721,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .where(eq(margonemAccountAccess.id, invite.accessId))
               .limit(1)
           );
+
           const remainingPlacements = yield* Effect.promise(() =>
             testDb
               .select({ id: squadCharacter.id })

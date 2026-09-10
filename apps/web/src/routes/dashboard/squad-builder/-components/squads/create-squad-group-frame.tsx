@@ -7,6 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ const CreateSquadGroupFormSchema = Schema.Struct({
     })
   ),
 });
+
 const CreateSquadGroupFormValidator = Schema.toStandardSchemaV1(
   CreateSquadGroupFormSchema
 );
@@ -41,31 +43,41 @@ export const CreateSquadGroupFrame = ({
   onClose,
 }: CreateSquadGroupFrameProps) => {
   const navigate = useNavigate();
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createSquadGroup = useMutation(
     createSquadGroupMutationOptions(queryClient)
   );
+
   const form = useAppForm({
     defaultValues: { name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
+
       const decoded =
         await CreateSquadGroupFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
+
       const result = await runFormSubmission(
         async () =>
           await createSquadGroup.mutateAsync({
             name: decoded.value.name.trim(),
           })
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
+
       toast.success("Grupa składów została utworzona");
       await navigate({
         params: { groupId: String(result.value.groupId) },
@@ -74,6 +86,7 @@ export const CreateSquadGroupFrame = ({
     },
     validators: { onSubmit: CreateSquadGroupFormValidator },
   });
+
   const isCreating = useSelector(form.store, (state) => state.isSubmitting);
   const name = useSelector(form.store, (state) => state.values.name);
 
@@ -93,7 +106,7 @@ export const CreateSquadGroupFrame = ({
                   maxLength={80}
                   onKeyDown={(event) => {
                     if (
-                      event.key === "Escape" &&
+                      Predicate.isTagged("Escape")(event) &&
                       name.trim().length === 0 &&
                       !isCreating
                     ) {

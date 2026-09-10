@@ -24,12 +24,13 @@ import type {
 } from "../../services/auction/auction-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
@@ -69,6 +70,7 @@ const getSignupsWithDatabase =
           Effect.gen(function* decodeAuctionSignup() {
             const id = yield* decodePersisted(AuctionSignupId)(row.id);
             const userId = yield* decodePersisted(AppUserId)(row.userId);
+
             return { ...row, id, userId };
           })
         )
@@ -92,7 +94,9 @@ const getStatsWithDatabase = (database: EffectPgDatabase) =>
           )
         )
     );
+
     const [stats] = result;
+
     return stats ?? { totalSignups: 0, uniqueUsers: 0 };
   });
 
@@ -111,6 +115,7 @@ const clearSignupsWithDatabase = (database: EffectPgDatabase) =>
           )
         )
     );
+
     return { success: true as const };
   });
 
@@ -127,21 +132,26 @@ const removeSignupWithDatabase = (database: EffectPgDatabase) =>
         .where(eq(auction.id, id))
         .limit(1)
     );
+
     const [signup] = signups;
+
     if (!signup) {
       return yield* new ApplicationNotFound({
         message: "Zapis nie znaleziony",
       });
     }
+
     if (signup.userId !== actorUserId) {
       return yield* new ApplicationForbidden({
         message: "Nie masz uprawnień do usunięcia tego zapisu",
       });
     }
+
     yield* persistenceQuery(
       "removeAuctionSignup",
       database.delete(auction).where(eq(auction.id, id))
     );
+
     return { success: true as const };
   });
 
@@ -165,19 +175,24 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
         )
         .limit(1)
     );
+
     const [cell] = existing;
+
     if (cell) {
       if (cell.userId === input.actorUserId) {
         yield* persistenceQuery(
           "removeOwnAuctionSignup",
           database.delete(auction).where(eq(auction.id, cell.id))
         );
+
         return { action: "removed" as const };
       }
+
       return yield* new ApplicationConflict({
         message: "To pole jest już zajęte",
       });
     }
+
     const inserted = yield* persistenceQuery(
       "addAuctionSignup",
       database
@@ -193,11 +208,13 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
         .onConflictDoNothing()
         .returning({ id: auction.id })
     );
+
     if (inserted.length === 0) {
       return yield* new ApplicationConflict({
         message: "To pole jest już zajęte",
       });
     }
+
     return { action: "added" as const };
   });
 

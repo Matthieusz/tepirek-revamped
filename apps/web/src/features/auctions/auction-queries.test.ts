@@ -6,6 +6,7 @@ import {
 } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
@@ -37,10 +38,12 @@ interface Deferred<A> {
 
 const deferred = <A>(): Deferred<A> => {
   let resolvePromise: (value: A) => void;
+
   // oxlint-disable-next-line promise/avoid-new -- tests need manually controlled responses
   const promise = new Promise<A>((resolve) => {
     resolvePromise = resolve;
   });
+
   return {
     promise,
     resolve: (value) => {
@@ -50,6 +53,7 @@ const deferred = <A>(): Deferred<A> => {
 };
 
 type PlannedResponse = Response | Promise<Response>;
+
 type AuctionOperation = "remove" | "signups" | "stats" | "toggle";
 
 interface AuctionTransport {
@@ -78,11 +82,13 @@ const takeResponse = (
   key?: string
 ): PlannedResponse => {
   const response = queue?.shift();
+
   if (response === undefined) {
     throw new Error(
       `No planned response for auction ${operation}${key === undefined ? "" : ` ${key}`}`
     );
   }
+
   return response;
 };
 
@@ -93,15 +99,20 @@ const makeAuctionTransport = (plans: {
   readonly toggle?: readonly PlannedResponse[];
 }): AuctionTransport => {
   const signupQueues = new Map<string, PlannedResponse[]>();
+
   for (const [key, responses] of Object.entries(plans.signups ?? {})) {
     signupQueues.set(key, [...responses]);
   }
+
   const statsQueues = new Map<string, PlannedResponse[]>();
+
   for (const [key, responses] of Object.entries(plans.stats ?? {})) {
     statsQueues.set(key, [...responses]);
   }
+
   const removeQueue = [...(plans.remove ?? [])];
   const toggleQueue = [...(plans.toggle ?? [])];
+
   const calls = {
     remove: 0,
     signups: new Map<string, number>(),
@@ -111,6 +122,7 @@ const makeAuctionTransport = (plans: {
 
   const httpClient = HttpClient.make((request, url) => {
     let operation: AuctionOperation;
+
     if (url.pathname.endsWith("/signups/toggle")) {
       operation = "toggle";
     } else if (url.pathname.endsWith("/signups/remove")) {
@@ -124,35 +136,43 @@ const makeAuctionTransport = (plans: {
     if (operation === "toggle") {
       calls.toggle += 1;
     }
+
     if (operation === "remove") {
       calls.remove += 1;
     }
 
     let key: string | undefined;
+
     if (operation === "signups" || operation === "stats") {
-      if (request.body._tag !== "Uint8Array") {
+      if (!Predicate.isTagged("Uint8Array")(request.body)) {
         throw new Error("Expected an auction request body");
       }
+
       key = decodeGroup(request.body.body);
     }
+
     if (operation === "signups" || operation === "stats") {
       if (key === undefined) {
         throw new Error("Expected an auction group key");
       }
+
       const counts = operation === "signups" ? calls.signups : calls.stats;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
 
     let planned: PlannedResponse;
+
     if (operation === "signups") {
       if (key === undefined) {
         throw new Error("Expected an auction group key");
       }
+
       planned = takeResponse(signupQueues.get(key), operation, key);
     } else if (operation === "stats") {
       if (key === undefined) {
         throw new Error("Expected an auction group key");
       }
+
       planned = takeResponse(statsQueues.get(key), operation, key);
     } else if (operation === "remove") {
       planned = takeResponse(removeQueue, operation);
@@ -165,8 +185,10 @@ const makeAuctionTransport = (plans: {
         Effect.map((response) => HttpClientResponse.fromWeb(request, response))
       );
     }
+
     return Effect.succeed(HttpClientResponse.fromWeb(request, planned));
   });
+
   const client = HttpApiClient.makeWith(AppHttpApi, {
     baseUrl: "http://localhost",
     httpClient,
@@ -206,6 +228,7 @@ const makeStats = (totalSignups: number, uniqueUsers: number) =>
   Schema.decodeSync(AuctionStats)({ totalSignups, uniqueUsers });
 
 const groupA: AuctionGroupInput = { profession: "mage", type: "main" };
+
 const groupB: AuctionGroupInput = {
   profession: "warrior",
   type: "main",
@@ -215,6 +238,7 @@ describe("auction queries and mutations", () => {
   it("keeps signup and stats caches separate while navigating between groups", async () => {
     const signupA = makeSignup(1);
     const signupB = makeSignup(2);
+
     const transport = makeAuctionTransport({
       signups: {
         [groupKey(groupA)]: [jsonResponse([signupA])],
@@ -225,6 +249,7 @@ describe("auction queries and mutations", () => {
         [groupKey(groupB)]: [jsonResponse(makeStats(2, 2))],
       },
     });
+
     const testClient = makeTestQueryClient();
 
     try {
@@ -276,6 +301,7 @@ describe("auction queries and mutations", () => {
   it("refreshes signups and stats only for the mutated group", async () => {
     const signupA = makeSignup(1);
     const signupB = makeSignup(2);
+
     const transport = makeAuctionTransport({
       remove: [jsonResponse({ success: true })],
       signups: {
@@ -294,7 +320,9 @@ describe("auction queries and mutations", () => {
       },
       toggle: [jsonResponse({ action: "removed" })],
     });
+
     const testClient = makeTestQueryClient();
+
     const observers = [
       new QueryObserver(
         testClient.queryClient,
@@ -313,6 +341,7 @@ describe("auction queries and mutations", () => {
         auctionStatsQueryOptions(groupB, transport.runner)
       ),
     ];
+
     const unsubscribers = observers.map((observer) =>
       observer.subscribe(() => {})
     );
@@ -321,6 +350,7 @@ describe("auction queries and mutations", () => {
       await Promise.all(
         observers.map(async (observer) => await observer.refetch())
       );
+
       const toggle = new MutationObserver(
         testClient.queryClient,
         toggleAuctionSignupMutationOptions(
@@ -329,6 +359,7 @@ describe("auction queries and mutations", () => {
           transport.runner
         )
       );
+
       await toggle.mutate({
         column: 1,
         level: 30,
@@ -345,6 +376,7 @@ describe("auction queries and mutations", () => {
           transport.runner
         )
       );
+
       await remove.mutate({ id: signupB.id });
 
       expect(transport.calls.toggle).toBe(1);
@@ -359,6 +391,7 @@ describe("auction queries and mutations", () => {
       for (const unsubscribe of unsubscribers) {
         unsubscribe();
       }
+
       testClient.cleanup();
     }
   });
@@ -367,9 +400,11 @@ describe("auction queries and mutations", () => {
     const signupA = makeSignup(1);
     const signupB = makeSignup(2);
     const failure = deferred<Response>();
+
     const transport = makeAuctionTransport({
       remove: [failure.promise],
     });
+
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(auctionSignupsQueryKey(groupA), [
       signupA,
@@ -393,6 +428,7 @@ describe("auction queries and mutations", () => {
           }
         )
       );
+
       const request = remove.mutate({ id: signupA.id });
       await vi.waitFor(() => {
         expect(
@@ -420,14 +456,17 @@ describe("auction queries and mutations", () => {
     const secondSignup = makeSignup(2);
     const firstResponse = deferred<Response>();
     const secondResponse = deferred<Response>();
+
     const transport = makeAuctionTransport({
       remove: [firstResponse.promise, secondResponse.promise],
     });
+
     const testClient = makeTestQueryClient();
     testClient.queryClient.setQueryData(auctionSignupsQueryKey(groupA), [
       firstSignup,
       secondSignup,
     ]);
+
     const remove = new MutationObserver(
       testClient.queryClient,
       removeAuctionSignupMutationOptions(
@@ -468,12 +507,15 @@ describe("auction queries and mutations", () => {
   it("does not let a delayed read overwrite an optimistic removal", async () => {
     const signup = makeSignup(1);
     const delayedRead = deferred<readonly AuctionSignup[]>();
+
     const transport = makeAuctionTransport({
       remove: [jsonResponse({ success: true })],
     });
+
     const testClient = makeTestQueryClient();
     const queryKey = auctionSignupsQueryKey(groupA);
     testClient.queryClient.setQueryData(queryKey, [signup]);
+
     const read = testClient.queryClient.query({
       queryFn: async () => await delayedRead.promise,
       queryKey,
@@ -487,6 +529,7 @@ describe("auction queries and mutations", () => {
           testClient.queryClient.getQueryState(queryKey)?.fetchStatus
         ).toBe("fetching");
       });
+
       const remove = new MutationObserver(
         testClient.queryClient,
         removeAuctionSignupMutationOptions(
@@ -495,6 +538,7 @@ describe("auction queries and mutations", () => {
           transport.runner
         )
       );
+
       await remove.mutate({ id: signup.id });
       delayedRead.resolve([signup]);
       await read;

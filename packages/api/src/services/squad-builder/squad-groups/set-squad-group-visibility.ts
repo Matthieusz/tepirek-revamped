@@ -15,6 +15,7 @@ export const set = Effect.fn("SquadGroups.setVisibility")(
   }) {
     const store = yield* SquadGroupAggregateStoreService;
     const now = yield* DateTime.nowAsDate;
+
     return yield* store.setSquadGroupVisibility({
       actorUserId: input.actorUserId,
       groupId: input.groupId,

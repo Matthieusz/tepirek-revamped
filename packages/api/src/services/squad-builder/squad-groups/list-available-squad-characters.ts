@@ -30,6 +30,7 @@ export const list = Effect.fn("SquadGroups.listAvailableCharacters")(
     const aggregateStore = yield* SquadGroupAggregateStoreService;
     const directoryStore = yield* SquadGroupDirectoryStoreService;
     const group = yield* aggregateStore.getSquadGroupDetail(input);
+
     return yield* directoryStore.listAvailableCharactersForOwner({
       ownerUserId: group.ownerUserId,
     });

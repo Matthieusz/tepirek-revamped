@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 
 export const POINTS_PER_HERO = 20;
+
 export const MIN_EARNINGS = 100_000_000;
 
 /** Calculate guild points per hero-bet member, floored to two decimals. */
@@ -31,6 +32,7 @@ export const EVENT_ICON_IDS = [
 export type EventIconId = (typeof EVENT_ICON_IDS)[number];
 
 const EventIconIdSchema = Schema.Literals(EVENT_ICON_IDS);
+
 export const isEventIconId = Schema.is(EventIconIdSchema);
 
 export interface EventIconOption {
@@ -59,6 +61,7 @@ export {
   isAuctionProfession,
   isAuctionType,
 } from "./auction-vocabulary.ts";
+
 export type { AuctionProfession, AuctionType } from "./auction-vocabulary.ts";
 
 // ---------------------------------------------------------------------------
@@ -74,6 +77,7 @@ export {
   getAuctionSlotColumns,
   isLegalAuctionSlot,
 } from "./auction-slots.ts";
+
 export type {
   AuctionSlotCoordinate,
   AuctionSlotRound,

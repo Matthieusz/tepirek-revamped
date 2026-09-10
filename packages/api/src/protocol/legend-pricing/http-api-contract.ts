@@ -41,6 +41,7 @@ export const UpdateLegendCostPayload = Schema.Struct({
   itemId: LegendaryItemId,
   priceGold: LegendPriceGold,
 });
+
 export interface UpdateLegendCostPayload extends Schema.Schema.Type<
   typeof UpdateLegendCostPayload
 > {}
@@ -54,6 +55,7 @@ export const LegendPriceEnemySource = Schema.Struct({
   name: Schema.NonEmptyString,
   sourceIconKey: LegendaryEnemySourceKey,
 });
+
 export interface LegendPriceEnemySource extends Schema.Schema.Type<
   typeof LegendPriceEnemySource
 > {}
@@ -74,6 +76,7 @@ export const LegendPriceSummary = Schema.Struct({
   sourceIconKey: LegendaryItemSourceKey,
   version: LegendCostVersion,
 });
+
 export interface LegendPriceSummary extends Schema.Schema.Type<
   typeof LegendPriceSummary
 > {}

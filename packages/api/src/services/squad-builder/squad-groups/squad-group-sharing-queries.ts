@@ -11,6 +11,7 @@ export const listIncomingSquadGroupInvites = Effect.fn(
   >[0]
 ) {
   const store = yield* SquadGroupSharingStoreService;
+
   return yield* store.listIncomingSquadGroupInvites(input);
 });
 
@@ -22,6 +23,7 @@ export const listSharedSquadGroups = Effect.fn("SquadGroupSharing.listShared")(
     >[0]
   ) {
     const store = yield* SquadGroupSharingStoreService;
+
     return yield* store.listSharedSquadGroups(input);
   }
 );
@@ -35,6 +37,7 @@ export const listSquadGroupEditorGrants = Effect.fn(
   >[0]
 ) {
   const store = yield* SquadGroupSharingStoreService;
+
   return yield* store.listSquadGroupEditorGrants(input);
 });
 
@@ -47,5 +50,6 @@ export const countPendingSquadGroupInvites = Effect.fn(
   >[0]
 ) {
   const store = yield* SquadGroupSharingStoreService;
+
   return yield* store.getPendingSquadGroupInviteCount(input);
 });

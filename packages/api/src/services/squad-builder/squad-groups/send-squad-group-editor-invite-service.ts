@@ -21,12 +21,15 @@ export const send = EffectRuntime.fn("SquadGroups.sendEditorInvite")(
       actorUserId: input.actorUserId,
       groupId: input.groupId,
     });
+
     if (input.actorUserId === input.invitedUserId) {
       return yield* new CannotInviteSelf();
     }
+
     const target = yield* directoryStore.findVerifiedSquadEditorInviteTarget({
       targetUserId: input.invitedUserId,
     });
+
     return yield* sharingStore.upsertSquadGroupEditorInvite({
       groupId: input.groupId,
       invitedUserId: target.userId,

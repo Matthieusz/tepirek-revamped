@@ -1,4 +1,5 @@
 export type OdwRarity = "zwykły" | "unikatowy" | "heroiczny" | "legendarny";
+
 /** Rarity multipliers applied to base value */
 const ODW_RARITY_MULTIPLIERS = {
   // +50%

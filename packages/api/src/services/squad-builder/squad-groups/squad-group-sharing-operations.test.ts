@@ -36,6 +36,7 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const squadGroupName = parseTestGroupName();
+
   const store = makeSquadGroupSharingStoreServiceTestService({
     respondToSquadGroupInvite: (input) => {
       expect(input).toMatchObject({
@@ -58,10 +59,12 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       });
     },
   });
+
   const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const invite = yield* respond({
       actorUserId,
       invitationId,
@@ -79,13 +82,16 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
 it.effect("surfaces squad invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-squad-respond-attacker");
   const invitationId = parseTestInvitationId();
+
   const store = makeSquadGroupSharingStoreServiceTestService({
     respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
   });
+
   const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       respond({
         actorUserId,
@@ -103,6 +109,7 @@ it.effect("revokes a squad group editor invite as the owner", () => {
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const squadGroupName = parseTestGroupName();
+
   const store = makeSquadGroupSharingStoreServiceTestService({
     revokeSquadGroupEditor: (input) => {
       expect(input).toMatchObject({
@@ -124,10 +131,12 @@ it.effect("revokes a squad group editor invite as the owner", () => {
       });
     },
   });
+
   const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const invite = yield* revoke({
       actorUserId,
       invitationId,
@@ -144,13 +153,16 @@ it.effect("revokes a squad group editor invite as the owner", () => {
 it.effect("surfaces squad group ownership failures", () => {
   const actorUserId = parseTestUserId("effect-squad-revoke-attacker");
   const invitationId = parseTestInvitationId();
+
   const store = makeSquadGroupSharingStoreServiceTestService({
     revokeSquadGroupEditor: () => new ActorDoesNotOwnSquadGroup(),
   });
+
   const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
+
     const error = yield* Effect.flip(
       revoke({
         actorUserId,

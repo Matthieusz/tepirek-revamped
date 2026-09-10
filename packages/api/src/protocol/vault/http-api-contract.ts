@@ -9,28 +9,36 @@ import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 export { EventId, HeroId } from "../../domain/core-identifiers.ts";
 
 const PositiveNumber = Schema.Finite.check(Schema.isGreaterThan(0));
+
 const VaultMetric = Schema.Finite;
+
 export const DistributeGoldPayload = Schema.Struct({
   goldAmount: PositiveNumber,
   heroId: HeroId,
 });
+
 export interface DistributeGoldPayload extends Schema.Schema.Type<
   typeof DistributeGoldPayload
 > {}
+
 export const EventFilterPayload = Schema.Struct({
   eventId: Schema.optionalKey(EventId),
 });
+
 export interface EventFilterPayload extends Schema.Schema.Type<
   typeof EventFilterPayload
 > {}
+
 export const TogglePaidOutPayload = Schema.Struct({
   eventId: EventId,
   paidOut: Schema.Boolean,
   userId: AppUserId,
 });
+
 export interface TogglePaidOutPayload extends Schema.Schema.Type<
   typeof TogglePaidOutPayload
 > {}
+
 export const DistributeGoldSuccess = Schema.Struct({
   goldAmount: PositiveNumber,
   heroId: HeroId,
@@ -40,9 +48,11 @@ export const DistributeGoldSuccess = Schema.Struct({
   totalPoints: VaultMetric,
   usersUpdated: VaultMetric,
 });
+
 export interface DistributeGoldSuccess extends Schema.Schema.Type<
   typeof DistributeGoldSuccess
 > {}
+
 export const VaultRow = Schema.Struct({
   paidOut: Schema.Boolean,
   totalEarnings: Schema.String,
@@ -50,8 +60,11 @@ export const VaultRow = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+
 export interface VaultRow extends Schema.Schema.Type<typeof VaultRow> {}
+
 export const MutationSuccess = Schema.Struct({ success: Schema.Boolean });
+
 export interface MutationSuccess extends Schema.Schema.Type<
   typeof MutationSuccess
 > {}
@@ -61,21 +74,25 @@ export class VaultUnauthorized extends Schema.TaggedErrorClass<VaultUnauthorized
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
+
 export class VaultForbidden extends Schema.TaggedErrorClass<VaultForbidden>()(
   "VaultForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
+
 export class VaultBadRequest extends Schema.TaggedErrorClass<VaultBadRequest>()(
   "VaultBadRequest",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
+
 export class VaultNotFound extends Schema.TaggedErrorClass<VaultNotFound>()(
   "VaultNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
+
 export class VaultPersistenceUnavailable extends Schema.TaggedErrorClass<VaultPersistenceUnavailable>()(
   "VaultPersistenceUnavailable",
   { operation: Schema.String },

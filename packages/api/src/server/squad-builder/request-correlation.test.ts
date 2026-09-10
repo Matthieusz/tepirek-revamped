@@ -19,10 +19,12 @@ const makeRequest = (requestId?: string) =>
 
 const makeTracer = () => {
   const spans: Tracer.NativeSpan[] = [];
+
   const tracer = Tracer.make({
     span(options) {
       const span = new Tracer.NativeSpan(options);
       spans.push(span);
+
       return span;
     },
   });
@@ -42,6 +44,7 @@ describe("withRequestCorrelation", () => {
         ),
         "handler"
       );
+
       yield* Effect.yieldNow;
 
       expect(result).toBe("success");
@@ -71,18 +74,22 @@ describe("withRequestCorrelation", () => {
           "handler"
         )
       );
+
       yield* Effect.yieldNow;
 
       expect(Exit.isFailure(exit)).toBe(true);
+
       if (Exit.isFailure(exit)) {
         const [reason] = exit.cause.reasons;
         expect(reason).toBeDefined();
+
         if (reason !== undefined) {
           expect(Cause.isFailReason(reason) && reason.error).toBe(
             "expected failure"
           );
         }
       }
+
       expect(
         spans
           .find((span) => span.name === "handler")
@@ -99,6 +106,7 @@ describe("withRequestCorrelation", () => {
         withRequestCorrelation(makeRequest(), Effect.succeed("success")),
         "handler"
       );
+
       const emptyRequestIdExit = yield* Effect.exit(
         Effect.withSpan(
           withRequestCorrelation(
@@ -108,19 +116,23 @@ describe("withRequestCorrelation", () => {
           "empty-request-id-handler"
         )
       );
+
       yield* Effect.yieldNow;
 
       expect(success).toBe("success");
       expect(Exit.isFailure(emptyRequestIdExit)).toBe(true);
+
       if (Exit.isFailure(emptyRequestIdExit)) {
         const [reason] = emptyRequestIdExit.cause.reasons;
         expect(reason).toBeDefined();
+
         if (reason !== undefined) {
           expect(Cause.isFailReason(reason) && reason.error).toBe(
             "expected failure"
           );
         }
       }
+
       expect(
         spans
           .find((span) => span.name === "handler")

@@ -26,12 +26,15 @@ export const getRanking = Effect.fn("Web.Ranking.get")(
   function* getRankingEffect(input: RankingInput) {
     const client = yield* AppHttpApiClient;
     let payload: RankingRequestPayload = {};
+
     if (input.eventId !== undefined) {
       payload = { ...payload, eventId: yield* asEventId(input.eventId) };
     }
+
     if (input.heroId !== undefined) {
       payload = { ...payload, heroId: yield* asHeroId(input.heroId) };
     }
+
     return yield* client.ranking.getRanking({
       payload: payload satisfies RankingPayload,
     });
@@ -42,6 +45,7 @@ export const getRanking = Effect.fn("Web.Ranking.get")(
 export const getHeroStats = Effect.fn("Web.Ranking.getHeroStats")(
   function* getHeroStatsEffect(heroId: number) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.ranking.getHeroStats({
       payload: { heroId: yield* asHeroId(heroId) },
     });
@@ -53,6 +57,7 @@ export const getOldestUnpaidEvent = Effect.fn(
   "Web.Ranking.getOldestUnpaidEvent"
 )(function* getOldestUnpaidEventEffect() {
   const client = yield* AppHttpApiClient;
+
   return yield* client.ranking.getOldestUnpaidEvent({});
 });
 

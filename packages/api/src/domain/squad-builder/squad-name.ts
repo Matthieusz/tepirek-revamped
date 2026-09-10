@@ -15,6 +15,7 @@ export const SquadGroupName = Schema.Trim.pipe(
   ),
   Schema.brand("SquadGroupName")
 );
+
 export type SquadGroupName = typeof SquadGroupName.Type;
 
 /** A validated squad name. */
@@ -24,6 +25,7 @@ export const SquadName = Schema.Trim.pipe(
   ),
   Schema.brand("SquadName")
 );
+
 export type SquadName = typeof SquadName.Type;
 
 /** Expected failure when a squad group name is invalid. */

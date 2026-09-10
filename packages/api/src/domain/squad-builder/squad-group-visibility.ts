@@ -6,6 +6,7 @@ export const SquadGroupVisibilitySchema = Schema.Literals([
   "private",
   "global",
 ]);
+
 /** Global discovery visibility for a squad group. */
 export type SquadGroupVisibility = typeof SquadGroupVisibilitySchema.Type;
 

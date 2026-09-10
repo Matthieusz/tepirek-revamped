@@ -14,16 +14,16 @@ import {
   listEvents,
   toggleEventActive,
 } from "../../services/event/event-service.ts";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
-const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
-  {
+const { requireAdminSession, requireVerifiedSession } =
+  buildAuthorizationPolicy({
     forbidden: () => new EventForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new EventUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
       new EventForbidden({ message: "Konto oczekuje na weryfikację" }),
-  }
-);
+  });
+
 const mapEventError = (error: ApplicationDependencyUnavailable) =>
   new EventPersistenceUnavailable({ operation: error.operation });
 
@@ -47,6 +47,7 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
       .handle("listEvents", () =>
         Effect.gen(function* listEventsHandler() {
           yield* requireVerifiedSession();
+
           return yield* listEvents().pipe(Effect.mapError(mapEventError));
         })
       )

@@ -13,6 +13,7 @@ const routeApi = getRouteApi("/dashboard/events/bets/add");
 
 const BetsAddRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <BetsAddPage session={session} />;
 };
 

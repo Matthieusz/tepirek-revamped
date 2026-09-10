@@ -4,6 +4,7 @@ import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ const GoldFormSchema = Schema.Struct({
   goldAmount: GoldAmountSchema,
   heroId: RequiredSelectionSchema("Wybierz konkretnego herosa"),
 });
+
 const GoldFormValidator = Schema.toStandardSchemaV1(GoldFormSchema);
 
 const filterHeroesForEvent = (
@@ -73,7 +75,7 @@ const filterHeroesForEvent = (
   );
 
 const getHeroStats = (state: HeroStatsPreviewState): HeroStats | undefined =>
-  state._tag === "success" ? state.heroStats : undefined;
+  Predicate.isTagged("success")(state) ? state.heroStats : undefined;
 
 const getSubmitLabel = (params: {
   readonly dependentDataLoading: boolean;
@@ -82,9 +84,11 @@ const getSubmitLabel = (params: {
   if (params.isSubmitting) {
     return "Rozdzielanie...";
   }
+
   if (params.dependentDataLoading) {
     return "Ładowanie...";
   }
+
   return "Rozdziel złoto";
 };
 
@@ -100,18 +104,23 @@ const DistributeGoldModalContent = ({
   selectedHeroId = "all",
 }: DistributeGoldModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const distributeGold = useMutation(
     distributeGoldMutationOptions(queryClient, runAppHttpApi)
   );
+
   const eventsQuery = useQuery(eventsQueryOptions());
   const events = eventsQuery.data ?? [];
   const eventsLoading = eventsQuery.isPending;
   const heroesQuery = useQuery(heroesQueryOptions());
   const heroes = heroesQuery.data ?? [];
   const heroesLoading = heroesQuery.isPending;
+
   const form = useAppForm({
     defaultValues: {
       eventId: selectedEventId,
@@ -121,11 +130,13 @@ const DistributeGoldModalContent = ({
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await GoldFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
 
       const goldAmount = parseGoldAmount(decoded.value.goldAmount);
+
       const result = await runFormSubmission(
         async () =>
           await distributeGold.mutateAsync({
@@ -134,8 +145,10 @@ const DistributeGoldModalContent = ({
             heroId: decoded.value.heroId,
           })
       );
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -147,13 +160,16 @@ const DistributeGoldModalContent = ({
     },
     validators: { onSubmit: GoldFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const eventId = useSelector(form.store, (state) => state.values.eventId);
   const heroId = useSelector(form.store, (state) => state.values.heroId);
+
   const goldAmountValue = useSelector(
     form.store,
     (state) => state.values.goldAmount
   );
+
   const canDiscard = useCanCloseForm(isSubmitting);
 
   const handleOpenChange = (nextOpen: boolean): void => {
@@ -161,15 +177,18 @@ const DistributeGoldModalContent = ({
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 
   const filteredHeroes = filterHeroesForEvent(eventId, heroes);
   const parsedHeroId = toQueryInput(heroId) ?? null;
   const heroStatsQuery = useQuery(heroStatsQueryOptions(parsedHeroId));
+
   const heroStatsPreviewState = getHeroStatsPreviewState({
     data: heroStatsQuery.data,
     enabled: heroId !== ALL_FILTER && open,
@@ -179,14 +198,21 @@ const DistributeGoldModalContent = ({
       void heroStatsQuery.refetch();
     },
   });
+
   const heroStats = getHeroStats(heroStatsPreviewState);
+
   const dependentDataLoading =
-    eventsLoading || heroesLoading || heroStatsPreviewState._tag === "loading";
+    eventsLoading ||
+    heroesLoading ||
+    Predicate.isTagged("loading")(heroStatsPreviewState);
+
   const goldAmount = parseGoldAmount(goldAmountValue || "0");
+
   const pointWorth =
     heroStats && heroStats.totalPoints > 0
       ? goldAmount / heroStats.totalPoints
       : 0;
+
   const submitLabel = getSubmitLabel({ dependentDataLoading, isSubmitting });
 
   return (
@@ -238,7 +264,7 @@ const DistributeGoldModalContent = ({
                   <field.TextField
                     disabled={
                       heroId === ALL_FILTER ||
-                      heroStatsPreviewState._tag === "loading"
+                      Predicate.isTagged("loading")(heroStatsPreviewState)
                     }
                     helperText={
                       <p className="text-muted-foreground text-xs">

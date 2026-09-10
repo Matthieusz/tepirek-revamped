@@ -1,7 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 
-import { formSubmission, runFormSubmission } from "@/lib/form-submission";
+import {
+  FormSubmissionResult,
+  formSubmission,
+  runFormSubmission,
+} from "@/lib/form-submission";
 
 describe("formSubmission", () => {
   it.effect("returns the mutation value on success", () =>
@@ -22,8 +27,8 @@ describe("formSubmission", () => {
         )
       );
 
+      expect(error).toHaveProperty("_tag", "FormSubmissionError");
       expect(error).toMatchObject({
-        _tag: "FormSubmissionError",
         message: "Nie udało się wykonać operacji. Spróbuj ponownie.",
       });
     })
@@ -32,16 +37,15 @@ describe("formSubmission", () => {
   it("returns success and expected failure as values for TanStack handlers", async () => {
     await expect(
       runFormSubmission(async () => await Promise.resolve("created"))
-    ).resolves.toEqual({
-      _tag: "success",
-      value: "created",
-    });
+    ).resolves.toEqual(FormSubmissionResult.success({ value: "created" }));
 
     const result = await runFormSubmission(
       async () => await Promise.reject(new Error("provider failed"))
     );
+
     expect(result._tag).toBe("failure");
-    if (result._tag === "failure") {
+
+    if (Predicate.isTagged("failure")(result)) {
       expect(result.error.message).toBe(
         "Nie udało się wykonać operacji. Spróbuj ponownie."
       );

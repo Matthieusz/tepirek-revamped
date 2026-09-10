@@ -19,9 +19,11 @@ it.effect("applies a pending account refetch", () => {
   const actorUserId = parseTestUserId();
   const accountId = Effect.runSync(parseMargonemAccountId(123));
   const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+
   const refetchPreviewId = Effect.runSync(
     parsePendingMargonemAccountRefetchId(456)
   );
+
   const store = makeAccountRefetchStoreServiceTestService({
     applyPendingRefetch: (input) => {
       expect(input.now).toEqual(fixedNow);
@@ -41,6 +43,7 @@ it.effect("applies a pending account refetch", () => {
 
   return Effect.gen(function* applyRefetchEffect() {
     yield* TestClock.setTime(fixedNow.getTime());
+
     const applied = yield* apply({
       actorUserId,
       refetchPreviewId,

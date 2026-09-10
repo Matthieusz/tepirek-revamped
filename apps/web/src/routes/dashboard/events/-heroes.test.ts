@@ -11,6 +11,7 @@ import { Route as VaultRoute } from "@/routes/dashboard/events/vault";
 import type { AuthSession } from "@/types/route";
 
 const getUser = vi.fn<RouterAppContext["getUser"]>();
+
 const verifiedSession: AuthSession = {
   session: {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -45,9 +46,11 @@ type EventRoutePath =
 
 const loadEventRoute = async (to: EventRoutePath) => {
   const router = getRouter();
+
   const query = vi
     .spyOn(router.options.context.queryClient, "query")
     .mockResolvedValue([]);
+
   router.update({
     context: { ...router.options.context, getUser },
     history: createMemoryHistory({ initialEntries: ["/"] }),
@@ -55,6 +58,7 @@ const loadEventRoute = async (to: EventRoutePath) => {
   });
   query.mockClear();
   await router.preloadRoute({ to });
+
   return { query, router };
 };
 

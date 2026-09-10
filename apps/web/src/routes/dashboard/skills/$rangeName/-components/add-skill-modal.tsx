@@ -1,5 +1,6 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ const SkillFormSchema = Schema.Struct({
   name: SkillNameSchema,
   professionId: SkillProfessionIdSchema,
 });
+
 const SkillFormValidator = Schema.toStandardSchemaV1(SkillFormSchema);
 
 const AddSkillModalContent = ({
@@ -47,9 +49,12 @@ const AddSkillModalContent = ({
   defaultProfessionId,
 }: AddSkillModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createSkill = useMutation(
     createSkillMutationOptions(queryClient, undefined, {
       onRefreshError: () => {
@@ -59,9 +64,11 @@ const AddSkillModalContent = ({
       },
     })
   );
+
   const professionsQuery = useQuery(skillProfessionsQueryOptions());
   const professionsData = professionsQuery.data ?? [];
   const professionsLoading = professionsQuery.isPending;
+
   const form = useAppForm({
     defaultValues: {
       link: "",
@@ -73,6 +80,7 @@ const AddSkillModalContent = ({
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await SkillFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -86,8 +94,10 @@ const AddSkillModalContent = ({
           rangeId: defaultRangeId,
         });
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -97,10 +107,12 @@ const AddSkillModalContent = ({
     },
     validators: { onSubmit: SkillFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
   let submitLabel = "Utwórz zestaw";
+
   if (professionsLoading) {
     submitLabel = "Ładowanie...";
   } else if (professionsQuery.isError) {
@@ -114,9 +126,11 @@ const AddSkillModalContent = ({
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 

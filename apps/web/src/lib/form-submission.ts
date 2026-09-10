@@ -1,3 +1,4 @@
+import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -12,9 +13,17 @@ export class FormSubmissionError extends Schema.TaggedErrorClass<FormSubmissionE
 ) {}
 
 /** The result of a mutation that is safe to render from a form component. */
-export type FormSubmissionResult<A> =
-  | { readonly _tag: "success"; readonly value: A }
-  | { readonly _tag: "failure"; readonly error: FormSubmissionError };
+export type FormSubmissionResult<A> = Data.TaggedEnum<{
+  readonly success: { readonly value: A };
+  readonly failure: { readonly error: FormSubmissionError };
+}>;
+
+interface FormSubmissionResultDefinition extends Data.TaggedEnum.WithGenerics<1> {
+  readonly taggedEnum: FormSubmissionResult<this["A"]>;
+}
+
+export const FormSubmissionResult =
+  Data.taggedEnum<FormSubmissionResultDefinition>();
 
 /** Translates a rejected mutation promise into a typed Effect Form failure. */
 export const formSubmission = <A>(promise: () => Promise<A>) =>
@@ -40,13 +49,12 @@ export const runFormSubmission = async <A>(
   promise: () => Promise<A>
 ): Promise<FormSubmissionResult<A>> => {
   try {
-    return {
-      _tag: "success",
+    return FormSubmissionResult.success({
       value: await Effect.runPromise(formSubmission(promise)),
-    };
+    });
   } catch (error: unknown) {
     if (Schema.is(FormSubmissionError)(error)) {
-      return { _tag: "failure", error };
+      return FormSubmissionResult.failure({ error });
     }
 
     throw error;

@@ -137,6 +137,7 @@ const SquadRosterRow = ({
   }
 
   const profession = getProfessionPresentation(character.profession);
+
   return (
     <li className="border-border bg-card/40 flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
       <div className="flex min-w-0 items-center gap-2">
@@ -213,9 +214,11 @@ const getSquadLevelRange = (
       characterById,
       draftCharacter.characterId
     ).pipe(Option.getOrUndefined);
+
     if (character === undefined) {
       continue;
     }
+
     min = min === undefined ? character.level : Math.min(min, character.level);
     max = max === undefined ? character.level : Math.max(max, character.level);
   }
@@ -237,8 +240,10 @@ const getSquadProfessionCounts = (
       characterById,
       draftCharacter.characterId
     ).pipe(Option.getOrUndefined);
+
     return character === undefined ? [] : [character.profession];
   });
+
   const counts = Arr.groupBy(professions, (profession) => profession);
 
   return Record.toEntries(counts).map(([profession, matches]) => ({
@@ -253,9 +258,11 @@ const formatSquadLevelRange = (
   if (levelRange === undefined) {
     return "Brak poziomów";
   }
+
   if (levelRange.min === levelRange.max) {
     return `Poziom ${levelRange.min}`;
   }
+
   return `Poziomy ${levelRange.min}–${levelRange.max}`;
 };
 
@@ -327,6 +334,7 @@ const SquadPanel = ({
                     {professionCounts.map(({ count, profession }) => {
                       const presentation =
                         getProfessionPresentation(profession);
+
                       return (
                         <li
                           aria-label={`${presentation.label}: ${count}`}
@@ -402,6 +410,7 @@ const SquadPanel = ({
             <ul className="grid grid-flow-col grid-cols-2 grid-rows-5 gap-2 px-3 pb-3">
               {Array.from({ length: MAX_SQUAD_CHARACTERS }, (_, position) => {
                 const character = squad.characters[position];
+
                 return (
                   <SquadRosterRow
                     canEditPlacements={canEditPlacements}

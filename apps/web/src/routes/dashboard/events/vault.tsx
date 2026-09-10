@@ -14,6 +14,7 @@ const routeApi = getRouteApi("/dashboard/events/vault");
 
 const EventsVaultRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <EventsVaultPage session={session} />;
 };
 

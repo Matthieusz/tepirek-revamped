@@ -19,6 +19,7 @@ import { getErrorMessage } from "@/lib/errors";
 import appCss from "@/index.css?url";
 
 const showDevtools = import.meta.env.DEV;
+
 const applicationDescription =
   "Narzędzia Gildii Złodziei do organizacji wydarzeń, aukcji i wspólnych zadań w Margonem.";
 
@@ -53,7 +54,7 @@ export const RootErrorBoundary = ({
   error,
   reset,
 }: {
-  error: Error;
+  error: unknown;
   reset: () => void;
 }): ReactElement => (
   <html lang="pl" suppressHydrationWarning>

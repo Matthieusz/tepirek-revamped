@@ -46,14 +46,19 @@ it.effect("previews account refetch and stores the pending diff", () => {
   const displayName = Effect.runSync(parseAccountDisplayName("informati"));
   const firecrawlCreditsUsed = Effect.runSync(parseFirecrawlCreditCount(1));
   const level = Effect.runSync(parsePositiveLevel(315));
+
   const margonemCharacterId = Effect.runSync(
     parseMargonemCharacterId(1_296_625)
   );
+
   const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+
   const refetchPreviewId = Effect.runSync(
     parsePendingMargonemAccountRefetchId(456)
   );
+
   const createdPendingIds: number[] = [];
+
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
       Effect.succeed({
@@ -67,10 +72,12 @@ it.effect("previews account refetch and stores the pending diff", () => {
     scrapeUrlHtml: () =>
       Effect.die(new Error("URL scraping is not used by this test")),
   };
+
   const store = makeAccountRefetchStoreServiceTestService({
     createPendingRefetch: (input) => {
       expect(input.latestCharacters).toHaveLength(1);
       createdPendingIds.push(456);
+
       return Effect.succeed({ id: refetchPreviewId });
     },
     getAccountForRefetch: (input) =>
@@ -92,6 +99,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
         profileId,
       }),
   });
+
   const requestAccounting =
     makeFirecrawlRequestAccountingStoreServiceTestService({
       markRequestSucceeded: () => Effect.void,
@@ -144,6 +152,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
     const scrapeStarted = yield* Deferred.make<boolean>();
     const pendingScrape = yield* Deferred.make<never>();
     const failedRequests: { errorTag: string; requestId: number }[] = [];
+
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
         Deferred.succeed(scrapeStarted, true).pipe(
@@ -152,6 +161,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
       scrapeUrlHtml: () =>
         Effect.die(new Error("URL scraping is not used by this test")),
     };
+
     const store = makeAccountRefetchStoreServiceTestService({
       getAccountForRefetch: () =>
         Effect.succeed({
@@ -161,6 +171,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
           profileId,
         }),
     });
+
     const requestAccounting =
       makeFirecrawlRequestAccountingStoreServiceTestService({
         markRequestFailed: (input) =>
@@ -178,6 +189,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
             requestId: 123,
           }),
       });
+
     const operation = preview({ accountId, actorUserId }).pipe(
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
@@ -190,6 +202,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
         requestAccounting
       )
     );
+
     const fiber = yield* Effect.forkChild(operation);
 
     yield* Deferred.await(scrapeStarted);
@@ -197,9 +210,11 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
     const exit = yield* Fiber.await(fiber);
 
     expect(Exit.isFailure(exit)).toBe(true);
+
     if (Exit.isFailure(exit)) {
       expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true);
     }
+
     expect(failedRequests).toHaveLength(1);
     expect(failedRequests[0]).toMatchObject({
       errorTag: "Interrupted",

@@ -2,6 +2,7 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 import type * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import type * as Schema from "effect/Schema";
@@ -16,10 +17,15 @@ import { DiscordGuilds, hasDiscordGuild } from "./discord-guild.ts";
 import { DiscordVerificationConfig } from "./discord-verification-config.ts";
 
 const DISCORD_API_BASE_URL = "https://discord.com/api";
+
 const DISCORD_GUILDS_PATH = "/users/@me/guilds";
+
 const DISCORD_REQUEST_TIMEOUT = "10 seconds";
+
 const DISCORD_RETRY_LIMIT = 2;
+
 const DISCORD_RETRY_BASE_DELAY_MILLISECONDS = 100;
+
 const MILLISECONDS_PER_SECOND = 1000;
 
 const parseRetryAfterMilliseconds = (
@@ -29,17 +35,21 @@ const parseRetryAfterMilliseconds = (
     let retryAfterMilliseconds: number | undefined;
 
     if (
-      error.reason._tag === "StatusCodeError" &&
+      Predicate.isTagged("StatusCodeError")(error.reason) &&
       error.reason.response.status === 429
     ) {
       const retryAfter = error.reason.response.headers["retry-after"];
+
       if (retryAfter !== undefined) {
         const seconds = Number(retryAfter);
+
         if (Number.isNaN(seconds)) {
           const retryAt = Date.parse(retryAfter);
+
           if (Number.isFinite(retryAt)) {
             const currentTime = yield* Clock.currentTimeMillis;
             const delay = retryAt - currentTime;
+
             if (delay >= 0) {
               retryAfterMilliseconds = delay;
             }
@@ -101,9 +111,11 @@ const fetchDiscordGuilds = (
 
   return Effect.gen(function* fetchGuilds() {
     const response = yield* client.execute(request);
+
     if (response.status === 401 || response.status === 403) {
       return false as const;
     }
+
     return yield* HttpClientResponse.schemaBodyJson(DiscordGuilds)(response);
   });
 };

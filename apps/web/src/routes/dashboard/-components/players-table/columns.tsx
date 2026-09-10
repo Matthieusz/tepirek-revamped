@@ -63,6 +63,7 @@ const ActionCell = ({ player }: { player: Player }) => {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
+
   const mutationCallbacks = {
     onRefreshError: () => {
       toast.error("Zapisano zmiany, ale nie udało się odświeżyć danych.");
@@ -71,15 +72,19 @@ const ActionCell = ({ player }: { player: Player }) => {
       await router.invalidate();
     },
   };
+
   const setVerified = useMutation(
     setVerifiedMutationOptions(queryClient, undefined, mutationCallbacks)
   );
+
   const setRole = useMutation(
     setRoleMutationOptions(queryClient, undefined, mutationCallbacks)
   );
+
   const updateUserName = useMutation(
     updateUserNameMutationOptions(queryClient, undefined, mutationCallbacks)
   );
+
   const removeUser = useMutation(
     deleteUserMutationOptions(queryClient, undefined, mutationCallbacks)
   );
@@ -87,12 +92,14 @@ const ActionCell = ({ player }: { player: Player }) => {
   const runAction = (name: string, action: () => Promise<void>) => {
     const run = async () => {
       setPendingAction(name);
+
       try {
         await action();
         toast.success("Zapisano zmiany");
       } catch (error: unknown) {
         toast.error(getErrorMessage(error, "Nie udało się zapisać zmian"));
       }
+
       setPendingAction(null);
     };
 

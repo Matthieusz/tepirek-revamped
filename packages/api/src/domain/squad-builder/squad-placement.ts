@@ -1,3 +1,5 @@
+import * as Data from "effect/Data";
+
 /** The maximum number of characters that may be placed in one squad. */
 export const MAX_SQUAD_CHARACTERS = 10 as const;
 
@@ -21,32 +23,35 @@ export interface SquadPlacementSquad<
   readonly characters: readonly SquadPlacementCharacter<AccountId>[];
 }
 
-/** A capacity failure produced before character metadata is available. */
-export interface SquadPlacementCapacityError {
-  readonly _tag: "TooManyCharactersInSquad";
-  readonly maxCharacters: typeof MAX_SQUAD_CHARACTERS;
-  readonly squadClientKey: string;
-}
-
 /** A failure produced by the squad placement policy. */
-export type SquadPlacementValidationError<
-  AccountId extends SquadPlacementAccountId = SquadPlacementAccountId,
-> =
-  | SquadPlacementCapacityError
-  | {
-      readonly _tag: "DuplicateCharacterInSquad";
+export type SquadPlacementValidationError<AccountId = SquadPlacementAccountId> =
+  Data.TaggedEnum<{
+    readonly TooManyCharactersInSquad: {
+      readonly maxCharacters: typeof MAX_SQUAD_CHARACTERS;
+      readonly squadClientKey: string;
+    };
+    readonly DuplicateCharacterInSquad: {
       readonly characterId: number;
       readonly squadClientKey: string;
-    }
-  | {
-      readonly _tag: "DuplicateCharacterInSquadGroup";
-      readonly characterId: number;
-    }
-  | {
-      readonly _tag: "DuplicateAccountInSquad";
+    };
+    readonly DuplicateCharacterInSquadGroup: { readonly characterId: number };
+    readonly DuplicateAccountInSquad: {
       readonly accountId: AccountId;
       readonly squadClientKey: string;
     };
+  }>;
+
+interface SquadPlacementValidationErrorDefinition extends Data.TaggedEnum.WithGenerics<1> {
+  readonly taggedEnum: SquadPlacementValidationError<this["A"]>;
+}
+
+export const SquadPlacementValidationError =
+  Data.taggedEnum<SquadPlacementValidationErrorDefinition>();
+
+export type SquadPlacementCapacityError = Data.TaggedEnum.Value<
+  SquadPlacementValidationError,
+  "TooManyCharactersInSquad"
+>;
 
 /** Check the canonical capacity of one squad. */
 export const validateSquadPlacementCount = (
@@ -54,11 +59,10 @@ export const validateSquadPlacementCount = (
   characterCount: number
 ): SquadPlacementCapacityError | undefined =>
   characterCount > MAX_SQUAD_CHARACTERS
-    ? {
-        _tag: "TooManyCharactersInSquad",
+    ? SquadPlacementValidationError.TooManyCharactersInSquad({
         maxCharacters: MAX_SQUAD_CHARACTERS,
         squadClientKey,
-      }
+      })
     : undefined;
 
 /**
@@ -77,6 +81,7 @@ export const validateSquadPlacements = <
       squad.squadClientKey,
       squad.characters.length
     );
+
     if (countError !== undefined) {
       return countError;
     }
@@ -86,29 +91,28 @@ export const validateSquadPlacements = <
 
     for (const character of squad.characters) {
       if (squadCharacterIds.has(character.characterId)) {
-        return {
-          _tag: "DuplicateCharacterInSquad",
+        return SquadPlacementValidationError.DuplicateCharacterInSquad({
           characterId: character.characterId,
           squadClientKey: squad.squadClientKey,
-        };
+        });
       }
 
       if (groupCharacterIds.has(character.characterId)) {
-        return {
-          _tag: "DuplicateCharacterInSquadGroup",
+        return SquadPlacementValidationError.DuplicateCharacterInSquadGroup({
           characterId: character.characterId,
-        };
+        });
       }
 
       if (character.accountId !== undefined) {
         const key = String(character.accountId);
+
         if (squadAccountIds.has(key)) {
-          return {
-            _tag: "DuplicateAccountInSquad",
+          return SquadPlacementValidationError.DuplicateAccountInSquad({
             accountId: character.accountId,
             squadClientKey: squad.squadClientKey,
-          };
+          });
         }
+
         squadAccountIds.add(key);
       }
 

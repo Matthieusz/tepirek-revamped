@@ -41,6 +41,7 @@ export type MargonemCharacterDiff = Data.TaggedEnum<{
     readonly latest: MargonemCharacterPreview;
   };
 }>;
+
 export const MargonemCharacterDiff = Data.taggedEnum<MargonemCharacterDiff>();
 
 export type AddedMargonemCharacterDiff = Data.TaggedEnum.Value<
@@ -153,6 +154,7 @@ export const computeMargonemAccountRefetchDiff = ({
       (current) => [current.margonemCharacterId, current] as const
     )
   );
+
   const latestByCharacterId = HashMap.fromIterable(
     latestCharacters.map((latest) => [latest.characterId, latest] as const)
   );
@@ -169,6 +171,7 @@ export const computeMargonemAccountRefetchDiff = ({
       added.push(MargonemCharacterDiff.AddedCharacter({ latest }));
       continue;
     }
+
     const current = currentOption.value;
 
     const changes = fieldChangesForCharacter(current, latest);

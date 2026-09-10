@@ -58,9 +58,11 @@ const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
 ): S["Type"] => {
   const result = Schema.decodeUnknownExit(schema)(value);
   expect(Exit.isSuccess(result)).toBe(true);
+
   if (Exit.isFailure(result)) {
     throw new Error("Expected schema decoding to succeed");
   }
+
   return result.value;
 };
 

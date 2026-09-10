@@ -15,7 +15,9 @@ export interface AuthEnv {
 }
 
 const NonEmptyString = Schema.String.check(Schema.isNonEmpty());
+
 const BetterAuthSecret = Schema.String.check(Schema.isMinLength(32));
+
 const TrimmedNonEmptyString = Schema.Trim.pipe(
   Schema.check(Schema.isNonEmpty())
 );

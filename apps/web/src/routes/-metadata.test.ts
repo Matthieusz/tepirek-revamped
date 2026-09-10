@@ -28,6 +28,7 @@ describe("route metadata", () => {
     const homeHead = await invokeRouteHook(HomeRoute.options.head);
     const loginHead = await invokeRouteHook(LoginRoute.options.head);
     const signupHead = await invokeRouteHook(SignupRoute.options.head);
+
     const waitingRoomHead = await invokeRouteHook(
       WaitingRoomRoute.options.head
     );
@@ -57,6 +58,7 @@ describe("route metadata", () => {
   it("prevents auth-gated routes from being indexed", async () => {
     const loginHead = await invokeRouteHook(LoginRoute.options.head);
     const signupHead = await invokeRouteHook(SignupRoute.options.head);
+
     const waitingRoomHead = await invokeRouteHook(
       WaitingRoomRoute.options.head
     );

@@ -41,6 +41,7 @@ describe("legend catalog identifiers and levels", () => {
           const error = yield* Schema.decodeEffect(schema)(value).pipe(
             Effect.flip
           );
+
           expect(error._tag).toBe("SchemaError");
         }
       }
@@ -62,6 +63,7 @@ describe("LegendCostVersion", () => {
         const error = yield* Schema.decodeEffect(LegendCostVersion)(value).pipe(
           Effect.flip
         );
+
         expect(error._tag).toBe("SchemaError");
       }
     })
@@ -84,6 +86,7 @@ describe("LegendPriceGold", () => {
         const error = yield* Schema.decodeEffect(LegendPriceGold)(value).pipe(
           Effect.flip
         );
+
         expect(error._tag).toBe("SchemaError");
       }
     })
@@ -102,9 +105,11 @@ describe("Margonem CDN icon normalization", () => {
       sourceKey: "/obrazki/itemy/pie/pierscien1319.gif",
       url: "https://micc.garmory-cdn.cloud/obrazki/itemy/pie/pierscien1319.gif",
     });
+
     const enemyIcon = normalizeLegendaryEnemyIcon(
       "https://micc.garmory-cdn.cloud/obrazki/npc/her/domina.gif#preview"
     );
+
     expect(Option.getOrNull(enemyIcon)).toEqual({
       sourceKey: "/obrazki/npc/her/domina.gif",
       url: "https://micc.garmory-cdn.cloud/obrazki/npc/her/domina.gif",
@@ -150,9 +155,11 @@ describe("classifyLegendaryEquipment", () => {
       options?.icon ??
         "https://micc.garmory-cdn.cloud/obrazki/itemy/pie/item.gif"
     );
+
     if (Option.isNone(icon)) {
       throw new Error("Test icon must be a supported item icon");
     }
+
     return Option.getOrNull(
       classifyLegendaryEquipment({
         iconSourceKey: icon.value.sourceKey,

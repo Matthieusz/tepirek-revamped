@@ -26,17 +26,19 @@ import type {
 import { RankingService } from "../../services/ranking/ranking-service.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
 const PersistedAggregateNumber = Schema.Union([
   Schema.Finite,
   Schema.FiniteFromString,
 ]);
-const directPersistenceQuery = makeDirectPersistenceQuery(
+
+const directPersistenceQuery = buildDirectPersistenceQuery(
   ({ cause, operation }) =>
     new RankingPersistenceUnavailable({ cause, operation })
 );
+
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
@@ -55,6 +57,7 @@ const decodePersisted = <A>(
 
 const decodePointWorth = (operation: string) => {
   const decode = parsePointWorth;
+
   return (input: Parameters<typeof decode>[0]) =>
     decode(input).pipe(
       Effect.mapError(
@@ -68,12 +71,15 @@ const buildUserStatsWhere = (input: {
   readonly heroId?: number | undefined;
 }): SQL | undefined => {
   const conditions: SQL[] = [];
+
   if (input.eventId !== undefined) {
     conditions.push(eq(userStats.eventId, input.eventId));
   }
+
   if (input.heroId !== undefined) {
     conditions.push(eq(userStats.heroId, input.heroId));
   }
+
   return conditions.length > 0 ? and(...conditions) : undefined;
 };
 
@@ -90,10 +96,12 @@ const normalizeRankingRow = (row: {
       PersistedAggregateNumber,
       "getRanking.decode"
     )(row.totalBets);
+
     const userId = yield* decodePersisted(
       AppUserId,
       "getRanking.decode"
     )(row.userId);
+
     return { ...row, totalBets, userId } satisfies RankingRow;
   });
 
@@ -113,6 +121,7 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
         .from(userStats)
         .where(eq(userStats.heroId, heroId))
     );
+
     const heroRows = yield* persistenceQuery(
       "getHeroStats.hero",
       database
@@ -120,26 +129,34 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
         .from(hero)
         .where(eq(hero.id, heroId))
     );
+
     const [heroInfo] = heroRows;
+
     if (heroInfo === undefined) {
       return yield* new RankingNotFound({ message: "Heros nie znaleziony" });
     }
+
     const [stats] = statsRows;
+
     const decodedHeroId = yield* decodePersisted(
       HeroId,
       "getHeroStats.decode"
     )(heroId);
+
     const totalBets = yield* decodePersisted(
       PersistedAggregateNumber,
       "getHeroStats.decode"
     )(stats?.totalBets ?? 0);
+
     const totalPoints = yield* decodePersisted(
       Schema.FiniteFromString,
       "getHeroStats.decode"
     )(stats?.totalPoints ?? "0");
+
     const currentPointWorth = yield* decodePointWorth("getHeroStats.decode")(
       heroInfo.pointWorth
     );
+
     return {
       currentPointWorth: currentPointWorth ?? 0,
       heroId: decodedHeroId,
@@ -159,6 +176,7 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
         sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS} AND NOT BOOL_AND(${userStats.paidOut})`
       )
       .as("eligible_users");
+
     const result = yield* persistenceQuery(
       "getOldestUnpaidEvent",
       database
@@ -169,7 +187,9 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
         .orderBy(asc(event.endTime), asc(event.id))
         .limit(1)
     );
+
     const eventId = result[0]?.eventId;
+
     return eventId === undefined
       ? null
       : yield* decodePersisted(EventId, "getOldestUnpaidEvent.decode")(eventId);
@@ -200,6 +220,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
     );
 
     let totalBetsRows: readonly { count: number }[];
+
     if (input.heroId !== undefined) {
       totalBetsRows = yield* persistenceQuery(
         "getRanking.totalHeroBets",
@@ -223,6 +244,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(hero.eventId, input.eventId))
       );
     }
+
     const totalBets = yield* decodePersisted(
       PersistedAggregateNumber,
       "getRanking.decode"
@@ -238,6 +260,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
               .from(hero)
               .where(eq(hero.id, input.heroId))
           );
+
     const pointWorth =
       pointWorthRows === null
         ? null

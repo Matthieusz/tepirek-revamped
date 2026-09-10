@@ -12,6 +12,7 @@ import {
 
 const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
+
 const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
 
 it("constructs and closes the scoped shared PostgreSQL pool", async () => {
@@ -21,6 +22,7 @@ it("constructs and closes the scoped shared PostgreSQL pool", async () => {
         const context = yield* Layer.build(
           makeSharedPostgresPoolLayer(Redacted.make(testDatabaseUrl))
         );
+
         const sharedPool = Context.get(context, SharedPostgresPool);
 
         expect(sharedPool.options.max).toBe(DATABASE_POOL_MAX_CONNECTIONS);

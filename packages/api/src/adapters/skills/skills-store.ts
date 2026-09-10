@@ -31,12 +31,13 @@ import type {
 } from "../../services/skills/skills-store.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 
-const persistenceQuery = makeDirectPersistenceQuery(
+const persistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
+
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
   operation: string
@@ -79,11 +80,13 @@ const createRangeWithDatabase = (database: EffectPgDatabase) =>
     name,
   }: CreateRangeInput) {
     const slug = slugifySkillRangeName(name);
+
     if (slug === "") {
       return yield* new ApplicationInvalidInput({
         message: "Nazwa przedziału musi zawierać litery lub cyfry",
       });
     }
+
     const existing = yield* persistenceQuery(
       "findRangeBySlug",
       database
@@ -92,15 +95,18 @@ const createRangeWithDatabase = (database: EffectPgDatabase) =>
         .where(eq(range.slug, slug))
         .limit(1)
     );
+
     if (existing[0]) {
       return yield* new ApplicationConflict({
         message: "Przedział o tej nazwie już istnieje",
       });
     }
+
     yield* persistenceQuery(
       "createRange",
       database.insert(range).values({ image, level, name, slug })
     );
+
     return yield* Effect.void;
   });
 
@@ -120,6 +126,7 @@ const deleteRangeWithDatabase =
       "deleteRange",
       database.delete(range).where(eq(range.id, id))
     );
+
 const deleteSkillWithDatabase =
   (database: EffectPgDatabase) =>
   ({ id }: DeleteSkillInput) =>
@@ -127,6 +134,7 @@ const deleteSkillWithDatabase =
       "deleteSkill",
       database.delete(skills).where(eq(skills.id, id))
     );
+
 const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listProfessions", database.select().from(professions)).pipe(
     Effect.flatMap((rows) =>
@@ -139,6 +147,7 @@ const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
       )
     )
   );
+
 const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listRanges", database.select().from(range)).pipe(
     Effect.flatMap((rows) =>
@@ -151,6 +160,7 @@ const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
       )
     )
   );
+
 const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* getRangeBySlugWithDatabase({
     slug,
@@ -159,16 +169,21 @@ const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
       "getRangeBySlug",
       database.select().from(range).where(eq(range.slug, slug)).limit(1)
     );
+
     const [row] = rows;
+
     if (row === undefined) {
       return null;
     }
+
     const id = yield* decodePersisted(
       SkillRangeId,
       "getRangeBySlug.decode"
     )(row.id);
+
     return { ...row, id };
   });
+
 const listSkillsByRangeWithDatabase =
   (database: EffectPgDatabase) =>
   ({ rangeId }: GetSkillsByRangeInput) =>
@@ -198,10 +213,12 @@ const listSkillsByRangeWithDatabase =
               SkillId,
               "listSkillsByRange.decode"
             )(row.id);
+
             const professionId = yield* decodePersisted(
               ProfessionId,
               "listSkillsByRange.decode"
             )(row.professionId);
+
             return { ...row, id, professionId };
           })
         )

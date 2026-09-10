@@ -21,6 +21,7 @@ it.effect("searches squad editor invite targets for a group owner", () => {
   const actorUserId = parseTestUserId("effect-squad-search-owner");
   const targetUserId = parseTestUserId("effect-squad-search-target");
   const groupId = parseTestGroupId();
+
   const sharingStore = makeSquadGroupSharingStoreServiceTestService({
     authorizeSquadGroupOwner: (input) => {
       expect(input.actorUserId).toBe(actorUserId);
@@ -34,6 +35,7 @@ it.effect("searches squad editor invite targets for a group owner", () => {
       });
     },
   });
+
   const directoryStore = makeSquadGroupDirectoryStoreServiceTestService({
     searchSquadEditorInviteTargets: (input) => {
       expect(input.groupId).toBe(groupId);
@@ -50,6 +52,7 @@ it.effect("searches squad editor invite targets for a group owner", () => {
       ]);
     },
   });
+
   const testLayer = Layer.merge(
     Layer.succeed(SquadGroupSharingStoreService, sharingStore),
     Layer.succeed(SquadGroupDirectoryStoreService, directoryStore)

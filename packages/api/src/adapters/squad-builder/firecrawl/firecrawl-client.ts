@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -21,10 +22,15 @@ import {
 } from "../../../services/squad-builder/firecrawl-config.ts";
 
 const FIRECRAWL_API_BASE_URL = "https://api.firecrawl.dev/v2";
+
 const FIRECRAWL_SCRAPE_PATH = "/scrape";
+
 const FIRECRAWL_SCRAPE_DEADLINE = "30 seconds";
+
 const FIRECRAWL_METADATA_NUMBER = Schema.Finite;
+
 const FIRECRAWL_METADATA_STRING = Schema.String.check(Schema.isMaxLength(2048));
+
 const FIRECRAWL_PROVIDER_FIELD = Schema.String.check(Schema.isMaxLength(512));
 
 const FirecrawlDocumentSchema = Schema.Struct({
@@ -146,6 +152,7 @@ export const FirecrawlClientServiceLiveLayer: Layer.Layer<
             onlyMainContent === undefined
               ? { formats: ["html"] as const, url }
               : { formats: ["html"] as const, onlyMainContent, url };
+
           const request = yield* HttpClientRequest.post(
             FIRECRAWL_SCRAPE_PATH
           ).pipe(
@@ -167,6 +174,7 @@ export const FirecrawlClientServiceLiveLayer: Layer.Layer<
 
           const document = yield* decodeFirecrawlResponse(response);
           const rawCredits = document.metadata?.creditsUsed;
+
           const creditsUsed =
             rawCredits === undefined
               ? 1
@@ -209,7 +217,7 @@ export const FirecrawlClientServiceLiveLayer: Layer.Layer<
         function* scrapeProfileHtml(profileId: MargonemProfileId) {
           return yield* scrapeHtml(toMargonemProfileUrl(profileId)).pipe(
             Effect.mapError((error) =>
-              error._tag === "FirecrawlUrlRequestFailed"
+              Predicate.isTagged("FirecrawlUrlRequestFailed")(error)
                 ? new FirecrawlRequestFailed({
                     cause: error.cause,
                     profileId,

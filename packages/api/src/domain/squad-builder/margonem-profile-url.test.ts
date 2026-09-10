@@ -15,6 +15,7 @@ describe("Margonem profile URL parsing", () => {
         const canonical = yield* parseMargonemProfileUrl(
           "https://www.margonem.pl/profile/view,7298897"
         );
+
         const anchored = yield* parseMargonemProfileUrl(
           "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
         );
@@ -29,6 +30,7 @@ describe("Margonem profile URL parsing", () => {
       const result = yield* parseMargonemProfileUrl(
         "https://example.com/profile/view,7298897"
       ).pipe(Effect.flip);
+
       expect(result._tag).toBe("InvalidMargonemProfileUrl");
     })
   );
@@ -38,6 +40,7 @@ describe("Margonem profile URL parsing", () => {
       const parsed = yield* parseMargonemProfileUrl(
         "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
       );
+
       expect(toMargonemProfileUrl(parsed)).toBe(
         "https://www.margonem.pl/profile/view,7298897"
       );

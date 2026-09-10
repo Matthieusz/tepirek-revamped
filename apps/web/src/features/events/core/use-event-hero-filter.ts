@@ -58,9 +58,11 @@ export const useEventHeroFilter = (
   options: UseEventHeroFilterOptions
 ): UseEventHeroFilterResult => {
   const { routeId } = options;
+
   const { eventId: urlEventId, heroId: urlHeroId } = useSearch({
     from: routeId,
   });
+
   const navigate = useNavigate({ from: routeId });
 
   const state = normalizeEventHeroFilter({ urlEventId, urlHeroId });
@@ -69,9 +71,11 @@ export const useEventHeroFilter = (
   const events = eventsQuery.data;
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
+
   const heroEventId = heroQueryEnabled
     ? (toQueryInput(state.eventId) ?? null)
     : null;
+
   const heroesQuery = useQuery(heroesByEventQueryOptions(heroEventId));
   const heroes = heroesQuery.data ?? [];
   const heroesLoading = heroQueryEnabled && heroesQuery.isPending;

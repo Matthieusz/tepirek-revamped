@@ -16,6 +16,7 @@ export const AccountDisplayName = Schema.Trim.pipe(
   ),
   Schema.brand("AccountDisplayName")
 );
+
 export type AccountDisplayName = typeof AccountDisplayName.Type;
 
 /** Expected failure when an account display name is not valid for storage. */

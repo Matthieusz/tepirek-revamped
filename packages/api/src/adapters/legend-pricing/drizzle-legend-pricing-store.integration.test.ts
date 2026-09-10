@@ -36,10 +36,12 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
       () =>
         Effect.gen(function* verifyLegendPricingStore() {
           const store = yield* LegendPricingStore;
+
           const actor = yield* Effect.promise(
             async () =>
               await createVerifiedMember({ id: "legend-pricing-store-admin" })
           );
+
           const [enemy] = yield* Effect.promise(() =>
             testDb
               .insert(legendaryEnemy)
@@ -58,6 +60,7 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
               })
               .returning()
           );
+
           const [item] = yield* Effect.promise(() =>
             testDb
               .insert(legendaryItem)
@@ -74,9 +77,11 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
               })
               .returning()
           );
+
           if (enemy === undefined || item === undefined) {
             throw new Error("Failed to create legend pricing store fixtures");
           }
+
           yield* Effect.promise(() =>
             testDb.insert(legendaryItemDrop).values({
               enemyId: enemy.id,
@@ -98,6 +103,7 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
             priceGold: LegendPriceGold.make(123_456),
             updatedBy: AppUserId.make(actor.id),
           });
+
           expect(priced).toMatchObject({
             priceGold: 123_456,
             version: 1,
@@ -111,6 +117,7 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
               updatedBy: AppUserId.make(actor.id),
             })
             .pipe(Effect.flip);
+
           expect(conflict).toBeInstanceOf(ApplicationConflict);
 
           const repriced = yield* store.updateCost({
@@ -119,6 +126,7 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
             priceGold: LegendPriceGold.make(654_321),
             updatedBy: AppUserId.make(actor.id),
           });
+
           expect(repriced).toMatchObject({
             priceGold: 654_321,
             version: 2,

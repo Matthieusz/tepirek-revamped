@@ -27,6 +27,7 @@ const createCatalogRows = async () => {
       sourceUrl: "https://forum.margonem.pl/?id=514740&ps=0",
     })
     .returning();
+
   const [item] = await testDb
     .insert(legendaryItem)
     .values({
@@ -110,6 +111,7 @@ it("rejects negative prices and non-positive versions", async () => {
   const actor = await createVerifiedMember({
     id: "legend-pricing-invalid-cost-actor",
   });
+
   const { item } = await createCatalogRows();
 
   await expect(

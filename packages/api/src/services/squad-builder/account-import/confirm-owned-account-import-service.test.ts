@@ -32,6 +32,7 @@ it.effect("confirms a pending owned account import through services", () => {
   const accountId = parseTestAccountId();
   const profileId = parseTestProfileId();
   const characterId = Effect.runSync(parseMargonemCharacterId(1_296_625));
+
   const store = makeAccountImportStoreServiceTestService({
     confirmPendingImport: ({ displayName, now, pendingImportId: inputId }) => {
       expect(now).toEqual(FIXED_TIME);
@@ -58,6 +59,7 @@ it.effect("confirms a pending owned account import through services", () => {
 
   return Effect.gen(function* confirmEffect() {
     yield* TestClock.setTime(FIXED_TIME.getTime());
+
     const result = yield* confirm({
       actorUserId,
       displayName: "  informati  ",

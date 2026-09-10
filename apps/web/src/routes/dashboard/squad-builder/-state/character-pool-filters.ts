@@ -24,10 +24,12 @@ type CharacterPoolTextFilter = Extract<
 const isUnsignedIntegerText = Schema.is(
   Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+$/u)))
 );
+
 const PositiveIntegerFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );
+
 const decodePositiveInteger = Schema.decodeUnknownOption(
   PositiveIntegerFromString
 );
@@ -69,6 +71,7 @@ interface ParsedLevelInput {
 
 const parseLevelInput = (rawValue: string): ParsedLevelInput => {
   const value = rawValue.trim();
+
   if (value.length === 0) {
     return { invalid: false, value: null };
   }
@@ -92,6 +95,7 @@ const getTextFilterValue = (
     (candidate): candidate is CharacterPoolTextFilter =>
       candidate.field === field
   );
+
   return normalizeText(
     Option.match(filter, {
       onNone: () => "",
@@ -111,6 +115,7 @@ export const parseCharacterPoolFilters = (
       filter.field === "profession" ? Arr.map(normalizeText)(filter.values) : []
     )(filters)
   );
+
   const levelFrom = parseLevelInput(levelFromInput);
   const levelTo = parseLevelInput(levelToInput);
 
@@ -152,12 +157,15 @@ const matchesLevel = (
   if (filters.hasReversedLevelRange) {
     return true;
   }
+
   if (filters.levelFrom !== null && level < filters.levelFrom) {
     return false;
   }
+
   if (filters.levelTo !== null && level > filters.levelTo) {
     return false;
   }
+
   return true;
 };
 
@@ -186,6 +194,7 @@ export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
   filters: CharacterPoolFilters
 ): readonly T[] => {
   const assignedCharacterIdSet = HashSet.fromIterable(assignedCharacterIds);
+
   return Arr.filter<T>(
     (character) =>
       !HashSet.has(assignedCharacterIdSet, character.characterId) &&
@@ -195,18 +204,23 @@ export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
 
 const comparePolishText = (left: string, right: string): number =>
   left.localeCompare(right, "pl-PL", { sensitivity: "base" });
+
 const polishTextOrder = Order.make<string>((left, right) => {
   const result = comparePolishText(left, right);
+
   if (result < 0) {
     return -1;
   }
+
   return result > 0 ? 1 : 0;
 });
+
 const characterOrder = Order.combineAll<CharacterPoolCharacter>([
   Order.mapInput(Order.flip(Order.Number), (character) => character.level),
   Order.mapInput(polishTextOrder, (character) => character.name),
   Order.mapInput(Order.Number, (character) => character.characterId),
 ]);
+
 const accountGroupOrder = Order.combine(
   Order.mapInput(
     polishTextOrder,

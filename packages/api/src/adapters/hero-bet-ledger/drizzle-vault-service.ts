@@ -27,14 +27,15 @@ import type {
 import { VaultService } from "../../services/vault/vault-service.ts";
 import {
   decodePersistedValue,
-  makeDirectPersistenceQuery,
+  buildDirectPersistenceQuery,
 } from "../persistence-query.ts";
 import { lockHeroLedger } from "./hero-ledger-lock.ts";
 
-const directPersistenceQuery = makeDirectPersistenceQuery(
+const directPersistenceQuery = buildDirectPersistenceQuery(
   ({ cause, operation }) =>
     new VaultPersistenceUnavailable({ cause, operation })
 );
+
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
@@ -60,10 +61,13 @@ const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
         .from(hero)
         .where(eq(hero.id, heroId))
     );
+
     const [heroData] = rows;
+
     if (heroData === undefined) {
       return yield* new VaultBadRequest({ message });
     }
+
     return heroData;
   });
 
@@ -79,10 +83,12 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
           tx: TransactionDatabase
         ) {
           yield* lockHeroLedger(tx, heroId);
+
           const heroData = yield* getHeroEventWithDatabase(tx)(
             heroId,
             "Heros nie znaleziony"
           );
+
           const heroUserStats = yield* persistenceQuery(
             "distributeGold.loadStats",
             tx
@@ -94,11 +100,13 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
               .from(userStats)
               .where(eq(userStats.heroId, heroId))
           );
+
           if (heroUserStats.length === 0) {
             return yield* new VaultBadRequest({
               message: "Brak obstawień dla tego herosa",
             });
           }
+
           // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
           const decodedPoints = yield* Effect.forEach(heroUserStats, (stat) =>
             decodePersisted(
@@ -106,12 +114,15 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
               "distributeGold.decode"
             )(stat.points)
           );
+
           const totalPoints = Num.sumAll(decodedPoints);
+
           if (totalPoints <= 0) {
             return yield* new VaultBadRequest({
               message: "Suma punktów musi być większa od zera",
             });
           }
+
           const pointWorth = goldAmount / totalPoints;
           const storedPointWorth = pointWorth.toFixed(6);
           yield* tx
@@ -124,10 +135,12 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .update(hero)
             .set({ pointWorth: storedPointWorth })
             .where(eq(hero.id, heroId));
+
           const decodedPointWorth = yield* decodePersisted(
             Schema.FiniteFromString,
             "distributeGold.decode"
           )(storedPointWorth);
+
           return {
             heroName: heroData.name,
             pointWorth: decodedPointWorth,
@@ -137,10 +150,12 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
         })
       )
     );
+
     const decodedHeroId = yield* decodePersisted(
       HeroId,
       "distributeGold.decode"
     )(heroId);
+
     return {
       goldAmount,
       heroId: decodedHeroId,
@@ -155,10 +170,13 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
 const getVaultWithDatabase =
   (database: EffectPgDatabase) => (eventId?: number) => {
     const conditions = [];
+
     if (eventId !== undefined) {
       conditions.push(eq(userStats.eventId, eventId));
     }
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
     return persistenceQuery(
       "getVault",
       database
@@ -204,6 +222,7 @@ const togglePaidOutWithDatabase = (database: EffectPgDatabase) =>
           )
         )
     );
+
     return { success: true } as const;
   });
 

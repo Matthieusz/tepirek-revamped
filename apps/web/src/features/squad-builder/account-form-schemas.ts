@@ -13,6 +13,7 @@ export const MAX_PROFILE_URLS = 20;
 export const getProfileLines = (value: string): readonly string[] =>
   Arr.filterMap<string, string, null>((line) => {
     const trimmedLine = Str.trim(line);
+
     return Str.isNonEmpty(trimmedLine)
       ? Result.succeed(trimmedLine)
       : Result.fail(null);

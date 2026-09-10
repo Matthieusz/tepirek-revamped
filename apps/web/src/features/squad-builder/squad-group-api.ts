@@ -65,13 +65,17 @@ export interface SetSquadGroupVisibilityInput {
 }
 
 export type AvailableSquadCharacter = AvailableSquadCharacterSchema;
+
 export type GlobalSquadGroupSummary = GlobalSquadGroupSummarySchema;
+
 export type SquadGroupSummary = SquadGroupSummarySchema;
+
 export type SquadGroupApiRunner = typeof runAppHttpApi;
 
 export const listOwnedSquadGroups = Effect.fn("Web.SquadGroup.listOwned")(
   function* listOwnedSquadGroupsEffect() {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderSquadGroup.listOwnedSquadGroups({
       payload: {},
     });
@@ -81,6 +85,7 @@ export const listOwnedSquadGroups = Effect.fn("Web.SquadGroup.listOwned")(
 export const listGlobalSquadGroups = Effect.fn("Web.SquadGroup.listGlobal")(
   function* listGlobalSquadGroupsEffect(payload: ListGlobalSquadGroupsInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderSquadGroup.listGlobalSquadGroups({
       payload,
     });
@@ -90,6 +95,7 @@ export const listGlobalSquadGroups = Effect.fn("Web.SquadGroup.listGlobal")(
 export const getSquadGroupDetail = Effect.fn("Web.SquadGroup.getDetail")(
   function* getSquadGroupDetailEffect(input: SquadGroupIdInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderSquadGroup.getSquadGroupDetail({
       payload: { groupId: yield* asSquadGroupId(input.groupId) },
     });
@@ -100,6 +106,7 @@ export const listAvailableSquadCharacters = Effect.fn(
   "Web.SquadGroup.listAvailableCharacters"
 )(function* listAvailableSquadCharactersEffect(input: SquadGroupIdInput) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroup.listAvailableSquadCharacters({
     payload: { groupId: yield* asSquadGroupId(input.groupId) },
   });
@@ -108,6 +115,7 @@ export const listAvailableSquadCharacters = Effect.fn(
 export const createSquadGroup = Effect.fn("Web.SquadGroup.create")(
   function* createSquadGroupEffect(payload: CreateSquadGroupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderSquadGroup.createSquadGroup({ payload });
   }
 );
@@ -115,6 +123,7 @@ export const createSquadGroup = Effect.fn("Web.SquadGroup.create")(
 export const deleteSquadGroup = Effect.fn("Web.SquadGroup.delete")(
   function* deleteSquadGroupEffect(input: DeleteSquadGroupInput) {
     const client = yield* AppHttpApiClient;
+
     return yield* client.squadBuilderSquadGroup.deleteSquadGroup({
       payload: { groupId: yield* asSquadGroupId(input.groupId) },
     });
@@ -126,8 +135,10 @@ const decodeSquadId = (squadId: number) => asSquadId(squadId);
 export const saveSquadGroup = Effect.fn("Web.SquadGroup.save")(
   function* saveSquadGroupEffect(payload: SaveSquadGroupInput) {
     const client = yield* AppHttpApiClient;
+
     const squads = yield* Effect.forEach((squad: SaveSquadPayloadSquad) => {
       const { squadId, ...squadWithoutId } = squad;
+
       return squadId === undefined
         ? Effect.succeed(squadWithoutId)
         : decodeSquadId(squadId).pipe(
@@ -137,6 +148,7 @@ export const saveSquadGroup = Effect.fn("Web.SquadGroup.save")(
             }))
           );
     })(payload.squads);
+
     return yield* client.squadBuilderSquadGroup.saveSquadGroup({
       payload: {
         expectedUpdatedAt: payload.expectedUpdatedAt,
@@ -154,12 +166,14 @@ export const saveSharedSquadGroupCharacters = Effect.fn(
   payload: SaveSharedSquadGroupCharactersInput
 ) {
   const client = yield* AppHttpApiClient;
+
   const squads = yield* Effect.forEach(
     (squad: SaveSharedSquadGroupCharactersInput["squads"][number]) =>
       decodeSquadId(squad.squadId).pipe(
         Effect.map((squadId) => ({ ...squad, squadId }))
       )
   )(payload.squads);
+
   return yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
     payload: {
       expectedUpdatedAt: payload.expectedUpdatedAt,
@@ -175,6 +189,7 @@ export const setSquadGroupVisibility = Effect.fn(
   payload: SetSquadGroupVisibilityInput
 ) {
   const client = yield* AppHttpApiClient;
+
   return yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
     payload: {
       groupId: yield* asSquadGroupId(payload.groupId),

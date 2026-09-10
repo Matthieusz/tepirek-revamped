@@ -14,7 +14,7 @@ import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import * as Schema from "effect/Schema";
 
-import { makeDirectPersistenceQuery } from "./adapters/persistence-query.ts";
+import { buildDirectPersistenceQuery } from "./adapters/persistence-query.ts";
 import { makeLoggerLayer } from "./observability.ts";
 import { makeStderrLogger } from "./observability/logging.ts";
 import * as Otlp from "./observability/otlp.ts";
@@ -23,7 +23,8 @@ import { createVerifiedMember } from "./test/integration/builders.ts";
 import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.ts";
 
 const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
-const userPersistenceQuery = makeDirectPersistenceQuery(
+
+const userPersistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
 );
 
@@ -33,6 +34,7 @@ describe("Effect database query logging", () => {
     () => {
       const secretParameter = "database-logging-secret-7f43f2";
       const capturedEntries: unknown[] = [];
+
       const capturingLogger = Logger.make((options) => {
         capturedEntries.push({
           annotations: options.fiber.getRef(References.CurrentLogAnnotations),
@@ -78,6 +80,7 @@ describe("Effect database query logging", () => {
                 response.writeHead(200).end();
               });
             });
+
             server.once("error", (error) => {
               resume(Effect.fail(error));
             });
@@ -96,6 +99,7 @@ describe("Effect database query logging", () => {
               });
             }).pipe(Effect.orDie)
         );
+
         const address = yield* Schema.decodeUnknownEffect(
           Schema.Struct({ port: Schema.Finite })
         )(collector.address());
@@ -105,6 +109,7 @@ describe("Effect database query logging", () => {
             stderrEntries.push(output);
           }),
         ]);
+
         const loggerLayer = Otlp.loggerLayer(
           {
             deploymentEnvironmentName: "test",
@@ -150,12 +155,14 @@ describe("Effect database query logging", () => {
       const insertedText = "must-be-rolled-back";
       const secretParameter = "transaction-secret-cf395a";
       const capturedEntries: unknown[] = [];
+
       const capturingLogger = Logger.make((options) => {
         capturedEntries.push({
           annotations: options.fiber.getRef(References.CurrentLogAnnotations),
           message: options.message,
         });
       });
+
       const observabilityLayer = Logger.layer([capturingLogger]);
 
       return Effect.gen(function* transactionRollbackIntegrationTest() {
@@ -165,9 +172,11 @@ describe("Effect database query logging", () => {
               id: "transaction-rollback-user",
             })
         );
+
         const error = yield* Effect.flip(
           Effect.gen(function* transactionWithDatabase() {
             const database = yield* EffectDatabase;
+
             return yield* userPersistenceQuery(
               "transactionRollbackTest",
               database.transaction((tx) =>
@@ -185,16 +194,21 @@ describe("Effect database query logging", () => {
           )
         );
 
+        expect(error).toHaveProperty(
+          "_tag",
+          "ApplicationDependencyUnavailable"
+        );
         expect(error).toMatchObject({
-          _tag: "ApplicationDependencyUnavailable",
           operation: "transactionRollbackTest",
         });
+
         const persistedRows = yield* Effect.promise(() =>
           testDb
             .select({ id: todo.id })
             .from(todo)
             .where(eq(todo.text, insertedText))
         );
+
         expect(persistedRows).toEqual([]);
         const serializedEntries = JSON.stringify(capturedEntries);
         expect(serializedEntries).not.toContain(secretParameter);

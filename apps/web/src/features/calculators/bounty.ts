@@ -8,16 +8,19 @@
  */
 
 const MIN_LEVEL = 1;
+
 const MAX_LEVEL = 500;
 
 /**
  * Base level difference threshold before scaling
  */
 const LEVEL_DIFFERENCE_BASE = 16;
+
 /**
  * Level at which scaling starts
  */
 const LEVEL_DIFFERENCE_SCALING_START = 100;
+
 /**
  * Scaling divisor for level difference
  */
@@ -27,8 +30,11 @@ const LEVEL_DIFFERENCE_SCALING_DIVISOR = 5;
  * Group attack formula constants
  */
 const GROUP_ATTACK_STRENGTH_MULTIPLIER = 0.5;
+
 const GROUP_ATTACK_THRESHOLD_BASE = 15;
+
 const GROUP_ATTACK_THRESHOLD_MULTIPLIER = 0.1;
+
 const GROUP_ATTACK_THRESHOLD_OFFSET = 20;
 
 interface GroupAttackPenaltyResult {
@@ -77,6 +83,7 @@ export const wouldReceivePenalty = (
 ): boolean => {
   const minDiff = calculateMinLevelDifference(attackerLevel);
   const actualDiff = attackerLevel - victimLevel;
+
   return actualDiff >= minDiff;
 };
 
@@ -87,6 +94,7 @@ export const calculateMinVictimLevelForPenalty = (
   attackerLevel: number
 ): number => {
   const minDiff = calculateMinLevelDifference(attackerLevel);
+
   return Math.ceil(attackerLevel - minDiff);
 };
 
@@ -100,14 +108,17 @@ export const calculateMaxAttackerLevelWithoutPenalty = (
   // attackerLevel - victimLevel < 16 + max(0, (attackerLevel - 100) / 5)
   // This requires solving iteratively since attackerLevel appears on both sides
   let maxLevel = victimLevel;
+
   for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl += 1) {
     const minDiff = calculateMinLevelDifference(lvl);
+
     if (lvl - victimLevel < minDiff) {
       maxLevel = lvl;
     } else {
       break;
     }
   }
+
   return maxLevel;
 };
 
@@ -120,15 +131,18 @@ export const calculateGroupAttackPenalty = (
   defenderLevels: number[]
 ): GroupAttackPenaltyResult => {
   const maxAttackerLevel = Math.max(...attackerLevels);
+
   const avgAttackerLevel =
     attackerLevels.reduce((sum, level) => sum + level, 0) /
     attackerLevels.length;
+
   const avgDefenderLevel =
     defenderLevels.reduce((sum, level) => sum + level, 0) /
     defenderLevels.length;
 
   // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
   const attackerStrength = maxAttackerLevel + avgAttackerLevel;
+
   const difference =
     GROUP_ATTACK_STRENGTH_MULTIPLIER * attackerStrength - avgDefenderLevel;
 
@@ -158,6 +172,7 @@ export const calculateGroupAttackPenalty = (
 export const parseLevels = (input: string): number[] =>
   input.split(",").flatMap((value) => {
     const level = Number(value.trim());
+
     return Number.isInteger(level) && level >= MIN_LEVEL && level <= MAX_LEVEL
       ? [level]
       : [];

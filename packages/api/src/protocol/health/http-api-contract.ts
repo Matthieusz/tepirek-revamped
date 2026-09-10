@@ -12,4 +12,5 @@ export const HealthHttpApiGroup = HttpApiGroup.make("health").add(
 );
 
 export const HealthHttpApi = HttpApi.make("healthApi").add(HealthHttpApiGroup);
+
 export type HealthHttpApi = typeof HealthHttpApi;

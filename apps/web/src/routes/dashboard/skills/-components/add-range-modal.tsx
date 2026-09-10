@@ -1,6 +1,7 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateRangePayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -30,13 +31,17 @@ const RangeFormSchema = Schema.Struct({
   ),
   name: CreateRangePayload.fields.name,
 });
+
 const RangeFormValidator = Schema.toStandardSchemaV1(RangeFormSchema);
 
 export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const [open, setOpen] = useState(false);
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const queryClient = useQueryClient();
+
   const createSkillRange = useMutation(
     createSkillRangeMutationOptions(queryClient, undefined, {
       onRefreshError: () => {
@@ -46,11 +51,13 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       },
     })
   );
+
   const form = useAppForm({
     defaultValues: { image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await RangeFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -58,8 +65,10 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       const result = await runFormSubmission(async () => {
         await createSkillRange.mutateAsync(decoded.value);
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -69,6 +78,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
     },
     validators: { onSubmit: RangeFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
@@ -77,9 +87,11 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       if (!canDiscard()) {
         return;
       }
+
       form.reset();
       setSubmissionFailure(undefined);
     }
+
     setOpen(nextOpen);
   };
 

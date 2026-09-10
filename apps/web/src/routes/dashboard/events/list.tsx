@@ -11,6 +11,7 @@ const routeApi = getRouteApi("/dashboard/events/list");
 
 const EventsListRoute = () => {
   const { session } = routeApi.useRouteContext();
+
   return <EventsListPage session={session} />;
 };
 

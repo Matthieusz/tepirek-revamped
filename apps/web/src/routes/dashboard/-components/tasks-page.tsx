@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ interface TasksPageProps {
 }
 
 const TodoFormSchema = Schema.Struct({ text: TodoTextSchema });
+
 const TodoFormValidator = Schema.toStandardSchemaV1(TodoFormSchema);
 
 const TasksPage = ({ session }: TasksPageProps) => {
@@ -92,6 +94,7 @@ const TasksContent = ({
   todosData,
 }: TasksContentProps) => {
   const queryClient = useQueryClient();
+
   const createTodoMutation = useMutation(
     createTodoMutationOptions(queryClient, runAppHttpApi, {
       onRefreshError: () => {
@@ -101,6 +104,7 @@ const TasksContent = ({
       },
     })
   );
+
   const toggleTodoMutation = useMutation(
     toggleTodoMutationOptions(queryClient, runAppHttpApi, {
       onError: (error) => {
@@ -116,6 +120,7 @@ const TasksContent = ({
       },
     })
   );
+
   const deleteTodoMutation = useMutation(
     deleteTodoMutationOptions(queryClient, runAppHttpApi, {
       onError: (error) => {
@@ -131,14 +136,18 @@ const TasksContent = ({
       },
     })
   );
+
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
+
   const canCreateTodo = session.user.id.length > 0;
+
   const form = useAppForm({
     defaultValues: { text: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await TodoFormValidator["~standard"].validate(value);
+
       if (!("value" in decoded)) {
         return;
       }
@@ -146,8 +155,10 @@ const TasksContent = ({
       const result = await runFormSubmission(async () => {
         await createTodoMutation.mutateAsync(decoded.value);
       });
-      if (result._tag === "failure") {
+
+      if (Predicate.isTagged("failure")(result)) {
         setSubmissionFailure(result.error);
+
         return;
       }
 
@@ -156,6 +167,7 @@ const TasksContent = ({
     },
     validators: { onSubmit: TodoFormValidator },
   });
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   const handleToggleTodo = (id: number, completed: boolean) => {

@@ -10,13 +10,16 @@ export interface CreateEventInput {
   readonly icon?: string | undefined;
   readonly name: string;
 }
+
 export interface DeleteEventInput {
   readonly id: EventId;
 }
+
 export interface ToggleEventActiveInput {
   readonly active: boolean;
   readonly id: EventId;
 }
+
 export interface EventSummary {
   readonly active: boolean | null;
   readonly color: string;
