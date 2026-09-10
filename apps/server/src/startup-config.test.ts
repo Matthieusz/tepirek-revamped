@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
 import {
-  makeStartupConfigLayer,
+  buildStartupConfigLayer,
   readLegendCatalogSyncConfig,
   readStartupConfig,
 } from "./startup-config.js";
@@ -35,7 +35,7 @@ const provideEnvironment = (environment: Record<string, string>) =>
 const configuredStartup = (environment: Record<string, string>) =>
   readStartupConfig.pipe(
     Effect.provide(
-      makeStartupConfigLayer(ConfigProvider.fromUnknown(environment))
+      buildStartupConfigLayer(ConfigProvider.fromUnknown(environment))
     )
   );
 
@@ -102,6 +102,7 @@ describe("startup config", () => {
         );
 
         expect(Exit.isFailure(exit)).toBe(true);
+
         if (Exit.isFailure(exit)) {
           expect(Cause.hasFails(exit.cause)).toBe(true);
           expect(Cause.hasDies(exit.cause)).toBe(false);

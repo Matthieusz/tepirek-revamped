@@ -15,7 +15,7 @@ import { DrizzleLegendPricingStoreLayer } from "../adapters/legend-pricing/drizz
 import { MargonemForumClientLiveLayer } from "../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
 import { SkillsStoreLayer } from "../adapters/skills/skills-store.ts";
 import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client.ts";
-import { makeFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
+import { buildFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
 import { DrizzleAccountImportStoreServiceLayer } from "../adapters/squad-builder/persistence/account-import-store.ts";
 import { DrizzleAccountRefetchStoreServiceLayer } from "../adapters/squad-builder/persistence/account-refetch-store.ts";
 import { DrizzleAccountSharingStoreServiceLayer } from "../adapters/squad-builder/persistence/account-sharing-store.ts";
@@ -24,7 +24,7 @@ import { DrizzleSquadGroupAggregateStoreServiceLayer } from "../adapters/squad-b
 import { DrizzleSquadGroupDirectoryStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-directory-store.ts";
 import { DrizzleSquadGroupSharingStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-sharing-store.ts";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.ts";
-import { makeDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
+import { buildDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
 import type { DiscordVerificationConfig as DiscordVerificationConfigService } from "../adapters/user/discord-verification-config.ts";
 import { DiscordGuildVerifierLiveLayer } from "../adapters/user/discord-verification-service.ts";
 import { UserStoreLayer } from "../adapters/user/user-store.ts";
@@ -114,8 +114,8 @@ export const makeApiLiveLayerFromDatabase = <DatabaseError>(
 ) =>
   makeApiStableLayer(
     databaseLayer,
-    makeDiscordVerificationConfigLayer({ guildId: config.discordGuildId }),
-    makeFirecrawlConfigLayer(config.firecrawl)
+    buildDiscordVerificationConfigLayer({ guildId: config.discordGuildId }),
+    buildFirecrawlConfigLayer(config.firecrawl)
   );
 
 /** Build the explicitly invoked forum-catalog synchronization graph. */
@@ -123,10 +123,12 @@ export const makeLegendCatalogSyncLayer = <DatabaseError>(
   databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>,
   firecrawlConfig: FirecrawlConfig
 ) => {
-  const firecrawlConfigLayer = makeFirecrawlConfigLayer(firecrawlConfig);
+  const firecrawlConfigLayer = buildFirecrawlConfigLayer(firecrawlConfig);
+
   const firecrawlClientLayer = FirecrawlClientServiceLiveLayer.pipe(
     Layer.provide(Layer.merge(firecrawlConfigLayer, FetchHttpClient.layer))
   );
+
   const accountingLayer =
     DrizzleFirecrawlRequestAccountingStoreServiceLayer.pipe(
       Layer.provide(databaseLayer)
@@ -153,7 +155,7 @@ export const makeLegendCatalogSyncLayer = <DatabaseError>(
 export { LegendCatalogSyncService } from "../services/legend-pricing/legend-catalog-sync.ts";
 
 /** Build API services from configuration parsed by an executable boundary. */
-export const makeApiLiveLayerFromValues = (config: {
+export const buildApiLiveLayerFromValues = (config: {
   readonly databaseUrl: string;
   readonly discordGuildId: string;
   readonly firecrawl: FirecrawlConfig;

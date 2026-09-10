@@ -12,7 +12,7 @@ import {
   AuthConfigLiveLayer,
   BetterAuthService,
   createAuth,
-  makeBetterAuthServiceLayer,
+  buildBetterAuthServiceLayer,
 } from "./index.ts";
 
 const validAuthEnvironment = {
@@ -44,6 +44,7 @@ describe("Better Auth service", () => {
         const database = yield* makeTestBetterAuthDatabase(
           "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
         );
+
         const instance = createAuth(
           {
             betterAuthSecret: Redacted.make("test-secret"),
@@ -55,12 +56,14 @@ describe("Better Auth service", () => {
           },
           database
         );
+
         vi.spyOn(instance.api, "getSession").mockRejectedValue(cause);
 
         const failure = yield* Effect.gen(function* inspectRejectedSession() {
           const auth = yield* BetterAuthService;
+
           return yield* auth.getSession(new Headers()).pipe(Effect.flip);
-        }).pipe(Effect.provide(makeBetterAuthServiceLayer(instance)));
+        }).pipe(Effect.provide(buildBetterAuthServiceLayer(instance)));
 
         expect(failure._tag).toBe("BetterAuthUnavailable");
         expect(failure.cause).toBe(cause);
@@ -75,6 +78,7 @@ describe("Better Auth config", () => {
       const database = yield* makeTestBetterAuthDatabase(
         "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
       );
+
       const auth = createAuth(
         {
           betterAuthSecret: Redacted.make("test-secret"),
@@ -108,9 +112,11 @@ describe("Better Auth config", () => {
         });
 
         expect(Exit.isFailure(exit)).toBe(true);
+
         if (Exit.isFailure(exit)) {
           expect(Cause.hasFails(exit.cause)).toBe(true);
           expect(Cause.hasDies(exit.cause)).toBe(false);
+
           if (variable.includes("SECRET") && value.length > 0) {
             expect(String(exit)).not.toContain(value);
           }

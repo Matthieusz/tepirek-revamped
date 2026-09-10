@@ -4,9 +4,9 @@ import * as Layer from "effect/Layer";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { CurrentSession } from "../../protocol/auth/current-session.ts";
-import { makeAuthorizationPolicy } from "./authorization-policy.ts";
+import { buildAuthorizationPolicy } from "./authorization-policy.ts";
 
-const policy = makeAuthorizationPolicy({
+const policy = buildAuthorizationPolicy({
   forbidden: () => "forbidden" as const,
   unauthorized: () => "unauthorized" as const,
   unverified: () => "unverified" as const,

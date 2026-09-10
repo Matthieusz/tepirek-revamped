@@ -8,22 +8,27 @@ import { AuthConfig } from "./auth-config.ts";
 import { createAuth } from "./better-auth-instance.ts";
 import {
   BetterAuthService,
-  makeBetterAuthService,
+  buildBetterAuthService,
 } from "./better-auth-service.ts";
 import type { BetterAuthInstance } from "./better-auth-types.ts";
 
 export { AuthConfig, AuthConfigLiveLayer } from "./auth-config.ts";
+
 export type { AuthEnv } from "./auth-config.ts";
+
 export { createAuth } from "./better-auth-instance.ts";
+
 export type {
   BetterAuthInstance,
   BetterAuthSession,
 } from "./better-auth-types.ts";
+
 export {
   BetterAuthService,
   BetterAuthUnavailable,
-  makeBetterAuthService,
+  buildBetterAuthService,
 } from "./better-auth-service.ts";
+
 export type { BetterAuthServiceInterface } from "./better-auth-service.ts";
 
 /** Expected startup failure when Better Auth construction rejects its inputs. */
@@ -38,16 +43,18 @@ export const BetterAuthServiceLiveLayer = Layer.effect(
   Effect.gen(function* makeLiveBetterAuthService() {
     const config = yield* AuthConfig;
     const database = yield* BetterAuthDatabaseService;
+
     const instance = yield* Effect.try({
       catch: (cause) => new BetterAuthInitializationError({ cause }),
       try: () => createAuth(config, database),
     });
-    return makeBetterAuthService(instance);
+
+    return buildBetterAuthService(instance);
   })
 );
 
 /** Construct a Better Auth service layer around a supplied vendor instance. */
-export const makeBetterAuthServiceLayer = (
+export const buildBetterAuthServiceLayer = (
   instance: BetterAuthInstance
 ): Layer.Layer<BetterAuthService> =>
-  Layer.succeed(BetterAuthService, makeBetterAuthService(instance));
+  Layer.succeed(BetterAuthService, buildBetterAuthService(instance));

@@ -9,15 +9,17 @@ export interface AuthorizationFailures<Unauthorized, Forbidden> {
 }
 
 /** Build consistent authenticated, verified-user, and admin policies. */
-export const makeAuthorizationPolicy = <Unauthorized, Forbidden>(
+export const buildAuthorizationPolicy = <Unauthorized, Forbidden>(
   failures: AuthorizationFailures<Unauthorized, Forbidden>
 ) => {
   const requireSession = Effect.fn("AuthorizationPolicy.requireSession")(
     function* requireSession() {
       const session = yield* CurrentSession;
+
       if (session === null) {
         return yield* Effect.fail(failures.unauthorized());
       }
+
       return session;
     }
   );
@@ -26,9 +28,11 @@ export const makeAuthorizationPolicy = <Unauthorized, Forbidden>(
     "AuthorizationPolicy.requireVerifiedSession"
   )(function* requireVerifiedSession() {
     const session = yield* requireSession();
+
     if (!session.user.verified) {
       return yield* Effect.fail(failures.unverified());
     }
+
     return session;
   });
 
@@ -36,9 +40,11 @@ export const makeAuthorizationPolicy = <Unauthorized, Forbidden>(
     "AuthorizationPolicy.requireAdminSession"
   )(function* requireAdminSession() {
     const session = yield* requireVerifiedSession();
+
     if (session.user.role !== "admin") {
       return yield* Effect.fail(failures.forbidden());
     }
+
     return session;
   });
 

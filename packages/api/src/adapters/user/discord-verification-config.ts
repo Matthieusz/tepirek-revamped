@@ -5,6 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 const DiscordGuildId = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
+
 const discordGuildIdConfig = Config.schema(DiscordGuildId, "DISCORD_SERVER_ID");
 
 export class DiscordVerificationConfig extends Context.Service<
@@ -18,6 +19,6 @@ export const readDiscordVerificationConfig = discordGuildIdConfig.pipe(
 );
 
 /** Provide an already-parsed Discord verification configuration. */
-export const makeDiscordVerificationConfigLayer = (config: {
+export const buildDiscordVerificationConfigLayer = (config: {
   readonly guildId: string;
 }) => Layer.succeed(DiscordVerificationConfig, config);

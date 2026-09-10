@@ -8,6 +8,7 @@ export const LegendaryItemId = brandedPositiveInt(
   "LegendaryItemId",
   "LegendaryItemId"
 );
+
 export type LegendaryItemId = typeof LegendaryItemId.Type;
 
 /** A persisted legendary enemy row identifier. */
@@ -15,6 +16,7 @@ export const LegendaryEnemyId = brandedPositiveInt(
   "LegendaryEnemyId",
   "LegendaryEnemyId"
 );
+
 export type LegendaryEnemyId = typeof LegendaryEnemyId.Type;
 
 /** An identifier of an official Margonem forum post. */
@@ -22,6 +24,7 @@ export const MargonemForumPostId = brandedPositiveInt(
   "MargonemForumPostId",
   "MargonemForumPostId"
 );
+
 export type MargonemForumPostId = typeof MargonemForumPostId.Type;
 
 /** A valid level of a legendary equipment item. */
@@ -29,6 +32,7 @@ export const LegendaryItemLevel = brandedPositiveInt(
   "LegendaryItemLevel",
   "LegendaryItemLevel"
 );
+
 export type LegendaryItemLevel = typeof LegendaryItemLevel.Type;
 
 /** A valid level of an enemy that drops legendary equipment. */
@@ -36,10 +40,12 @@ export const LegendaryEnemyLevel = brandedPositiveInt(
   "LegendaryEnemyLevel",
   "LegendaryEnemyLevel"
 );
+
 export type LegendaryEnemyLevel = typeof LegendaryEnemyLevel.Type;
 
 /** The current-guide categories that can supply legendary equipment. */
 export const LegendaryEnemyCategory = Schema.Literals(["hero", "elite2"]);
+
 export type LegendaryEnemyCategory = typeof LegendaryEnemyCategory.Type;
 
 /** Equipment slots supported by the legend catalog. */
@@ -54,6 +60,7 @@ export const LegendaryEquipmentType = Schema.Literals([
   "necklace",
   "shield",
 ]);
+
 export type LegendaryEquipmentType = typeof LegendaryEquipmentType.Type;
 
 /** Character professions used by enemies and equipment requirements. */
@@ -65,6 +72,7 @@ export const LegendaryProfession = Schema.Literals([
   "hunter",
   "tracker",
 ]);
+
 export type LegendaryProfession = typeof LegendaryProfession.Type;
 
 /** A non-empty legendary bonus encoded in forum item statistics. */
@@ -72,6 +80,7 @@ export const LegendaryBonus = Schema.Trim.pipe(
   Schema.check(Schema.isNonEmpty()),
   Schema.brand("LegendaryBonus")
 );
+
 export type LegendaryBonus = typeof LegendaryBonus.Type;
 
 /** A non-negative price expressed in whole gold units. */
@@ -79,24 +88,28 @@ export const LegendPriceGold = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
 ).pipe(Schema.brand("LegendPriceGold"));
+
 export type LegendPriceGold = typeof LegendPriceGold.Type;
 
 /** Version used by optimistic cost updates; zero means no cost exists yet. */
 export const LegendCostVersion = Schema.Int.check(
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
 ).pipe(Schema.brand("LegendCostVersion"));
+
 export type LegendCostVersion = typeof LegendCostVersion.Type;
 
 /** A normalized item-icon path used as the stable source identity. */
 export const LegendaryItemSourceKey = Schema.String.check(
   Schema.isPattern(/^\/obrazki\/itemy\/[a-zA-Z0-9._~!$&'()+,;=@%/-]+$/u)
 ).pipe(Schema.brand("LegendaryItemSourceKey"));
+
 export type LegendaryItemSourceKey = typeof LegendaryItemSourceKey.Type;
 
 /** A normalized NPC-icon path used as part of the stable source identity. */
 export const LegendaryEnemySourceKey = Schema.String.check(
   Schema.isPattern(/^\/obrazki\/npc\/[a-zA-Z0-9._~!$&'()+,;=@%/-]+$/u)
 ).pipe(Schema.brand("LegendaryEnemySourceKey"));
+
 export type LegendaryEnemySourceKey = typeof LegendaryEnemySourceKey.Type;
 
 /** A canonical HTTPS URL for an icon hosted on the Margonem CDN. */
@@ -105,6 +118,7 @@ export const MargonemCdnIconUrl = Schema.String.check(
     /^https:\/\/micc\.garmory-cdn\.cloud\/obrazki\/(?:itemy|npc)\/[a-zA-Z0-9._~!$&'()+,;=@%/-]+$/u
   )
 ).pipe(Schema.brand("MargonemCdnIconUrl"));
+
 export type MargonemCdnIconUrl = typeof MargonemCdnIconUrl.Type;
 
 /** A normalized and canonicalized Margonem CDN icon. */
@@ -114,10 +128,12 @@ export interface NormalizedMargonemCdnIcon<SourceKey> {
 }
 
 const MARGONEM_CDN_HOST = "micc.garmory-cdn.cloud";
+
 const duplicateSlashPattern = /\/{2,}/gu;
 
 const normalizeCdnPath = (value: string): string | undefined => {
   let parsedUrl: URL;
+
   try {
     parsedUrl = new URL(value.startsWith("//") ? `https:${value}` : value);
   } catch {
@@ -150,11 +166,13 @@ export const normalizeLegendaryItemIcon = (
   value: string
 ): Option.Option<NormalizedMargonemCdnIcon<LegendaryItemSourceKey>> => {
   const path = normalizeCdnPath(value);
+
   if (path === undefined || !path.startsWith("/obrazki/itemy/")) {
     return Option.none();
   }
 
   const sourceKey = Schema.decodeOption(LegendaryItemSourceKey)(path);
+
   return sourceKey.pipe(
     Option.map((key) => ({
       sourceKey: key,
@@ -172,11 +190,13 @@ export const normalizeLegendaryEnemyIcon = (
   value: string
 ): Option.Option<NormalizedMargonemCdnIcon<LegendaryEnemySourceKey>> => {
   const path = normalizeCdnPath(value);
+
   if (path === undefined || !path.startsWith("/obrazki/npc/")) {
     return Option.none();
   }
 
   const sourceKey = Schema.decodeOption(LegendaryEnemySourceKey)(path);
+
   return sourceKey.pipe(
     Option.map((key) => ({
       sourceKey: key,
@@ -248,7 +268,7 @@ export const classifyLegendaryEquipment = ({
 };
 
 /** Build the persisted diagnostic fingerprint for item source drift checks. */
-export const makeLegendaryItemFingerprint = (input: {
+export const buildLegendaryItemFingerprint = (input: {
   readonly equipmentType: LegendaryEquipmentType;
   readonly level: LegendaryItemLevel;
   readonly name: string;
@@ -256,7 +276,7 @@ export const makeLegendaryItemFingerprint = (input: {
   JSON.stringify([input.name.trim(), input.level, input.equipmentType]);
 
 /** Build the persisted diagnostic fingerprint for enemy source drift checks. */
-export const makeLegendaryEnemyFingerprint = (input: {
+export const buildLegendaryEnemyFingerprint = (input: {
   readonly level: LegendaryEnemyLevel;
   readonly name: string;
 }): string => JSON.stringify([input.name.trim(), input.level]);

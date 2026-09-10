@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import { Pool } from "pg";
 
-import { makeBetterAuthDatabase } from "./better-auth-database.ts";
+import { buildBetterAuthDatabase } from "./better-auth-database.ts";
 
 /** Acquire a Better Auth database whose PostgreSQL pool closes with the Effect scope. */
 export const makeTestBetterAuthDatabase = (databaseUrl: string) =>
@@ -11,4 +11,4 @@ export const makeTestBetterAuthDatabase = (databaseUrl: string) =>
       Effect.promise(async () => {
         await pool.end();
       })
-  ).pipe(Effect.map(makeBetterAuthDatabase));
+  ).pipe(Effect.map(buildBetterAuthDatabase));

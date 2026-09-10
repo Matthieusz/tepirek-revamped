@@ -15,9 +15,10 @@ import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { FirecrawlClientService } from "../../../services/squad-builder/firecrawl-client.ts";
 import { FirecrawlClientServiceLiveLayer } from "./firecrawl-client.ts";
-import { makeFirecrawlConfigLayer } from "./firecrawl-config.ts";
+import { buildFirecrawlConfigLayer } from "./firecrawl-config.ts";
 
 const TEST_API_KEY = "test-firecrawl-key";
+
 const TEST_CONFIG = {
   apiKey: Redacted.make(TEST_API_KEY),
   monthlyRequestBudget: 900,
@@ -57,11 +58,13 @@ const makeSequenceClient = (
   requests: HttpClientRequest.HttpClientRequest[] = []
 ): HttpClient.HttpClient => {
   let attempt = 0;
+
   return HttpClient.make((request) =>
     Effect.suspend(() => {
       requests.push(request);
       const step = steps[attempt];
       attempt += 1;
+
       return step === undefined
         ? Effect.die(new Error("Unexpected Firecrawl HTTP attempt"))
         : step(request);
@@ -74,7 +77,7 @@ const provideFirecrawlClient = (client: HttpClient.HttpClient) =>
     FirecrawlClientServiceLiveLayer.pipe(
       Layer.provide(
         Layer.merge(
-          makeFirecrawlConfigLayer(TEST_CONFIG),
+          buildFirecrawlConfigLayer(TEST_CONFIG),
           Layer.succeed(HttpClient.HttpClient, client)
         )
       )
@@ -85,12 +88,14 @@ const scrapeWith = (client: HttpClient.HttpClient, profileId: number) =>
   Effect.gen(function* scrapeProfile() {
     const parsedProfileId = yield* parseMargonemProfileId(profileId);
     const service = yield* FirecrawlClientService;
+
     return yield* service.scrapeProfileHtml(parsedProfileId);
   }).pipe(provideFirecrawlClient(client));
 
 const scrapeUrlWith = (client: HttpClient.HttpClient, url: string) =>
   Effect.gen(function* scrapeUrl() {
     const service = yield* FirecrawlClientService;
+
     return yield* service.scrapeUrlHtml(url);
   }).pipe(provideFirecrawlClient(client));
 
@@ -99,6 +104,7 @@ const readRequestBody = (request: HttpClientRequest.HttpClientRequest) =>
     const webRequest = yield* HttpClientRequest.toWeb(request);
     const body = yield* Effect.tryPromise(async () => await webRequest.text());
     const parsedBody: unknown = JSON.parse(body);
+
     return parsedBody;
   });
 
@@ -134,6 +140,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
   it.effect("constructs the authenticated Firecrawl scrape request", () =>
     Effect.gen(function* requestProfile() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [jsonResponse(successEnvelope())],
         requests
@@ -144,6 +151,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
       expect(requests).toHaveLength(1);
       const [request] = requests;
       expect(request).toBeDefined();
+
       if (request === undefined) {
         return;
       }
@@ -168,10 +176,12 @@ describe("FirecrawlClientServiceLiveLayer", () => {
   it.effect("requests complete HTML when scraping an arbitrary URL", () =>
     Effect.gen(function* requestUrl() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const client = makeSequenceClient(
         [jsonResponse(successEnvelope())],
         requests
       );
+
       const url =
         "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0";
 
@@ -179,6 +189,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
 
       const [request] = requests;
       expect(request).toBeDefined();
+
       if (request !== undefined) {
         expect(yield* readRequestBody(request)).toEqual({
           formats: ["html"],
@@ -255,8 +266,8 @@ describe("FirecrawlClientServiceLiveLayer", () => {
         scrapeWith(makeSequenceClient([jsonResponse(body)]), 456)
       );
 
+      expect(error).toHaveProperty("_tag", "FirecrawlResponseNotParseable");
       expect(error).toMatchObject({
-        _tag: "FirecrawlResponseNotParseable",
         profileId: 456,
       });
     })
@@ -268,8 +279,8 @@ describe("FirecrawlClientServiceLiveLayer", () => {
         scrapeWith(makeSequenceClient([textResponse("{")]), 456)
       );
 
+      expect(error).toHaveProperty("_tag", "FirecrawlResponseNotParseable");
       expect(error).toMatchObject({
-        _tag: "FirecrawlResponseNotParseable",
         profileId: 456,
       });
     })
@@ -290,8 +301,8 @@ describe("FirecrawlClientServiceLiveLayer", () => {
         )
       );
 
+      expect(error).toHaveProperty("_tag", "FirecrawlRequestFailed");
       expect(error).toMatchObject({
-        _tag: "FirecrawlRequestFailed",
         cause: {
           code: "RATE_LIMITED",
           error: "Too many requests",
@@ -310,8 +321,8 @@ describe("FirecrawlClientServiceLiveLayer", () => {
           scrapeWith(makeSequenceClient([emptyResponse(status)]), 456)
         );
 
+        expect(error).toHaveProperty("_tag", "FirecrawlRequestFailed");
         expect(error).toMatchObject({
-          _tag: "FirecrawlRequestFailed",
           cause: { status },
           profileId: 456,
         });
@@ -327,8 +338,8 @@ describe("FirecrawlClientServiceLiveLayer", () => {
       yield* TestClock.adjust("30 seconds");
 
       const error = yield* Effect.flip(Fiber.join(fiber));
+      expect(error).toHaveProperty("_tag", "FirecrawlRequestFailed");
       expect(error).toMatchObject({
-        _tag: "FirecrawlRequestFailed",
         profileId: 456,
       });
       expect(error.cause).toEqual(new Error("Firecrawl scrape timed out"));
@@ -339,6 +350,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
     Effect.gen(function* interruptHttpClient() {
       const started = yield* Deferred.make<true>();
       const interrupted = yield* Deferred.make<true>();
+
       const client = HttpClient.make((_request) =>
         Deferred.succeed(started, true).pipe(
           Effect.andThen(
@@ -356,6 +368,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
 
       const exit = yield* Fiber.await(fiber);
       expect(Exit.isFailure(exit)).toBe(true);
+
       if (Exit.isFailure(exit)) {
         expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true);
       }
@@ -365,6 +378,7 @@ describe("FirecrawlClientServiceLiveLayer", () => {
   it.effect.each(NO_RETRY_CASES)("does not retry %s", ([, step]) =>
     Effect.gen(function* makeOneAttempt() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
+
       const error = yield* Effect.flip(
         scrapeWith(makeSequenceClient([step], requests), 456)
       );

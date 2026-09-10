@@ -4,14 +4,14 @@ import * as Context from "effect/Context";
 import type { Pool } from "pg";
 
 /** Build the node-postgres Drizzle database consumed by Better Auth. */
-export const makeBetterAuthDatabase = (pool: Pool) =>
+export const buildBetterAuthDatabase = (pool: Pool) =>
   drizzle({
     client: pool,
     logger: new NoopLogger(),
   });
 
 /** Node-postgres Drizzle database consumed by Better Auth. */
-export type BetterAuthDatabase = ReturnType<typeof makeBetterAuthDatabase>;
+export type BetterAuthDatabase = ReturnType<typeof buildBetterAuthDatabase>;
 
 /** Context service for the node-postgres Drizzle database used by Better Auth. */
 export class BetterAuthDatabaseService extends Context.Service<

@@ -13,13 +13,14 @@ import { Pool } from "pg";
 
 import {
   BetterAuthDatabaseService,
-  makeBetterAuthDatabase,
+  buildBetterAuthDatabase,
 } from "./better-auth-database.ts";
 
 export {
   BetterAuthDatabaseService,
-  makeBetterAuthDatabase,
+  buildBetterAuthDatabase,
 } from "./better-auth-database.ts";
+
 export type { BetterAuthDatabase } from "./better-auth-database.ts";
 
 /** Scoped node-postgres pool shared by both Drizzle adapters. */
@@ -32,6 +33,7 @@ export class SharedPostgresPool extends Context.Service<
 export const DATABASE_POOL_MAX_CONNECTIONS = 10;
 
 const POSTGRES_CONNECTION_TIMEOUT = Duration.seconds(5);
+
 const POSTGRES_POOL_CLOSE_TIMEOUT = Duration.seconds(1);
 
 const DrizzleServicesLayer = Layer.merge(
@@ -73,6 +75,7 @@ export const makeSharedPostgresPoolLayer = (
           connectionString: Redacted.value(databaseUrl),
           max: DATABASE_POOL_MAX_CONNECTIONS,
         });
+
         pool.on("error", () => {
           // The listener prevents pg from treating idle connection errors as uncaught.
         });
@@ -122,6 +125,7 @@ export const makeSharedPostgresPoolLayer = (
 export const PgClientFromSharedPoolLayer = Pg.layerFrom(
   Effect.gen(function* makePgClientFromSharedPool() {
     const pool = yield* SharedPostgresPool;
+
     return yield* Pg.fromPool({ acquire: Effect.succeed(pool) });
   })
 );
@@ -129,9 +133,10 @@ export const PgClientFromSharedPoolLayer = Pg.layerFrom(
 /** Build Better Auth's node-postgres Drizzle adapter from the shared pool. */
 export const BetterAuthDatabaseLayer = Layer.effect(
   BetterAuthDatabaseService,
-  Effect.gen(function* makeBetterAuthDatabaseService() {
+  Effect.gen(function* buildBetterAuthDatabaseService() {
     const pool = yield* SharedPostgresPool;
-    return makeBetterAuthDatabase(pool);
+
+    return buildBetterAuthDatabase(pool);
   })
 );
 
@@ -147,12 +152,15 @@ export const makeSharedDatabaseLayer = (
   databaseUrl: Redacted.Redacted
 ): Layer.Layer<EffectDatabase | BetterAuthDatabaseService, SqlError> => {
   const poolLayer = makeSharedPostgresPoolLayer(databaseUrl);
+
   const pgClientLayer = PgClientFromSharedPoolLayer.pipe(
     Layer.provide(poolLayer)
   );
+
   const effectDatabaseLayer = EffectDatabaseLayer.pipe(
     Layer.provide(pgClientLayer)
   );
+
   const betterAuthDatabaseLayer = BetterAuthDatabaseLayer.pipe(
     Layer.provide(poolLayer)
   );

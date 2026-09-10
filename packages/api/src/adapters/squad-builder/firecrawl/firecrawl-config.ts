@@ -6,6 +6,7 @@ import { FirecrawlConfigService } from "../../../services/squad-builder/firecraw
 import type { FirecrawlConfig } from "../../../services/squad-builder/firecrawl-config.ts";
 
 const NonEmptyString = Schema.String.check(Schema.isNonEmpty());
+
 const NonEmptyRedactedString = Schema.Redacted(NonEmptyString);
 
 const MonthlyRequestBudget = Schema.Int.check(
@@ -29,5 +30,5 @@ export const readFirecrawlConfig = Config.all({
 });
 
 /** Provide an already-parsed Firecrawl configuration. */
-export const makeFirecrawlConfigLayer = (config: FirecrawlConfig) =>
+export const buildFirecrawlConfigLayer = (config: FirecrawlConfig) =>
   Layer.succeed(FirecrawlConfigService, config);

@@ -41,7 +41,10 @@ import type { Context as HonoContext, Input as HonoInput } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import { makeStartupConfigLayer, readStartupConfig } from "./startup-config.js";
+import {
+  buildStartupConfigLayer,
+  readStartupConfig,
+} from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
 
 /** Scoped Hono application value used by tests and the Node.js host. */
@@ -62,12 +65,14 @@ export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupErr
 ) {}
 
 const appHttpApiEvlogExcludePath = "/**";
+
 const contentfulStatusCodes: ReadonlySet<number> = new Set([
   100, 102, 103, 200, 201, 202, 203, 206, 207, 208, 226, 300, 301, 302, 303,
   305, 306, 307, 308, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410,
   411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 424, 425, 426, 428,
   429, 431, 451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511,
 ]);
+
 const isContentfulStatusCode = (
   status: number
 ): status is ContentfulStatusCode => contentfulStatusCodes.has(status);
@@ -104,6 +109,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       const database = yield* EffectDatabase;
       const auth = yield* BetterAuthService;
       const app = new Hono<EvlogVariables>();
+
       const apiLiveLayer = makeApiLiveLayerFromDatabase(
         Layer.succeed(EffectDatabase, database),
         {
@@ -111,19 +117,23 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
           firecrawl: startupConfig.firecrawl,
         }
       );
+
       const appHttpApiServices = Layer.merge(
         apiLiveLayer,
         Layer.succeed(BetterAuthService, auth)
       );
+
       const appHttpApiLayer = AppHttpApiLayer.pipe(
         HttpRouter.provideRequest(appHttpApiServices),
         Layer.provide(appHttpApiServices),
         Layer.provide(HttpServer.layerServices)
       );
+
       const appHttpApi = HttpEffect.toWebHandler(
         yield* HttpRouter.toHttpEffect(appHttpApiLayer),
         HttpMiddleware.logger
       );
+
       const healthHttpApi = HttpEffect.toWebHandler(
         yield* HttpRouter.toHttpEffect(
           HealthHttpApiLayer.pipe(Layer.provide(HttpServer.layerServices))
@@ -145,9 +155,11 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 
       app.use("*", async (context, next) => {
         const log = context.get("log");
+
         if (log !== undefined) {
           await identifyUser(log, context.req.raw.headers, context.req.path);
         }
+
         // oxlint-disable-next-line typescript/no-confusing-void-expression -- Hono middleware must return its awaited next callback.
         return await next();
       });
@@ -178,9 +190,11 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 
       app.get("/api/openapi.json", (context) => {
         const log = context.get("log");
+
         if (log !== undefined) {
           log.set({ httpApi: { docs: "app-openapi" } });
         }
+
         return context.json(OpenApi.fromApi(AppHttpApi));
       });
 
@@ -198,13 +212,17 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       // oxlint-disable-next-line promise/prefer-await-to-callbacks
       app.onError((error, context) => {
         const log = context.get("log");
+
         if (log !== undefined) {
           log.error(error);
         }
+
         const parsed = parseError(error);
+
         const status = isContentfulStatusCode(parsed.status)
           ? parsed.status
           : 500;
+
         return context.json(
           {
             fix: parsed.fix,
@@ -223,10 +241,12 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 /** Build the scoped Hono application and all of its owned dependencies. */
 export const makeServerApplicationLayer = (startupConfig: StartupConfig) => {
   const databaseLayer = makeSharedDatabaseLayer(startupConfig.databaseUrl);
+
   const authLayer = BetterAuthServiceLiveLayer.pipe(
     Layer.provide(Layer.succeed(AuthConfig, startupConfig.auth)),
     Layer.provide(databaseLayer)
   );
+
   const dependencies = Layer.merge(databaseLayer, authLayer);
 
   return makeHonoApplicationLayer(startupConfig).pipe(
@@ -294,9 +314,8 @@ export const makeServerLayer = (startupConfig: StartupConfig) =>
   );
 
 const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
-  Effect.catchIf(
-    (error) => error.reason._tag === "NotFound",
-    () => Effect.succeed(ConfigProvider.fromUnknown({}))
+  Effect.catchReason("PlatformError", "NotFound", () =>
+    Effect.succeed(ConfigProvider.fromUnknown({}))
   ),
   Effect.provide(NodeFileSystem.layer)
 );
@@ -308,7 +327,7 @@ const startupConfigProvider = dotEnvProvider.pipe(
 );
 
 const startupConfigLayer = Layer.unwrap(
-  startupConfigProvider.pipe(Effect.map(makeStartupConfigLayer))
+  startupConfigProvider.pipe(Effect.map(buildStartupConfigLayer))
 );
 
 const main = readStartupConfig.pipe(

@@ -26,7 +26,7 @@ class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigura
  * two independent layers would leave auth config reading Effect's default
  * environment provider instead.
  */
-export const makeStartupConfigLayer = (
+export const buildStartupConfigLayer = (
   provider: ConfigProvider.ConfigProvider
 ) => {
   const configProviderLayer = ConfigProvider.layer(provider);
@@ -68,7 +68,9 @@ export const readLegendCatalogSyncConfig = Effect.gen(
       databaseUrlConfig,
       readFirecrawlConfig,
     ] as const);
+
     yield* validateDatabaseUrl(Redacted.value(databaseUrl));
+
     return { databaseUrl, firecrawl };
   }
 );

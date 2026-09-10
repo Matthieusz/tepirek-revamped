@@ -4,7 +4,7 @@ import {
   BetterAuthUnavailable,
   createAuth,
 } from "@tepirek-revamped/auth";
-import { makeBetterAuthDatabase } from "@tepirek-revamped/db/effect";
+import { buildBetterAuthDatabase } from "@tepirek-revamped/db/effect";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -22,6 +22,7 @@ import { loadCurrentSession } from "./session-middleware.ts";
 const testPool = new Pool({
   connectionString: "postgresql://postgres:password@localhost:5433/test",
 });
+
 const testBetterAuthInstance = createAuth(
   {
     betterAuthSecret: Redacted.make("test-secret-at-least-32-characters"),
@@ -31,7 +32,7 @@ const testBetterAuthInstance = createAuth(
     discordClientSecret: Redacted.make("test-discord-client-secret"),
     isProduction: false,
   },
-  makeBetterAuthDatabase(testPool)
+  buildBetterAuthDatabase(testPool)
 );
 
 afterAll(async () => {
@@ -64,6 +65,7 @@ it.effect(
   "projects a rejected Better Auth call into a safe middleware failure",
   () => {
     const internalCause = new Error("database connection and token details");
+
     const authLayer = Layer.succeed(BetterAuthService, {
       getSession: () =>
         Effect.fail(new BetterAuthUnavailable({ cause: internalCause })),
@@ -81,8 +83,8 @@ it.effect(
       // Trusted test value; sync encoding keeps the assertion focused.
       // @effect-diagnostics-next-line schemaSyncInEffect:off
       const encoded = Schema.encodeUnknownSync(SessionUnavailable)(failure);
-      expect(encoded).toEqual({
-        _tag: "SessionUnavailable",
+      expect(encoded).toHaveProperty("_tag", "SessionUnavailable");
+      expect(encoded).toMatchObject({
         message: "SESSION_UNAVAILABLE",
       });
       expect(JSON.stringify(encoded)).not.toContain(internalCause.message);

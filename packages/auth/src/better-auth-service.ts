@@ -29,7 +29,7 @@ export class BetterAuthService extends Context.Service<
 >()("@tepirek-revamped/auth/BetterAuthService") {}
 
 /** Construct a Better Auth service value around a vendor instance. */
-export const makeBetterAuthService = (
+export const buildBetterAuthService = (
   instance: BetterAuthInstance
 ): BetterAuthServiceInterface =>
   BetterAuthService.of({
