@@ -5,18 +5,7 @@ import react from "ultracite/oxlint/react";
 export default defineConfig({
   extends: [core, react],
   ignorePatterns: [
-    ".agent/**",
-    ".agents/**",
-    ".claude/**",
-    ".codex/**",
     ".codegraph/**",
-    ".continue/**",
-    ".cursor/**",
-    ".gemini/**",
-    ".opencode/**",
-    ".pi/**",
-    ".roo/**",
-    ".windsurf/**",
     "apps/web/src/routeTree.gen.ts",
     "apps/web/src/components/*",
     "tools/oxlint/anti-slop/**",
