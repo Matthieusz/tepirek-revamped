@@ -24,15 +24,6 @@ export default defineConfig({
     typeAware: true,
     typeCheck: true,
   },
-  overrides: [
-    {
-      files: ["**/*.{cts,mts,ts,tsx}"],
-      rules: {
-        // TypeScript has separate type and value namespaces. Its compiler still rejects invalid redeclarations.
-        "no-redeclare": "off",
-      },
-    },
-  ],
   rules: {
     "anti-slop-effect/no-manual-effect-error-tag": "error",
     "anti-slop-effect/no-manual-tag-comparison": "error",
@@ -57,6 +48,8 @@ export default defineConfig({
     "anti-slop/no-widen-then-assert": "error",
     "anti-slop/require-readable-spacing": "error",
     "anti-slop/require-safety-comment-for-type-assertion": "error",
+    "no-redeclare": "off",
     "oxc/no-accumulating-spread": "error",
+    "typescript/no-redeclare": "error",
   },
 });
