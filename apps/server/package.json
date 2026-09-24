@@ -21,15 +21,15 @@
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
     "effect": "catalog:",
-    "evlog": "^2.26.0",
+    "evlog": "^2.29.0",
     "hono": "catalog:",
     "ofetch": "^1.5.1"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
-    "tsdown": "^0.22.14",
-    "tsx": "^4.23.13",
+    "tsdown": "^0.23.0",
+    "tsx": "^4.23.15",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
