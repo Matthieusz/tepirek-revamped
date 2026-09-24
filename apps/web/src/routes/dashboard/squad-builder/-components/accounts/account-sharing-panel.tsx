@@ -202,8 +202,7 @@ export const AccountSharingPanel = ({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-
-                      const send = async () => {
+                      void (async () => {
                         setSendingUserId(target.userId);
 
                         try {
@@ -225,9 +224,7 @@ export const AccountSharingPanel = ({
                         }
 
                         setSendingUserId(null);
-                      };
-
-                      void send();
+                      })();
                     }}
                     size="xs"
                     type="button"
@@ -310,7 +307,7 @@ export const AccountSharingPanel = ({
                   aria-label={`Cofnij dostęp dla ${grant.invitedUserName}`}
                   disabled={revokingAccessId === grant.accessId}
                   onClick={() => {
-                    const revoke = async () => {
+                    void (async () => {
                       setRevokingAccessId(grant.accessId);
 
                       try {
@@ -330,9 +327,7 @@ export const AccountSharingPanel = ({
                       }
 
                       setRevokingAccessId(null);
-                    };
-
-                    void revoke();
+                    })();
                   }}
                   size="icon-sm"
                   variant="ghost"

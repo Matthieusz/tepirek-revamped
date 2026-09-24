@@ -96,6 +96,9 @@ const awaitAfter = <A, E>(
     return yield* Fiber.await(fiber);
   });
 
+const slowFailure: ClientStep = (request) =>
+  emptyResponse(503)(request).pipe(Effect.delay("6 seconds"));
+
 describe("DiscordGuildVerifier", () => {
   it.effect("constructs the authenticated Discord guild-list request", () =>
     Effect.gen(function* requestDiscordGuilds() {
@@ -342,9 +345,6 @@ describe("DiscordGuildVerifier", () => {
   it.effect("applies ten seconds to the complete multi-attempt operation", () =>
     Effect.gen(function* enforceOverallDeadline() {
       const requests: HttpClientRequest.HttpClientRequest[] = [];
-
-      const slowFailure: ClientStep = (request) =>
-        emptyResponse(503)(request).pipe(Effect.delay("6 seconds"));
 
       const client = makeSequenceClient(
         [slowFailure, slowFailure, slowFailure],

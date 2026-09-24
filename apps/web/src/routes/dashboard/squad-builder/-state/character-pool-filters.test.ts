@@ -64,6 +64,18 @@ const textFilter = (
 const ids = (filtered: readonly CharacterPoolCharacter[]): number[] =>
   filtered.map((character) => character.characterId);
 
+const getCharacter = (characterId: number): CharacterPoolCharacter => {
+  const character = characters.find(
+    (candidate) => candidate.characterId === characterId
+  );
+
+  if (character === undefined) {
+    throw new Error(`Missing test character ${characterId}`);
+  }
+
+  return character;
+};
+
 describe("character pool filters", () => {
   it("excludes assigned characters before applying user filters", () => {
     const filters = parseCharacterPoolFilters([], "", "");
@@ -158,18 +170,6 @@ describe("character pool filters", () => {
   });
 
   it("groups without mutating source order and sorts by account then level", () => {
-    const getCharacter = (characterId: number): CharacterPoolCharacter => {
-      const character = characters.find(
-        (candidate) => candidate.characterId === characterId
-      );
-
-      if (character === undefined) {
-        throw new Error(`Missing test character ${characterId}`);
-      }
-
-      return character;
-    };
-
     const source = [getCharacter(3), getCharacter(1), getCharacter(2)];
 
     const groups = groupCharactersByAccount(source);
