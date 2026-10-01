@@ -34,7 +34,8 @@ export interface MargonemForumTopicPage {
 }
 
 /** Failure while downloading a Margonem forum guide. */
-class MargonemForumRequestFailed extends Schema.TaggedErrorClass<MargonemForumRequestFailed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+class MargonemForumRequestFailed extends Schema.TaggedError<MargonemForumRequestFailed>()(
   "MargonemForumRequestFailed",
   {
     category: LegendaryEnemyCategory,
@@ -44,7 +45,8 @@ class MargonemForumRequestFailed extends Schema.TaggedErrorClass<MargonemForumRe
 ) {}
 
 /** A response was not a complete HTML guide document and is unsafe to parse. */
-class MargonemForumDocumentRejected extends Schema.TaggedErrorClass<MargonemForumDocumentRejected>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+class MargonemForumDocumentRejected extends Schema.TaggedError<MargonemForumDocumentRejected>()(
   "MargonemForumDocumentRejected",
   {
     category: LegendaryEnemyCategory,

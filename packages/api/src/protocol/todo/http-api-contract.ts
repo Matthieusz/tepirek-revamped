@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { TodoId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -42,19 +42,22 @@ export const TodoSummary = Schema.Struct({
 
 export interface TodoSummary extends Schema.Schema.Type<typeof TodoSummary> {}
 
-export class TodoUnauthorized extends Schema.TaggedErrorClass<TodoUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class TodoUnauthorized extends Schema.TaggedError<TodoUnauthorized>()(
   "TodoUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class TodoForbidden extends Schema.TaggedErrorClass<TodoForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class TodoForbidden extends Schema.TaggedError<TodoForbidden>()(
   "TodoForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class TodoPersistenceUnavailable extends Schema.TaggedErrorClass<TodoPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class TodoPersistenceUnavailable extends Schema.TaggedError<TodoPersistenceUnavailable>()(
   "TodoPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

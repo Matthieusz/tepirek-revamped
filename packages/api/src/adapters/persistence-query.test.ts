@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
-import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
-import type { SqlError as SqlErrorType } from "effect/unstable/sql/SqlError";
+import { SqlError, UnknownError } from "effect/sql/SqlError";
+import type { SqlError as SqlErrorType } from "effect/sql/SqlError";
 
 import { AnnouncementId } from "../domain/core-identifiers.ts";
 import { ApplicationDependencyUnavailable } from "../services/application-errors.ts";

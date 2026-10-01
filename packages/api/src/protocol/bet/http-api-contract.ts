@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -155,31 +155,36 @@ export interface MutationSuccess extends Schema.Schema.Type<
   typeof MutationSuccess
 > {}
 
-export class BetUnauthorized extends Schema.TaggedErrorClass<BetUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetUnauthorized extends Schema.TaggedError<BetUnauthorized>()(
   "BetUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class BetForbidden extends Schema.TaggedErrorClass<BetForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetForbidden extends Schema.TaggedError<BetForbidden>()(
   "BetForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class BetBadRequest extends Schema.TaggedErrorClass<BetBadRequest>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetBadRequest extends Schema.TaggedError<BetBadRequest>()(
   "BetBadRequest",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
 
-export class BetNotFound extends Schema.TaggedErrorClass<BetNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetNotFound extends Schema.TaggedError<BetNotFound>()(
   "BetNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
 
-export class BetPersistenceUnavailable extends Schema.TaggedErrorClass<BetPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetPersistenceUnavailable extends Schema.TaggedError<BetPersistenceUnavailable>()(
   "BetPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

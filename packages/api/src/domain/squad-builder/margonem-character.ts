@@ -11,7 +11,8 @@ export const MargonemWorld = Schema.Literal("jaruna");
 export type MargonemWorld = typeof MargonemWorld.Type;
 
 /** Expected failure when a world string is not a known Margonem world. */
-export class UnknownMargonemWorld extends Schema.TaggedErrorClass<UnknownMargonemWorld>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class UnknownMargonemWorld extends Schema.TaggedError<UnknownMargonemWorld>()(
   "UnknownMargonemWorld",
   {
     value: Schema.String,
@@ -58,7 +59,8 @@ export interface MargonemCharacterPreviewSchema extends Schema.Schema.Type<
 export type MargonemCharacterPreview = MargonemCharacterPreviewSchema;
 
 /** Expected failure when a profession label cannot be normalized. */
-export class UnknownMargonemProfession extends Schema.TaggedErrorClass<UnknownMargonemProfession>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class UnknownMargonemProfession extends Schema.TaggedError<UnknownMargonemProfession>()(
   "UnknownMargonemProfession",
   {
     label: Schema.String,

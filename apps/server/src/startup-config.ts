@@ -11,7 +11,8 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+class StartupConfigurationError extends Schema.TaggedError<StartupConfigurationError>()(
   "StartupConfigurationError",
   {
     message: Schema.String,
@@ -59,7 +60,7 @@ const validateDatabaseUrl = (value: string) =>
     )
   );
 
-const databaseUrlConfig = Config.redacted("DATABASE_URL");
+const databaseUrlConfig = Config.Redacted("DATABASE_URL");
 
 /** Minimal configuration required by the explicit legend-catalog sync command. */
 export const readLegendCatalogSyncConfig = Effect.gen(
@@ -76,16 +77,16 @@ export const readLegendCatalogSyncConfig = Effect.gen(
 );
 
 const readObservabilityConfig = Config.all({
-  minimumLogLevel: Config.logLevel("TEPIREK_LOG_LEVEL").pipe(
+  minimumLogLevel: Config.LogLevel("TEPIREK_LOG_LEVEL").pipe(
     Config.withDefault("Info")
   ),
-  nodeEnvironment: Config.string("NODE_ENV").pipe(
+  nodeEnvironment: Config.String("NODE_ENV").pipe(
     Config.withDefault("development")
   ),
-  printLogs: Config.boolean("TEPIREK_PRINT_LOGS").pipe(
+  printLogs: Config.Boolean("TEPIREK_PRINT_LOGS").pipe(
     Config.withDefault(false)
   ),
-  serviceVersion: Config.string("npm_package_version").pipe(
+  serviceVersion: Config.String("npm_package_version").pipe(
     Config.withDefault("0.0.0")
   ),
 }).pipe(

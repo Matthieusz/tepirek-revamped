@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
 
 import {
-  makeSharedPostgresPoolLayer,
-  SharedPostgresPool,
+  makeBetterAuthPostgresPoolLayer,
+  BetterAuthPostgresPool,
 } from "@tepirek-revamped/db/effect";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -22,7 +22,7 @@ const runDockerCompose = (args: readonly string[]) => {
 
 export const setup = async () => {
   const configuredTestDatabaseUrl = await Effect.runPromise(
-    Config.option(Config.string("TEST_DATABASE_URL"))
+    Config.option(Config.String("TEST_DATABASE_URL"))
   );
 
   const isManagedTestDatabase = Option.isNone(configuredTestDatabaseUrl);
@@ -39,11 +39,11 @@ export const setup = async () => {
   try {
     await Effect.runPromise(
       Effect.gen(function* verifyTestDatabaseConnection() {
-        const testPool = yield* SharedPostgresPool;
+        const testPool = yield* BetterAuthPostgresPool;
         yield* Effect.promise(async () => await testPool.query("select 1"));
       }).pipe(
         Effect.provide(
-          makeSharedPostgresPoolLayer(Redacted.make(testDatabaseUrl))
+          makeBetterAuthPostgresPoolLayer(Redacted.make(testDatabaseUrl))
         ),
         Effect.scoped
       )

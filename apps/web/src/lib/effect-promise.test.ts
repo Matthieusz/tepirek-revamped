@@ -2,9 +2,9 @@ import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-co
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { TodoForbidden } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import * as Layer from "effect/Layer";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getErrorMessage } from "@/lib/errors";

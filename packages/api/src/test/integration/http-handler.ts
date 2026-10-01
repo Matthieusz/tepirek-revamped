@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
+import { HttpRouter } from "effect/http";
 import type * as Layer from "effect/Layer";
-import { HttpRouter } from "effect/unstable/http";
 
 export interface IntegrationHandler {
   readonly handler: (request: Request) => Promise<Response>;

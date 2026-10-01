@@ -8,7 +8,7 @@ import * as Effect from "effect/Effect";
 import type { Success } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
+import { ConnectionError, SqlError } from "effect/sql/SqlError";
 import { Pool } from "pg";
 
 import {
@@ -23,13 +23,13 @@ export {
 
 export type { BetterAuthDatabase } from "./better-auth-database.ts";
 
-/** Scoped node-postgres pool shared by both Drizzle adapters. */
-export class SharedPostgresPool extends Context.Service<
-  SharedPostgresPool,
+/** Scoped node-postgres pool owned by Better Auth's Drizzle adapter. */
+export class BetterAuthPostgresPool extends Context.Service<
+  BetterAuthPostgresPool,
   Pool
->()("@tepirek-revamped/db/SharedPostgresPool") {}
+>()("@tepirek-revamped/db/BetterAuthPostgresPool") {}
 
-/** Maximum number of PostgreSQL connections shared by all server adapters. */
+/** Maximum connections per pool; the server owns two independent pools. */
 export const DATABASE_POOL_MAX_CONNECTIONS = 10;
 
 const POSTGRES_CONNECTION_TIMEOUT = Duration.seconds(5);
@@ -58,19 +58,14 @@ export class EffectDatabase extends Context.Service<
   EffectPgDatabase
 >()("@tepirek-revamped/db/EffectDatabase") {}
 
-/**
- * Acquire one validated, scoped PostgreSQL pool with intentional capacity.
- * Both Drizzle adapters use node-postgres's native temporal parsers so date
- * columns have the same `Date` representation; the Effect driver applies its
- * own column codecs to the values it selects.
- */
-export const makeSharedPostgresPoolLayer = (
+/** Acquire and validate Better Auth's scoped node-postgres pool. */
+export const makeBetterAuthPostgresPoolLayer = (
   databaseUrl: Redacted.Redacted
-): Layer.Layer<SharedPostgresPool, SqlError> =>
+): Layer.Layer<BetterAuthPostgresPool, SqlError> =>
   Layer.effect(
-    SharedPostgresPool,
+    BetterAuthPostgresPool,
     Effect.acquireRelease(
-      Effect.gen(function* acquireSharedPostgresPool() {
+      Effect.gen(function* acquireBetterAuthPostgresPool() {
         const pool = new Pool({
           connectionString: Redacted.value(databaseUrl),
           max: DATABASE_POOL_MAX_CONNECTIONS,
@@ -85,7 +80,7 @@ export const makeSharedPostgresPoolLayer = (
             new SqlError({
               reason: new ConnectionError({
                 cause,
-                message: "SharedPostgresPool: Failed to connect",
+                message: "BetterAuthPostgresPool: Failed to connect",
                 operation: "connect",
               }),
             }),
@@ -98,7 +93,7 @@ export const makeSharedPostgresPoolLayer = (
                 new SqlError({
                   reason: new ConnectionError({
                     cause: new Error("Connection timed out"),
-                    message: "SharedPostgresPool: Connection timed out",
+                    message: "BetterAuthPostgresPool: Connection timed out",
                     operation: "connect",
                   }),
                 })
@@ -121,20 +116,11 @@ export const makeSharedPostgresPoolLayer = (
     )
   );
 
-/** Build the Effect PostgreSQL client from the already-owned shared pool. */
-export const PgClientFromSharedPoolLayer = Pg.layerFrom(
-  Effect.gen(function* makePgClientFromSharedPool() {
-    const pool = yield* SharedPostgresPool;
-
-    return yield* Pg.fromPool({ acquire: Effect.succeed(pool) });
-  })
-);
-
-/** Build Better Auth's node-postgres Drizzle adapter from the shared pool. */
+/** Build Better Auth's Drizzle adapter from its node-postgres pool. */
 export const BetterAuthDatabaseLayer = Layer.effect(
   BetterAuthDatabaseService,
   Effect.gen(function* buildBetterAuthDatabaseService() {
-    const pool = yield* SharedPostgresPool;
+    const pool = yield* BetterAuthPostgresPool;
 
     return buildBetterAuthDatabase(pool);
   })
@@ -147,30 +133,34 @@ export const EffectDatabaseLayer: Layer.Layer<
   Pg.PgClient
 > = Layer.effect(EffectDatabase, makeDrizzleDatabase());
 
-/** Create both database adapters over one scoped PostgreSQL pool. */
-export const makeSharedDatabaseLayer = (
-  databaseUrl: Redacted.Redacted
-): Layer.Layer<EffectDatabase | BetterAuthDatabaseService, SqlError> => {
-  const poolLayer = makeSharedPostgresPoolLayer(databaseUrl);
-
-  const pgClientLayer = PgClientFromSharedPoolLayer.pipe(
-    Layer.provide(poolLayer)
+/** Acquire a scoped native PostgreSQL pool and verify connectivity at startup. */
+export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
+  Pg.layerFrom(
+    Pg.make({
+      connectTimeout: POSTGRES_CONNECTION_TIMEOUT,
+      maxConnections: DATABASE_POOL_MAX_CONNECTIONS,
+      url: databaseUrl,
+    }).pipe(Effect.tap((client) => client`SELECT 1`))
   );
 
+/**
+ * Create both database adapters with independently scoped pools.
+ * Effect SQL owns the native pool; Better Auth owns a node-postgres pool.
+ * Both pools close with the server scope, with at most 20 total connections.
+ */
+export const makeDatabaseLayer = (
+  databaseUrl: Redacted.Redacted
+): Layer.Layer<EffectDatabase | BetterAuthDatabaseService, SqlError> => {
   const effectDatabaseLayer = EffectDatabaseLayer.pipe(
-    Layer.provide(pgClientLayer)
+    Layer.provide(makePgClientLayer(databaseUrl))
   );
 
   const betterAuthDatabaseLayer = BetterAuthDatabaseLayer.pipe(
-    Layer.provide(poolLayer)
+    Layer.provide(makeBetterAuthPostgresPoolLayer(databaseUrl))
   );
 
   return Layer.merge(effectDatabaseLayer, betterAuthDatabaseLayer);
 };
-
-/** Create a managed PostgreSQL client layer from a redacted database URL. */
-export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
-  Pg.layer({ url: databaseUrl });
 
 /** Create a managed PostgreSQL client layer from a raw boundary database URL. */
 export const makePgClientLayerFromUrl = (databaseUrl: string) =>

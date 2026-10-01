@@ -1,10 +1,10 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
 
@@ -281,9 +281,7 @@ const HttpJsonBodySchema = Schema.Tree(
 
 type HttpJsonBody = typeof HttpJsonBodySchema.Type;
 
-const JsonDateSchema = Schema.DateFromString.pipe(
-  Schema.check(Schema.isDateValid())
-);
+const JsonDateSchema = Schema.DateFromString;
 
 const decodeJsonDate = Schema.decodeUnknownOption(JsonDateSchema);
 

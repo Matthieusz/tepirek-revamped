@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { AnnouncementId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -49,19 +49,22 @@ export interface AnnouncementSummary extends Schema.Schema.Type<
   typeof AnnouncementSummary
 > {}
 
-export class AnnouncementUnauthorized extends Schema.TaggedErrorClass<AnnouncementUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AnnouncementUnauthorized extends Schema.TaggedError<AnnouncementUnauthorized>()(
   "AnnouncementUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class AnnouncementForbidden extends Schema.TaggedErrorClass<AnnouncementForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AnnouncementForbidden extends Schema.TaggedError<AnnouncementForbidden>()(
   "AnnouncementForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class AnnouncementPersistenceUnavailable extends Schema.TaggedErrorClass<AnnouncementPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AnnouncementPersistenceUnavailable extends Schema.TaggedError<AnnouncementPersistenceUnavailable>()(
   "AnnouncementPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

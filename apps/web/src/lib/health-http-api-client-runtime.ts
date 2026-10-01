@@ -1,9 +1,9 @@
 import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-contract";
 import { Layer } from "effect";
 import * as Context from "effect/Context";
+import { FetchHttpClient } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import type * as LayerType from "effect/Layer";
-import { FetchHttpClient } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 
 import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";

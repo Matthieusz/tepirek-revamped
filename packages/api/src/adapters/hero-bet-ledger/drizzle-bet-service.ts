@@ -812,7 +812,7 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
     const countRows = yield* persistenceQuery(
       "getPaginatedBets.count",
       database
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<string>`count(*)::text` })
         .from(heroBet)
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .where(whereClause)

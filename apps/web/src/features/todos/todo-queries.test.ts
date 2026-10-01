@@ -2,10 +2,10 @@ import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 import { describe, expect, it, vi } from "vitest";
 
 import type { Todo, TodoApiRunner } from "@/features/todos/todo-api";

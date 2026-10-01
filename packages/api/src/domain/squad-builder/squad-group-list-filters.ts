@@ -24,7 +24,7 @@ export const SquadGroupNameQuery = Schema.String.pipe(
     encode: SchemaGetter.passthrough(),
   }),
   Schema.check(
-    Schema.isLengthBetween(
+    Schema.isBetweenLength(
       squadGroupListFilterPolicy.nameQueryMinLength,
       squadGroupListFilterPolicy.nameQueryMaxLength
     )
@@ -80,7 +80,8 @@ export const emptySquadGroupListFilters: SquadGroupListFilters = {
 };
 
 /** Failure returned when a squad group name query is invalid. */
-export class InvalidSquadGroupNameQuery extends Schema.TaggedErrorClass<InvalidSquadGroupNameQuery>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupNameQuery extends Schema.TaggedError<InvalidSquadGroupNameQuery>()(
   "InvalidSquadGroupNameQuery",
   {
     message: Schema.String,
@@ -88,7 +89,8 @@ export class InvalidSquadGroupNameQuery extends Schema.TaggedErrorClass<InvalidS
 ) {}
 
 /** Failure returned when a squad group character-level range is invalid. */
-export class InvalidSquadGroupLevelRange extends Schema.TaggedErrorClass<InvalidSquadGroupLevelRange>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupLevelRange extends Schema.TaggedError<InvalidSquadGroupLevelRange>()(
   "InvalidSquadGroupLevelRange",
   {
     message: Schema.String,

@@ -19,7 +19,8 @@ export type SquadGroupInvitationStatus =
   typeof SquadGroupInvitationStatusSchema.Type;
 
 /** Expected failure when a persisted squad group invitation status is unknown. */
-export class InvalidSquadGroupInvitationStatus extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationStatus>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupInvitationStatus extends Schema.TaggedError<InvalidSquadGroupInvitationStatus>()(
   "InvalidSquadGroupInvitationStatus",
   { value: Schema.String }
 ) {}

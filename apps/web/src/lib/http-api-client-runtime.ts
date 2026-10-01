@@ -3,11 +3,11 @@ import { HttpApiError } from "@tepirek-revamped/api/protocol/http-api-errors";
 import { Layer } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { FetchHttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
+import * as HttpClientError from "effect/http/HttpClientError";
 import type * as LayerType from "effect/Layer";
 import * as Predicate from "effect/Predicate";
-import { FetchHttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
-import { HttpApiClient } from "effect/unstable/httpapi";
 
 import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";

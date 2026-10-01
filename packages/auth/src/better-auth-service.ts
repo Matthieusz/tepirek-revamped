@@ -9,7 +9,8 @@ import type {
 } from "./better-auth-types.ts";
 
 /** Expected failure when Better Auth cannot load a session. */
-export class BetterAuthUnavailable extends Schema.TaggedErrorClass<BetterAuthUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetterAuthUnavailable extends Schema.TaggedError<BetterAuthUnavailable>()(
   "BetterAuthUnavailable",
   { cause: Schema.Defect() }
 ) {}

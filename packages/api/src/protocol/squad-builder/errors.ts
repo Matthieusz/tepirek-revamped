@@ -1,49 +1,57 @@
 /* eslint-disable max-classes-per-file -- Shared squad-builder error classes are defined centrally for reuse across protocol groups. */
 import * as Schema from "effect/Schema";
 
-export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderUnauthorized extends Schema.TaggedError<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class SquadBuilderForbidden extends Schema.TaggedErrorClass<SquadBuilderForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderForbidden extends Schema.TaggedError<SquadBuilderForbidden>()(
   "SquadBuilderForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class SquadBuilderNotFound extends Schema.TaggedErrorClass<SquadBuilderNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderNotFound extends Schema.TaggedError<SquadBuilderNotFound>()(
   "SquadBuilderNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
 
-export class SquadBuilderConflict extends Schema.TaggedErrorClass<SquadBuilderConflict>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderConflict extends Schema.TaggedError<SquadBuilderConflict>()(
   "SquadBuilderConflict",
   { message: Schema.String },
   { httpApiStatus: 409 }
 ) {}
 
-export class SquadBuilderInvalidInput extends Schema.TaggedErrorClass<SquadBuilderInvalidInput>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderInvalidInput extends Schema.TaggedError<SquadBuilderInvalidInput>()(
   "SquadBuilderInvalidInput",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
 
-export class SquadBuilderUpstreamUnavailable extends Schema.TaggedErrorClass<SquadBuilderUpstreamUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderUpstreamUnavailable extends Schema.TaggedError<SquadBuilderUpstreamUnavailable>()(
   "SquadBuilderUpstreamUnavailable",
   { message: Schema.String },
   { httpApiStatus: 502 }
 ) {}
 
-export class SquadBuilderRateLimited extends Schema.TaggedErrorClass<SquadBuilderRateLimited>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderRateLimited extends Schema.TaggedError<SquadBuilderRateLimited>()(
   "SquadBuilderRateLimited",
   { message: Schema.String },
   { httpApiStatus: 429 }
 ) {}
 
-export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderPersistenceUnavailable extends Schema.TaggedError<SquadBuilderPersistenceUnavailable>()(
   "SquadBuilderPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 503 }

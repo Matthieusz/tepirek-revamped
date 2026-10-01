@@ -3,7 +3,8 @@ import * as Schema from "effect/Schema";
 import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a squad group invitation id is invalid. */
-export class InvalidSquadGroupInvitationId extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationId>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupInvitationId extends Schema.TaggedError<InvalidSquadGroupInvitationId>()(
   "InvalidSquadGroupInvitationId",
   {}
 ) {}

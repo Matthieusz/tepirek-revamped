@@ -1,20 +1,22 @@
 /* eslint-disable max-classes-per-file -- Collocated middleware error schemas. */
+import { HttpApiMiddleware } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiMiddleware } from "effect/unstable/httpapi";
 
 import type { CurrentSession } from "./current-session.ts";
 
 export { CurrentSession } from "./current-session.ts";
 
 /** Safe response for malformed authenticated session data. */
-export class InvalidSession extends Schema.TaggedErrorClass<InvalidSession>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSession extends Schema.TaggedError<InvalidSession>()(
   "InvalidSession",
   { message: Schema.Literal("INVALID_SESSION") },
   { httpApiStatus: 401 }
 ) {}
 
 /** Safe public projection for session-store failures. */
-export class SessionUnavailable extends Schema.TaggedErrorClass<SessionUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SessionUnavailable extends Schema.TaggedError<SessionUnavailable>()(
   "SessionUnavailable",
   { message: Schema.Literal("SESSION_UNAVAILABLE") },
   { httpApiStatus: 503 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
-import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
+import { SqlError, UnknownError } from "effect/sql/SqlError";
 
 import { persistenceQuery } from "./persistence-query.ts";
 

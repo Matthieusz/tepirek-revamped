@@ -27,14 +27,14 @@ const authEnvConfig = Config.all({
     Schema.Redacted(BetterAuthSecret),
     "BETTER_AUTH_SECRET"
   ),
-  betterAuthUrl: Config.url("BETTER_AUTH_URL"),
-  corsOrigin: Config.url("CORS_ORIGIN"),
+  betterAuthUrl: Config.URL("BETTER_AUTH_URL"),
+  corsOrigin: Config.URL("CORS_ORIGIN"),
   discordClientId: Config.schema(TrimmedNonEmptyString, "DISCORD_CLIENT_ID"),
   discordClientSecret: Config.schema(
     Schema.Redacted(NonEmptyString),
     "DISCORD_CLIENT_SECRET"
   ),
-  isProduction: Config.string("NODE_ENV").pipe(
+  isProduction: Config.String("NODE_ENV").pipe(
     Config.withDefault("development"),
     Config.map((nodeEnv) => nodeEnv === "production")
   ),

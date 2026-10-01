@@ -4,7 +4,8 @@ import * as Schema from "effect/Schema";
 
 import { getErrorMessage } from "@/lib/errors";
 
-export class FormSubmissionError extends Schema.TaggedErrorClass<FormSubmissionError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FormSubmissionError extends Schema.TaggedError<FormSubmissionError>()(
   "FormSubmissionError",
   {
     cause: Schema.Defect(),

@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -56,25 +56,29 @@ export interface RankingResult extends Schema.Schema.Type<
   typeof RankingResult
 > {}
 
-export class RankingUnauthorized extends Schema.TaggedErrorClass<RankingUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class RankingUnauthorized extends Schema.TaggedError<RankingUnauthorized>()(
   "RankingUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class RankingForbidden extends Schema.TaggedErrorClass<RankingForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class RankingForbidden extends Schema.TaggedError<RankingForbidden>()(
   "RankingForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class RankingNotFound extends Schema.TaggedErrorClass<RankingNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class RankingNotFound extends Schema.TaggedError<RankingNotFound>()(
   "RankingNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
 
-export class RankingPersistenceUnavailable extends Schema.TaggedErrorClass<RankingPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class RankingPersistenceUnavailable extends Schema.TaggedError<RankingPersistenceUnavailable>()(
   "RankingPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

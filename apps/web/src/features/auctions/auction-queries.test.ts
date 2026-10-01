@@ -6,10 +6,10 @@ import {
 } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 import { describe, expect, it, vi } from "vitest";
 
 import type {

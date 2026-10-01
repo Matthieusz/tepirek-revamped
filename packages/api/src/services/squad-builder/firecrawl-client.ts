@@ -28,7 +28,8 @@ export interface FirecrawlClient {
   ) => Effect<FirecrawlScrapeSuccess, FirecrawlUrlScrapeError>;
 }
 
-export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlRequestFailed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlRequestFailed extends Schema.TaggedError<FirecrawlRequestFailed>()(
   "FirecrawlRequestFailed",
   {
     cause: Schema.Defect(),
@@ -37,7 +38,8 @@ export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlReq
   {}
 ) {}
 
-export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<FirecrawlResponseNotParseable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlResponseNotParseable extends Schema.TaggedError<FirecrawlResponseNotParseable>()(
   "FirecrawlResponseNotParseable",
   {
     cause: Schema.Defect(),
@@ -47,14 +49,16 @@ export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<Firec
 ) {}
 
 /** Firecrawl failed while scraping an arbitrary URL. */
-export class FirecrawlUrlRequestFailed extends Schema.TaggedErrorClass<FirecrawlUrlRequestFailed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlUrlRequestFailed extends Schema.TaggedError<FirecrawlUrlRequestFailed>()(
   "FirecrawlUrlRequestFailed",
   { cause: Schema.Defect() },
   {}
 ) {}
 
 /** Firecrawl returned an invalid response for an arbitrary URL. */
-export class FirecrawlUrlResponseNotParseable extends Schema.TaggedErrorClass<FirecrawlUrlResponseNotParseable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlUrlResponseNotParseable extends Schema.TaggedError<FirecrawlUrlResponseNotParseable>()(
   "FirecrawlUrlResponseNotParseable",
   { cause: Schema.Defect() },
   {}

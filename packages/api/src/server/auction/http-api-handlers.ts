@@ -1,7 +1,7 @@
 /* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 import * as Effect from "effect/Effect";
+import { HttpApiBuilder } from "effect/http-api";
 import * as Match from "effect/Match";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import {
   AuctionConflict,

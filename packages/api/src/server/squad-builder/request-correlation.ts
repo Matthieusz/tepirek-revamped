@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
+import type { HttpServerRequest } from "effect/http/HttpServerRequest";
 
 export const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,

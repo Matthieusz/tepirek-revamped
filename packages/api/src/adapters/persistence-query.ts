@@ -1,8 +1,8 @@
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { isSqlError } from "effect/unstable/sql/SqlError";
-import type { SqlError } from "effect/unstable/sql/SqlError";
+import { isSqlError } from "effect/sql/SqlError";
+import type { SqlError } from "effect/sql/SqlError";
 
 interface PersistenceErrorInput<Operation extends string> {
   readonly cause: EffectDrizzleQueryError | SqlError;

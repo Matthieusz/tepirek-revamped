@@ -33,7 +33,7 @@ import {
 } from "@/features/auctions/auction-queries";
 import { getErrorMessage } from "@/lib/errors";
 
-const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
+const isValidDate = Schema.is(Schema.Date);
 
 interface CellContentProps {
   signup: AuctionSignup | undefined;

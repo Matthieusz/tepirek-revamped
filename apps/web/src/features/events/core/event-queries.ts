@@ -197,7 +197,16 @@ export const toggleEventActiveMutationOptions = (
 
       queryClient.setQueryData<readonly Event[]>(eventsQueryKey, (events) =>
         events?.map((event) =>
-          event.id === input.id ? { ...event, active: input.active } : event
+          event.id === input.id
+            ? {
+                active: input.active,
+                color: event.color,
+                endTime: event.endTime,
+                icon: event.icon,
+                id: event.id,
+                name: event.name,
+              }
+            : event
         )
       );
 

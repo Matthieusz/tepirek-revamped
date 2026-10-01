@@ -1,5 +1,6 @@
 import { expect } from "@effect/vitest";
 import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
@@ -36,7 +37,10 @@ export {
 
 /** Shared live layers used by the hero-bet-ledger integration tests. */
 export const testLayer = (() => {
-  const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
+  // Pool eviction uses real time; ledger timestamps remain controlled by TestClock.
+  const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl).pipe(
+    Layer.provide(Layer.succeed(Clock.Clock, Clock.Clock.defaultValue()))
+  );
 
   return Layer.mergeAll(
     DrizzleBetServiceLayer.pipe(Layer.provide(databaseLayer)),

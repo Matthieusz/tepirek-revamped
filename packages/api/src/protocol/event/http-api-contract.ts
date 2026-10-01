@@ -1,8 +1,8 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import { EVENT_ICON_IDS } from "@tepirek-revamped/config";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId } from "../../domain/core-identifiers.ts";
 
@@ -49,19 +49,22 @@ export const EventSummary = Schema.Struct({
 
 export interface EventSummary extends Schema.Schema.Type<typeof EventSummary> {}
 
-export class EventUnauthorized extends Schema.TaggedErrorClass<EventUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class EventUnauthorized extends Schema.TaggedError<EventUnauthorized>()(
   "EventUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class EventForbidden extends Schema.TaggedErrorClass<EventForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class EventForbidden extends Schema.TaggedError<EventForbidden>()(
   "EventForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class EventPersistenceUnavailable extends Schema.TaggedErrorClass<EventPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class EventPersistenceUnavailable extends Schema.TaggedError<EventPersistenceUnavailable>()(
   "EventPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

@@ -6,7 +6,8 @@ import { parseMargonemProfileId } from "./margonem-profile-id.ts";
 import type { MargonemProfileId } from "./margonem-profile-id.ts";
 
 /** Expected failure when a Margonem profile URL cannot be parsed. */
-export class InvalidMargonemProfileUrl extends Schema.TaggedErrorClass<InvalidMargonemProfileUrl>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidMargonemProfileUrl extends Schema.TaggedError<InvalidMargonemProfileUrl>()(
   "InvalidMargonemProfileUrl",
   {
     message: Schema.String,
@@ -14,7 +15,8 @@ export class InvalidMargonemProfileUrl extends Schema.TaggedErrorClass<InvalidMa
 ) {}
 
 /** Expected failure when a Margonem profile id is missing from a profile URL. */
-export class MissingMargonemProfileId extends Schema.TaggedErrorClass<MissingMargonemProfileId>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MissingMargonemProfileId extends Schema.TaggedError<MissingMargonemProfileId>()(
   "MissingMargonemProfileId",
   {
     message: Schema.String,

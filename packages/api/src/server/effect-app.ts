@@ -1,7 +1,7 @@
 import type { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 
 import { AnnouncementStoreLayer } from "../adapters/announcement/announcement-store.ts";
 import { AuctionStoreLayer } from "../adapters/auction/auction-store.ts";
