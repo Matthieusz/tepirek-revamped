@@ -9,17 +9,17 @@ allowBuilds:
 
 catalog:
   better-auth: ^1.7.6
-  dotenv: ^18.0.4
+  dotenv: ^18.0.5
   "@effect/sql-pg": 4.0.0
   "@effect/vitest": 4.0.0
   "@types/pg": 8.23.1
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
   effect: 4.0.0
-  hono: ^4.13.11
+  hono: ^4.13.12
   pg: 8.23.0
   typescript: 7.0.2
-  vitest: ^5.0.2
+  vitest: ^5.0.3
   zod: ^4.6.5
   linkedom: ^0.18.13
 
