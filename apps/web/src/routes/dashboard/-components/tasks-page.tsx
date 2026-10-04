@@ -86,6 +86,146 @@ interface TasksContentProps extends TasksPageProps {
   readonly todosData: readonly Todo[];
 }
 
+const TaskStats = ({
+  completedCount,
+  totalCount,
+}: {
+  readonly completedCount: number;
+  readonly totalCount: number;
+}) => (
+  <div className="grid grid-cols-3 gap-4">
+    <div className="border-border bg-card rounded-xl border p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-medium">Wszystkie</p>
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={ListChecksIcon}
+          className="text-muted-foreground size-4"
+        />
+      </div>
+      <p className="mt-1 text-2xl font-bold">{totalCount}</p>
+    </div>
+    <div className="border-border bg-card rounded-xl border p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-medium">Ukończone</p>
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={CheckmarkCircle02Icon}
+          className="text-primary size-4"
+        />
+      </div>
+      <p className="text-primary mt-1 text-2xl font-bold">{completedCount}</p>
+    </div>
+    <div className="border-border bg-card rounded-xl border p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-medium">Pozostałe</p>
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={CircleIcon}
+          className="text-muted-foreground size-4"
+        />
+      </div>
+      <p className="text-muted-foreground mt-1 text-2xl font-bold">
+        {totalCount - completedCount}
+      </p>
+    </div>
+  </div>
+);
+
+const TaskList = ({
+  todosData,
+  handleToggleTodo,
+  handleDeleteTodo,
+}: {
+  readonly todosData: readonly Todo[];
+  readonly handleToggleTodo: (id: number, completed: boolean) => void;
+  readonly handleDeleteTodo: (id: number) => void;
+}) => {
+  const completedCount = todosData.filter((todo) => todo.completed).length;
+  const totalCount = todosData.length;
+
+  return (
+    <div className="border-border bg-card rounded-xl border">
+      <div className="border-border flex items-center gap-2 border-b p-4">
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={ListChecksIcon}
+          className="size-4"
+        />
+        <h2 className="text-base font-semibold">Twoje zadania</h2>
+        <span className="text-muted-foreground ml-auto text-sm">
+          {totalCount > 0
+            ? `${completedCount} z ${totalCount} ukończonych`
+            : "Brak zadań"}
+        </span>
+      </div>
+      <div className="p-4">
+        {todosData.length === 0 && (
+          <div className="rounded-lg border border-dashed py-8 text-center">
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={ListChecksIcon}
+              className="text-muted-foreground mx-auto size-8"
+            />
+            <p className="text-muted-foreground mt-2 text-sm">
+              Brak zadań do wyświetlenia
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Dodaj nowe zadanie powyżej
+            </p>
+          </div>
+        )}
+        {todosData.length > 0 && (
+          <ul className="space-y-2">
+            {todosData.map((todo) => (
+              <li
+                className={`flex items-center justify-between rounded-lg p-3 transition-colors ${
+                  todo.completed
+                    ? "bg-primary/10"
+                    : "bg-muted/50 hover:bg-muted"
+                }`}
+                key={todo.id}
+              >
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={todo.completed}
+                    id={`todo-${todo.id}`}
+                    onCheckedChange={() => {
+                      handleToggleTodo(todo.id, todo.completed);
+                    }}
+                  />
+                  <label
+                    className={`cursor-pointer text-sm ${
+                      todo.completed ? "text-muted-foreground line-through" : ""
+                    }`}
+                    htmlFor={`todo-${todo.id}`}
+                  >
+                    {todo.text}
+                  </label>
+                </div>
+                <Button
+                  aria-label="Usuń zadanie"
+                  onClick={() => {
+                    handleDeleteTodo(todo.id);
+                  }}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Delete01Icon}
+                    className="size-4"
+                  />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const TasksContent = ({
   isRefreshing,
   onRetry,
@@ -220,51 +360,7 @@ const TasksContent = ({
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="border-border bg-card rounded-xl border p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-xs font-medium">
-                Wszystkie
-              </p>
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={ListChecksIcon}
-                className="text-muted-foreground size-4"
-              />
-            </div>
-            <p className="mt-1 text-2xl font-bold">{totalCount}</p>
-          </div>
-          <div className="border-border bg-card rounded-xl border p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-xs font-medium">
-                Ukończone
-              </p>
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={CheckmarkCircle02Icon}
-                className="text-primary size-4"
-              />
-            </div>
-            <p className="text-primary mt-1 text-2xl font-bold">
-              {completedCount}
-            </p>
-          </div>
-          <div className="border-border bg-card rounded-xl border p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-xs font-medium">
-                Pozostałe
-              </p>
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={CircleIcon}
-                className="text-muted-foreground size-4"
-              />
-            </div>
-            <p className="text-muted-foreground mt-1 text-2xl font-bold">
-              {totalCount - completedCount}
-            </p>
-          </div>
-        </div>
+        <TaskStats completedCount={completedCount} totalCount={totalCount} />
 
         {/* Add Task */}
         <div className="border-border bg-card rounded-xl border p-6">
@@ -309,86 +405,11 @@ const TasksContent = ({
         </div>
 
         {/* Task List */}
-        <div className="border-border bg-card rounded-xl border">
-          <div className="border-border flex items-center gap-2 border-b p-4">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={ListChecksIcon}
-              className="size-4"
-            />
-            <h2 className="text-base font-semibold">Twoje zadania</h2>
-            <span className="text-muted-foreground ml-auto text-sm">
-              {totalCount > 0
-                ? `${completedCount} z ${totalCount} ukończonych`
-                : "Brak zadań"}
-            </span>
-          </div>
-          <div className="p-4">
-            {todosData.length === 0 && (
-              <div className="rounded-lg border border-dashed py-8 text-center">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={ListChecksIcon}
-                  className="text-muted-foreground mx-auto size-8"
-                />
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Brak zadań do wyświetlenia
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Dodaj nowe zadanie powyżej
-                </p>
-              </div>
-            )}
-            {todosData.length > 0 && (
-              <ul className="space-y-2">
-                {todosData.map((todo) => (
-                  <li
-                    className={`flex items-center justify-between rounded-lg p-3 transition-colors ${
-                      todo.completed
-                        ? "bg-primary/10"
-                        : "bg-muted/50 hover:bg-muted"
-                    }`}
-                    key={todo.id}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={todo.completed}
-                        id={`todo-${todo.id}`}
-                        onCheckedChange={() => {
-                          handleToggleTodo(todo.id, todo.completed);
-                        }}
-                      />
-                      <label
-                        className={`cursor-pointer text-sm ${
-                          todo.completed
-                            ? "text-muted-foreground line-through"
-                            : ""
-                        }`}
-                        htmlFor={`todo-${todo.id}`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      aria-label="Usuń zadanie"
-                      onClick={() => {
-                        handleDeleteTodo(todo.id);
-                      }}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={Delete01Icon}
-                        className="size-4"
-                      />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        <TaskList
+          todosData={todosData}
+          handleToggleTodo={handleToggleTodo}
+          handleDeleteTodo={handleDeleteTodo}
+        />
       </div>
     </div>
   );
