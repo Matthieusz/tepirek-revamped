@@ -1,25 +1,9 @@
-import { CalculatorIcon, Unlink05Icon } from "@hugeicons/core-free-icons";
+import { Unlink05Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
-import { Form } from "@/components/forms/form";
-import { FormFieldFrame } from "@/components/forms/form-field-helpers";
-import {
-  getFieldErrorId,
-  getFieldErrorMessage,
-  getFieldId,
-} from "@/components/forms/form-field-utils";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CalculatorItemLevelFromStringSchema } from "@/features/calculators/form-schemas";
 import {
   calculateUnbindCost,
@@ -27,6 +11,8 @@ import {
 } from "@/features/calculators/odw";
 import type { OdwRarity } from "@/features/calculators/odw";
 import type { AuthSession } from "@/types/route";
+
+import { ItemParametersForm, ItemRarityField } from "./item-parameters";
 
 type Rarity = OdwRarity;
 
@@ -130,8 +116,6 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
     validators: { onChange: OdwFormValidator },
   });
 
-  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
-
   return (
     <form.AppForm>
       <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -145,93 +129,20 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="border-border bg-card rounded-xl border">
-            <div className="border-border border-b p-6">
-              <h2 className="flex items-center gap-2 text-base font-semibold">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={CalculatorIcon}
-                  className="size-5"
+          <ItemParametersForm form={form} submitLabel="Oblicz koszt">
+            <form.AppField name="itemLevel">
+              {(field) => <field.NumberField label="Poziom przedmiotu" />}
+            </form.AppField>
+            <form.Field name="itemRarity">
+              {(field) => (
+                <ItemRarityField
+                  field={field}
+                  colors={rarityColors}
+                  rarities={RARITY_ORDER}
                 />
-                Parametry przedmiotu
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Wprowadź poziom i wybierz rzadkość przedmiotu
-              </p>
-            </div>
-            <div className="p-6">
-              <Form className="grid gap-4" form={form}>
-                <form.AppField name="itemLevel">
-                  {(field) => <field.NumberField label="Poziom przedmiotu" />}
-                </form.AppField>
-                <form.Field name="itemRarity">
-                  {(field) => {
-                    const fieldId = getFieldId(field.name);
-                    const error = getFieldErrorMessage(field.state.meta.errors);
-
-                    const showError =
-                      error !== undefined &&
-                      (field.state.meta.isTouched ||
-                        field.form.state.submissionAttempts > 0);
-
-                    const errorId = getFieldErrorId(fieldId);
-
-                    return (
-                      <FormFieldFrame
-                        error={showError ? error : undefined}
-                        fieldId={fieldId}
-                        label="Rzadkość przedmiotu"
-                      >
-                        <Select
-                          name={field.name}
-                          onValueChange={(value) => {
-                            const rarity = RARITY_ORDER.find(
-                              (item) => item === value
-                            );
-
-                            if (rarity !== undefined) {
-                              field.handleChange(rarity);
-                            }
-                          }}
-                          value={field.state.value}
-                        >
-                          <SelectTrigger
-                            aria-describedby={showError ? errorId : undefined}
-                            aria-errormessage={showError ? errorId : undefined}
-                            aria-invalid={showError || undefined}
-                            aria-labelledby={`${fieldId}-label`}
-                            id={fieldId}
-                            onBlur={field.handleBlur}
-                          >
-                            <SelectValue placeholder="Wybierz rzadkość" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {RARITY_ORDER.map((rarity) => (
-                              <SelectItem key={rarity} value={rarity}>
-                                <span
-                                  className={`font-medium ${rarityColors[rarity]}`}
-                                >
-                                  {rarity.charAt(0).toUpperCase() +
-                                    rarity.slice(1)}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormFieldFrame>
-                    );
-                  }}
-                </form.Field>
-                <Button
-                  className="w-full"
-                  disabled={isSubmitting}
-                  type="submit"
-                >
-                  {isSubmitting ? "Obliczanie..." : "Oblicz koszt"}
-                </Button>
-              </Form>
-            </div>
-          </div>
+              )}
+            </form.Field>
+          </ItemParametersForm>
 
           {result && (
             <div

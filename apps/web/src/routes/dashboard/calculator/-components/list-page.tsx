@@ -45,6 +45,37 @@ const GroupFormSchema = Schema.Struct({
 
 const GroupFormValidator = Schema.toStandardSchemaV1(GroupFormSchema);
 
+const PenaltyResultTitle = ({
+  hasPenalty,
+  mode,
+}: {
+  readonly hasPenalty: boolean;
+  readonly mode: "single" | "group";
+}) => {
+  const penaltyMessage =
+    mode === "single"
+      ? "Otrzymasz punkt karny!"
+      : "Drużyna otrzyma punkty karne!";
+
+  const safeMessage =
+    mode === "single" ? "Brak punktu karnego" : "Brak punktów karnych";
+
+  return (
+    <h2 className="flex items-center gap-2 text-base font-semibold">
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={hasPenalty ? TriangleAlertIcon : Shield01Icon}
+        className={
+          hasPenalty ? "text-destructive size-5" : "text-primary size-5"
+        }
+      />
+      <span className={hasPenalty ? "text-destructive" : "text-primary"}>
+        {hasPenalty ? penaltyMessage : safeMessage}
+      </span>
+    </h2>
+  );
+};
+
 const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
   <div
     className={`rounded-xl border-2 ${
@@ -54,27 +85,10 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
     } bg-card p-6`}
   >
     <div className="mb-4">
-      <h2 className="flex items-center gap-2 text-base font-semibold">
-        {result.wouldReceivePenalty ? (
-          <>
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={TriangleAlertIcon}
-              className="text-destructive size-5"
-            />
-            <span className="text-destructive">Otrzymasz punkt karny!</span>
-          </>
-        ) : (
-          <>
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Shield01Icon}
-              className="text-primary size-5"
-            />
-            <span className="text-primary">Brak punktu karnego</span>
-          </>
-        )}
-      </h2>
+      <PenaltyResultTitle
+        hasPenalty={result.wouldReceivePenalty}
+        mode="single"
+      />
     </div>
     <div className="space-y-4">
       <div className="grid gap-3">
@@ -135,29 +149,10 @@ const GroupModeResult = ({ result }: { result: GroupPenaltyResult }) => (
     } bg-card p-6`}
   >
     <div className="mb-4">
-      <h2 className="flex items-center gap-2 text-base font-semibold">
-        {result.wouldReceivePenalty ? (
-          <>
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={TriangleAlertIcon}
-              className="text-destructive size-5"
-            />
-            <span className="text-destructive">
-              Drużyna otrzyma punkty karne!
-            </span>
-          </>
-        ) : (
-          <>
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Shield01Icon}
-              className="text-primary size-5"
-            />
-            <span className="text-primary">Brak punktów karnych</span>
-          </>
-        )}
-      </h2>
+      <PenaltyResultTitle
+        hasPenalty={result.wouldReceivePenalty}
+        mode="group"
+      />
       <p className="text-muted-foreground text-sm">
         Atakujący: {result.attackerLevels.length} | Obrońcy:{" "}
         {result.defenderLevels.length}
