@@ -86,13 +86,15 @@ export type LegendCatalogPersistenceOperation =
   | "reconcileLegendCatalog";
 
 /** A complete snapshot was internally inconsistent and was not persisted. */
-export class LegendCatalogSnapshotInvalid extends Schema.TaggedErrorClass<LegendCatalogSnapshotInvalid>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendCatalogSnapshotInvalid extends Schema.TaggedError<LegendCatalogSnapshotInvalid>()(
   "LegendCatalogSnapshotInvalid",
   { reason: Schema.String }
 ) {}
 
 /** Existing source identity metadata differs from the incoming fingerprint. */
-export class LegendCatalogSourceDrift extends Schema.TaggedErrorClass<LegendCatalogSourceDrift>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendCatalogSourceDrift extends Schema.TaggedError<LegendCatalogSourceDrift>()(
   "LegendCatalogSourceDrift",
   {
     entityType: Schema.Literals(["enemy", "item"]),
@@ -103,7 +105,8 @@ export class LegendCatalogSourceDrift extends Schema.TaggedErrorClass<LegendCata
 ) {}
 
 /** PostgreSQL could not reconcile the complete legend catalog snapshot. */
-export class LegendCatalogPersistenceUnavailable extends Schema.TaggedErrorClass<LegendCatalogPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendCatalogPersistenceUnavailable extends Schema.TaggedError<LegendCatalogPersistenceUnavailable>()(
   "LegendCatalogPersistenceUnavailable",
   {
     cause: Schema.Defect(),

@@ -1,4 +1,4 @@
-import { HttpApi } from "effect/unstable/httpapi";
+import { HttpApi } from "effect/http-api";
 
 import { AnnouncementHttpApiGroup } from "./announcement/http-api-contract.ts";
 import { AuctionHttpApiGroup } from "./auction/http-api-contract.ts";

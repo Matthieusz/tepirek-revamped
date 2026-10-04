@@ -1,6 +1,6 @@
+import { OpenApi } from "effect/http-api";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
-import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
 import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";

@@ -130,7 +130,8 @@ export interface MargonemForumCatalogSnapshot {
 }
 
 /** The forum topic cannot be safely interpreted as a complete official guide. */
-export class MargonemForumGuideNotParseable extends Schema.TaggedErrorClass<MargonemForumGuideNotParseable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MargonemForumGuideNotParseable extends Schema.TaggedError<MargonemForumGuideNotParseable>()(
   "MargonemForumGuideNotParseable",
   {
     category: Schema.Literals(["hero", "elite2"]),

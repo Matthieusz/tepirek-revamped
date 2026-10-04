@@ -15,7 +15,8 @@ interface AuthResponse {
   readonly error: AuthProviderErrorDetails | null;
 }
 
-export class AuthFormSubmissionError extends Schema.TaggedErrorClass<AuthFormSubmissionError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuthFormSubmissionError extends Schema.TaggedError<AuthFormSubmissionError>()(
   "AuthFormSubmissionError",
   {
     cause: Schema.optional(Schema.Defect()),

@@ -10,52 +10,62 @@ const InvitationStatusSchema = Schema.Literals([
   "revoked",
 ]);
 
-export class SquadGroupNotFound extends Schema.TaggedErrorClass<SquadGroupNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadGroupNotFound extends Schema.TaggedError<SquadGroupNotFound>()(
   "SquadGroupNotFound",
   {}
 ) {}
 
-export class ActorDoesNotOwnSquadGroup extends Schema.TaggedErrorClass<ActorDoesNotOwnSquadGroup>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorDoesNotOwnSquadGroup extends Schema.TaggedError<ActorDoesNotOwnSquadGroup>()(
   "ActorDoesNotOwnSquadGroup",
   {}
 ) {}
 
-export class ActorCannotViewSquadGroup extends Schema.TaggedErrorClass<ActorCannotViewSquadGroup>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorCannotViewSquadGroup extends Schema.TaggedError<ActorCannotViewSquadGroup>()(
   "ActorCannotViewSquadGroup",
   {}
 ) {}
 
-export class ActorCannotEditSquadGroup extends Schema.TaggedErrorClass<ActorCannotEditSquadGroup>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorCannotEditSquadGroup extends Schema.TaggedError<ActorCannotEditSquadGroup>()(
   "ActorCannotEditSquadGroup",
   {}
 ) {}
 
-export class CannotInviteSelf extends Schema.TaggedErrorClass<CannotInviteSelf>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class CannotInviteSelf extends Schema.TaggedError<CannotInviteSelf>()(
   "CannotInviteSelf",
   {}
 ) {}
 
-export class SquadEditorInviteTargetNotFound extends Schema.TaggedErrorClass<SquadEditorInviteTargetNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadEditorInviteTargetNotFound extends Schema.TaggedError<SquadEditorInviteTargetNotFound>()(
   "SquadEditorInviteTargetNotFound",
   {}
 ) {}
 
-export class SquadEditorInviteTargetNotVerified extends Schema.TaggedErrorClass<SquadEditorInviteTargetNotVerified>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadEditorInviteTargetNotVerified extends Schema.TaggedError<SquadEditorInviteTargetNotVerified>()(
   "SquadEditorInviteTargetNotVerified",
   {}
 ) {}
 
-export class SquadGroupInvitationNotFound extends Schema.TaggedErrorClass<SquadGroupInvitationNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadGroupInvitationNotFound extends Schema.TaggedError<SquadGroupInvitationNotFound>()(
   "SquadGroupInvitationNotFound",
   {}
 ) {}
 
-export class ActorIsNotSquadGroupInviteRecipient extends Schema.TaggedErrorClass<ActorIsNotSquadGroupInviteRecipient>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorIsNotSquadGroupInviteRecipient extends Schema.TaggedError<ActorIsNotSquadGroupInviteRecipient>()(
   "ActorIsNotSquadGroupInviteRecipient",
   {}
 ) {}
 
-export class SquadGroupInvitationTransitionNotAllowed extends Schema.TaggedErrorClass<SquadGroupInvitationTransitionNotAllowed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadGroupInvitationTransitionNotAllowed extends Schema.TaggedError<SquadGroupInvitationTransitionNotAllowed>()(
   "SquadGroupInvitationTransitionNotAllowed",
   {
     attempted: Schema.String,
@@ -63,54 +73,64 @@ export class SquadGroupInvitationTransitionNotAllowed extends Schema.TaggedError
   }
 ) {}
 
-export class SquadGroupWriteConflict extends Schema.TaggedErrorClass<SquadGroupWriteConflict>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadGroupWriteConflict extends Schema.TaggedError<SquadGroupWriteConflict>()(
   "SquadGroupWriteConflict",
   {}
 ) {}
 
-export class SquadNotInGroup extends Schema.TaggedErrorClass<SquadNotInGroup>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadNotInGroup extends Schema.TaggedError<SquadNotInGroup>()(
   "SquadNotInGroup",
   {
     squadId: Schema.Finite,
   }
 ) {}
 
-export class EditorCannotChangeSquadStructure extends Schema.TaggedErrorClass<EditorCannotChangeSquadStructure>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class EditorCannotChangeSquadStructure extends Schema.TaggedError<EditorCannotChangeSquadStructure>()(
   "EditorCannotChangeSquadStructure",
   {}
 ) {}
 
-export class MargonemAccountNotFound extends Schema.TaggedErrorClass<MargonemAccountNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MargonemAccountNotFound extends Schema.TaggedError<MargonemAccountNotFound>()(
   "MargonemAccountNotFound",
   {}
 ) {}
 
-export class ActorDoesNotOwnMargonemAccount extends Schema.TaggedErrorClass<ActorDoesNotOwnMargonemAccount>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorDoesNotOwnMargonemAccount extends Schema.TaggedError<ActorDoesNotOwnMargonemAccount>()(
   "ActorDoesNotOwnMargonemAccount",
   {}
 ) {}
 
-export class InviteTargetNotFound extends Schema.TaggedErrorClass<InviteTargetNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InviteTargetNotFound extends Schema.TaggedError<InviteTargetNotFound>()(
   "InviteTargetNotFound",
   {}
 ) {}
 
-export class InviteTargetNotVerified extends Schema.TaggedErrorClass<InviteTargetNotVerified>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InviteTargetNotVerified extends Schema.TaggedError<InviteTargetNotVerified>()(
   "InviteTargetNotVerified",
   {}
 ) {}
 
-export class AccountAccessInviteNotFound extends Schema.TaggedErrorClass<AccountAccessInviteNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AccountAccessInviteNotFound extends Schema.TaggedError<AccountAccessInviteNotFound>()(
   "AccountAccessInviteNotFound",
   {}
 ) {}
 
-export class ActorIsNotInviteRecipient extends Schema.TaggedErrorClass<ActorIsNotInviteRecipient>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ActorIsNotInviteRecipient extends Schema.TaggedError<ActorIsNotInviteRecipient>()(
   "ActorIsNotInviteRecipient",
   {}
 ) {}
 
-export class AccountAccessTransitionNotAllowed extends Schema.TaggedErrorClass<AccountAccessTransitionNotAllowed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AccountAccessTransitionNotAllowed extends Schema.TaggedError<AccountAccessTransitionNotAllowed>()(
   "AccountAccessTransitionNotAllowed",
   {
     attempted: Schema.String,
@@ -118,17 +138,20 @@ export class AccountAccessTransitionNotAllowed extends Schema.TaggedErrorClass<A
   }
 ) {}
 
-export class PendingMargonemAccountImportNotFound extends Schema.TaggedErrorClass<PendingMargonemAccountImportNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class PendingMargonemAccountImportNotFound extends Schema.TaggedError<PendingMargonemAccountImportNotFound>()(
   "PendingMargonemAccountImportNotFound",
   {}
 ) {}
 
-export class PendingMargonemAccountRefetchNotFound extends Schema.TaggedErrorClass<PendingMargonemAccountRefetchNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class PendingMargonemAccountRefetchNotFound extends Schema.TaggedError<PendingMargonemAccountRefetchNotFound>()(
   "PendingMargonemAccountRefetchNotFound",
   {}
 ) {}
 
-export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedErrorClass<FirecrawlMonthlyBudgetExhausted>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedError<FirecrawlMonthlyBudgetExhausted>()(
   "FirecrawlMonthlyBudgetExhausted",
   {
     monthlyRequestBudget: Schema.Finite,
@@ -137,7 +160,8 @@ export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedErrorClass<Fir
   }
 ) {}
 
-export class FirecrawlUserMonthlyBudgetExhausted extends Schema.TaggedErrorClass<FirecrawlUserMonthlyBudgetExhausted>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class FirecrawlUserMonthlyBudgetExhausted extends Schema.TaggedError<FirecrawlUserMonthlyBudgetExhausted>()(
   "FirecrawlUserMonthlyBudgetExhausted",
   {
     monthlyRequestBudget: Schema.Finite,
@@ -146,17 +170,20 @@ export class FirecrawlUserMonthlyBudgetExhausted extends Schema.TaggedErrorClass
   }
 ) {}
 
-export class MargonemAccountAlreadyOwnedByActor extends Schema.TaggedErrorClass<MargonemAccountAlreadyOwnedByActor>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MargonemAccountAlreadyOwnedByActor extends Schema.TaggedError<MargonemAccountAlreadyOwnedByActor>()(
   "MargonemAccountAlreadyOwnedByActor",
   {}
 ) {}
 
-export class MargonemAccountOwnedByAnotherUser extends Schema.TaggedErrorClass<MargonemAccountOwnedByAnotherUser>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MargonemAccountOwnedByAnotherUser extends Schema.TaggedError<MargonemAccountOwnedByAnotherUser>()(
   "MargonemAccountOwnedByAnotherUser",
   {}
 ) {}
 
-export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedErrorClass<MargonemAccountAlreadySharedWithActor>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedError<MargonemAccountAlreadySharedWithActor>()(
   "MargonemAccountAlreadySharedWithActor",
   {}
 ) {}
@@ -207,7 +234,8 @@ const SquadBuilderPersistenceOperationSchema = Schema.Literals([
 export type SquadBuilderPersistenceOperation =
   typeof SquadBuilderPersistenceOperationSchema.Type;
 
-export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadBuilderPersistenceUnavailable extends Schema.TaggedError<SquadBuilderPersistenceUnavailable>()(
   "SquadBuilderPersistenceUnavailable",
   {
     cause: Schema.Defect(),

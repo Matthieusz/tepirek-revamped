@@ -5,8 +5,8 @@ import {
   AUCTION_TYPES,
   isLegalAuctionSlot,
 } from "@tepirek-revamped/config";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { AuctionSignupId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -101,31 +101,36 @@ export interface ClearAuctionSignupsSuccess extends Schema.Schema.Type<
   typeof ClearAuctionSignupsSuccess
 > {}
 
-export class AuctionUnauthorized extends Schema.TaggedErrorClass<AuctionUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuctionUnauthorized extends Schema.TaggedError<AuctionUnauthorized>()(
   "AuctionUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class AuctionForbidden extends Schema.TaggedErrorClass<AuctionForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuctionForbidden extends Schema.TaggedError<AuctionForbidden>()(
   "AuctionForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class AuctionNotFound extends Schema.TaggedErrorClass<AuctionNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuctionNotFound extends Schema.TaggedError<AuctionNotFound>()(
   "AuctionNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
 
-export class AuctionConflict extends Schema.TaggedErrorClass<AuctionConflict>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuctionConflict extends Schema.TaggedError<AuctionConflict>()(
   "AuctionConflict",
   { message: Schema.String },
   { httpApiStatus: 409 }
 ) {}
 
-export class AuctionPersistenceUnavailable extends Schema.TaggedErrorClass<AuctionPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class AuctionPersistenceUnavailable extends Schema.TaggedError<AuctionPersistenceUnavailable>()(
   "AuctionPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

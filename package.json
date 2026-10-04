@@ -33,23 +33,23 @@
     "prepare": "effect-tsgo patch"
   },
   "devDependencies": {
-    "@effect/tsgo": "^0.45.0",
+    "@effect/tsgo": "^0.47.1",
     "@oxlint/plugins": "1.85.0",
     "@tepirek-revamped/config": "workspace:*",
-    "@types/node": "^26.6.2",
-    "knip": "^6.38.0",
+    "@types/node": "^26.6.3",
+    "knip": "^6.39.0",
     "lefthook": "latest",
-    "oxfmt": "^0.70.0",
+    "oxfmt": "^0.71.0",
     "oxlint": "1.85.0",
-    "oxlint-tsgolint": "^7.0.2002",
-    "turbo": "^2.11.3",
+    "oxlint-tsgolint": "^7.0.2003",
+    "turbo": "^2.11.5",
     "typescript": "catalog:",
     "ultracite": "7.12.0"
   },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.6.0",
+      "version": "12.8.1",
       "onFail": "warn"
     }
   },
@@ -57,5 +57,5 @@
     "node": ">=26",
     "pnpm": "12.6.0"
   },
-  "packageManager": "pnpm@12.6.0"
+  "packageManager": "pnpm@12.8.1"
 }

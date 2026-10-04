@@ -15,23 +15,20 @@ import {
   BetterAuthService,
   BetterAuthServiceLiveLayer,
 } from "@tepirek-revamped/auth";
-import {
-  EffectDatabase,
-  makeSharedDatabaseLayer,
-} from "@tepirek-revamped/db/effect";
+import { EffectDatabase, makeDatabaseLayer } from "@tepirek-revamped/db/effect";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
-import * as Schema from "effect/Schema";
 import {
   HttpEffect,
   HttpMiddleware,
   HttpRouter,
   HttpServer,
-} from "effect/unstable/http";
-import { OpenApi } from "effect/unstable/httpapi";
+} from "effect/http";
+import { OpenApi } from "effect/http-api";
+import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
@@ -59,7 +56,8 @@ export class ServerApplication extends Context.Service<
 >()("@tepirek-revamped/server/ServerApplication") {}
 
 /** Expected failure while binding the Node.js HTTP server. */
-export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ServerStartupError extends Schema.TaggedError<ServerStartupError>()(
   "ServerStartupError",
   { cause: Schema.Defect() }
 ) {}
@@ -240,7 +238,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 
 /** Build the scoped Hono application and all of its owned dependencies. */
 export const makeServerApplicationLayer = (startupConfig: StartupConfig) => {
-  const databaseLayer = makeSharedDatabaseLayer(startupConfig.databaseUrl);
+  const databaseLayer = makeDatabaseLayer(startupConfig.databaseUrl);
 
   const authLayer = BetterAuthServiceLiveLayer.pipe(
     Layer.provide(Layer.succeed(AuthConfig, startupConfig.auth)),

@@ -3,9 +3,9 @@ import { buildBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { HttpServer } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { HttpServer } from "effect/unstable/http";
 
 import { buildApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";

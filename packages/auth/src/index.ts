@@ -32,7 +32,8 @@ export {
 export type { BetterAuthServiceInterface } from "./better-auth-service.ts";
 
 /** Expected startup failure when Better Auth construction rejects its inputs. */
-export class BetterAuthInitializationError extends Schema.TaggedErrorClass<BetterAuthInitializationError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetterAuthInitializationError extends Schema.TaggedError<BetterAuthInitializationError>()(
   "BetterAuthInitializationError",
   { cause: Schema.Defect() }
 ) {}

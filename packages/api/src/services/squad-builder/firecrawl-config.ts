@@ -5,7 +5,8 @@ import type { Redacted } from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 /** Expected failure when Firecrawl config is missing or unsafe. */
-export class ParseFirecrawlConfigError extends Schema.TaggedErrorClass<ParseFirecrawlConfigError>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class ParseFirecrawlConfigError extends Schema.TaggedError<ParseFirecrawlConfigError>()(
   "InvalidFirecrawlConfig",
   { message: Schema.String }
 ) {}

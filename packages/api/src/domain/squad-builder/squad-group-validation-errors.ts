@@ -5,12 +5,14 @@ import { MargonemAccountId } from "./margonem-account-id.ts";
 import { InvalidSquadGroupName, InvalidSquadName } from "./squad-name.ts";
 import { MAX_SQUAD_CHARACTERS } from "./squad-placement.ts";
 
-export class InvalidSquadSnapshot extends Schema.TaggedErrorClass<InvalidSquadSnapshot>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadSnapshot extends Schema.TaggedError<InvalidSquadSnapshot>()(
   "InvalidSquadSnapshot",
   { message: Schema.String }
 ) {}
 
-export class TooManyCharactersInSquad extends Schema.TaggedErrorClass<TooManyCharactersInSquad>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class TooManyCharactersInSquad extends Schema.TaggedError<TooManyCharactersInSquad>()(
   "TooManyCharactersInSquad",
   {
     maxCharacters: Schema.Literal(MAX_SQUAD_CHARACTERS),
@@ -18,7 +20,8 @@ export class TooManyCharactersInSquad extends Schema.TaggedErrorClass<TooManyCha
   }
 ) {}
 
-export class DuplicateCharacterInSquad extends Schema.TaggedErrorClass<DuplicateCharacterInSquad>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class DuplicateCharacterInSquad extends Schema.TaggedError<DuplicateCharacterInSquad>()(
   "DuplicateCharacterInSquad",
   {
     characterId: Schema.Finite,
@@ -26,7 +29,8 @@ export class DuplicateCharacterInSquad extends Schema.TaggedErrorClass<Duplicate
   }
 ) {}
 
-export class DuplicateAccountInSquad extends Schema.TaggedErrorClass<DuplicateAccountInSquad>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class DuplicateAccountInSquad extends Schema.TaggedError<DuplicateAccountInSquad>()(
   "DuplicateAccountInSquad",
   {
     accountId: MargonemAccountId,
@@ -34,17 +38,20 @@ export class DuplicateAccountInSquad extends Schema.TaggedErrorClass<DuplicateAc
   }
 ) {}
 
-export class DuplicateCharacterInSquadGroup extends Schema.TaggedErrorClass<DuplicateCharacterInSquadGroup>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class DuplicateCharacterInSquadGroup extends Schema.TaggedError<DuplicateCharacterInSquadGroup>()(
   "DuplicateCharacterInSquadGroup",
   { characterId: Schema.Finite }
 ) {}
 
-export class SquadCharacterNotAccessible extends Schema.TaggedErrorClass<SquadCharacterNotAccessible>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadCharacterNotAccessible extends Schema.TaggedError<SquadCharacterNotAccessible>()(
   "SquadCharacterNotAccessible",
   { characterId: Schema.Finite }
 ) {}
 
-export class SquadCharacterNotJaruna extends Schema.TaggedErrorClass<SquadCharacterNotJaruna>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SquadCharacterNotJaruna extends Schema.TaggedError<SquadCharacterNotJaruna>()(
   "SquadCharacterNotJaruna",
   { characterId: Schema.Finite }
 ) {}

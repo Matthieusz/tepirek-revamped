@@ -1,8 +1,8 @@
 import { Layer } from "effect";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
-import * as OtlpSerialization from "effect/unstable/observability/OtlpSerialization";
-import * as OtlpTracer from "effect/unstable/observability/OtlpTracer";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as OtlpLogger from "effect/observability/OtlpLogger";
+import * as OtlpSerialization from "effect/observability/OtlpSerialization";
+import * as OtlpTracer from "effect/observability/OtlpTracer";
 
 export interface OtlpConfig {
   readonly deploymentEnvironmentName: string;

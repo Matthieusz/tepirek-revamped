@@ -111,7 +111,7 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
       "getHeroStats.stats",
       database
         .select({
-          totalBets: sql<number>`COALESCE(SUM(${userStats.bets}), 0)`.as(
+          totalBets: sql<string>`COALESCE(SUM(${userStats.bets}), 0)::text`.as(
             "total_bets"
           ),
           totalPoints: sql<string>`COALESCE(SUM(${userStats.points}), '0')`.as(
@@ -203,7 +203,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
       "getRanking.ranking",
       database
         .select({
-          totalBets: sql<number>`SUM(${userStats.bets})`.as("total_bets"),
+          totalBets: sql<string>`SUM(${userStats.bets})::text`.as("total_bets"),
           totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
             "total_earnings"
           ),
@@ -219,26 +219,26 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
         .orderBy(desc(sql`SUM(${userStats.points})`))
     );
 
-    let totalBetsRows: readonly { count: number }[];
+    let totalBetsRows: readonly { count: string }[];
 
     if (input.heroId !== undefined) {
       totalBetsRows = yield* persistenceQuery(
         "getRanking.totalHeroBets",
         database
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql<string>`count(*)::text` })
           .from(heroBet)
           .where(eq(heroBet.heroId, input.heroId))
       );
     } else if (input.eventId === undefined) {
       totalBetsRows = yield* persistenceQuery(
         "getRanking.totalBets",
-        database.select({ count: sql<number>`count(*)` }).from(heroBet)
+        database.select({ count: sql<string>`count(*)::text` }).from(heroBet)
       );
     } else {
       totalBetsRows = yield* persistenceQuery(
         "getRanking.totalEventBets",
         database
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql<string>`count(*)::text` })
           .from(heroBet)
           .innerJoin(hero, eq(heroBet.heroId, hero.id))
           .where(eq(hero.eventId, input.eventId))

@@ -11,7 +11,7 @@ export const squadBuilderNamingPolicy = {
 /** A validated squad group name. */
 export const SquadGroupName = Schema.Trim.pipe(
   Schema.check(
-    Schema.isLengthBetween(1, squadBuilderNamingPolicy.squadGroupNameMaxLength)
+    Schema.isBetweenLength(1, squadBuilderNamingPolicy.squadGroupNameMaxLength)
   ),
   Schema.brand("SquadGroupName")
 );
@@ -21,7 +21,7 @@ export type SquadGroupName = typeof SquadGroupName.Type;
 /** A validated squad name. */
 export const SquadName = Schema.Trim.pipe(
   Schema.check(
-    Schema.isLengthBetween(1, squadBuilderNamingPolicy.squadNameMaxLength)
+    Schema.isBetweenLength(1, squadBuilderNamingPolicy.squadNameMaxLength)
   ),
   Schema.brand("SquadName")
 );
@@ -29,7 +29,8 @@ export const SquadName = Schema.Trim.pipe(
 export type SquadName = typeof SquadName.Type;
 
 /** Expected failure when a squad group name is invalid. */
-export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadGroupName>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupName extends Schema.TaggedError<InvalidSquadGroupName>()(
   "InvalidSquadGroupName",
   {
     message: Schema.String,
@@ -37,7 +38,8 @@ export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadG
 ) {}
 
 /** Expected failure when a squad name is invalid. */
-export class InvalidSquadName extends Schema.TaggedErrorClass<InvalidSquadName>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadName extends Schema.TaggedError<InvalidSquadName>()(
   "InvalidSquadName",
   {
     message: Schema.String,

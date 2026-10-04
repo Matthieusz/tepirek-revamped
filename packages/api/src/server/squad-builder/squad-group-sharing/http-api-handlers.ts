@@ -1,8 +1,8 @@
 /* eslint-disable promise/prefer-await-to-callbacks -- Effect Match handlers are synchronous pattern handlers, not Promise callbacks. */
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
+import { HttpApiBuilder } from "effect/http-api";
 import * as Match from "effect/Match";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";

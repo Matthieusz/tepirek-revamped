@@ -11,7 +11,8 @@ export const SquadGroupVisibilitySchema = Schema.Literals([
 export type SquadGroupVisibility = typeof SquadGroupVisibilitySchema.Type;
 
 /** Failure returned when a persisted or submitted squad group visibility is unknown. */
-export class InvalidSquadGroupVisibility extends Schema.TaggedErrorClass<InvalidSquadGroupVisibility>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidSquadGroupVisibility extends Schema.TaggedError<InvalidSquadGroupVisibility>()(
   "InvalidSquadGroupVisibility",
   {}
 ) {}

@@ -3,7 +3,8 @@ import * as Schema from "effect/Schema";
 import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a pending refetch id is not a positive integer. */
-export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountRefetchId>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedError<InvalidPendingMargonemAccountRefetchId>()(
   "InvalidPendingMargonemAccountRefetchId",
   {}
 ) {}

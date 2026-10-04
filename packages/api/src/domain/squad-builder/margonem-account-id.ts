@@ -3,7 +3,8 @@ import * as Schema from "effect/Schema";
 import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when an account id is not a positive integer. */
-export class InvalidMargonemAccountId extends Schema.TaggedErrorClass<InvalidMargonemAccountId>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidMargonemAccountId extends Schema.TaggedError<InvalidMargonemAccountId>()(
   "InvalidMargonemAccountId",
   {}
 ) {}

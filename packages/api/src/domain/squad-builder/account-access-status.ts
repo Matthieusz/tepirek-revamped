@@ -19,7 +19,8 @@ export const AccountAccessStatusSchema = InvitationAccessStatusSchema;
 export type AccountAccessStatus = typeof AccountAccessStatusSchema.Type;
 
 /** Expected failure when a persisted status string is not a known status. */
-export class InvalidAccountAccessStatus extends Schema.TaggedErrorClass<InvalidAccountAccessStatus>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidAccountAccessStatus extends Schema.TaggedError<InvalidAccountAccessStatus>()(
   "InvalidAccountAccessStatus",
   { value: Schema.String }
 ) {}

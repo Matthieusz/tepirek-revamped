@@ -8,18 +8,18 @@ allowBuilds:
   msgpackr-extract: true
 
 catalog:
-  better-auth: ^1.7.5
-  dotenv: ^18.0.3
-  "@effect/sql-pg": 4.0.0-beta.101
-  "@effect/vitest": 4.0.0-beta.101
+  better-auth: ^1.7.6
+  dotenv: ^18.0.5
+  "@effect/sql-pg": 4.0.0
+  "@effect/vitest": 4.0.0
   "@types/pg": 8.23.1
-  drizzle-kit: 1.0.0-rc.4
-  drizzle-orm: 1.0.0-rc.4
-  effect: 4.0.0-beta.101
-  hono: ^4.13.8
+  drizzle-kit: 1.0.0-rc.5-5935859
+  drizzle-orm: 1.0.0-rc.5-5935859
+  effect: 4.0.0
+  hono: ^4.13.12
   pg: 8.23.0
   typescript: 7.0.2
-  vitest: ^5.0.1
+  vitest: ^5.0.3
   zod: ^4.6.5
   linkedom: ^0.18.13
 
@@ -28,13 +28,15 @@ minimumReleaseAgeExclude:
   - "@vitest/mocker@5.0.0"
   - "@vitest/spy@5.0.0"
   - vitest@5.0.0
+  - "@effect/platform-node-shared@4.0.0"
+  - "@effect/platform-node@4.0.0"
+  - "@effect/sql-pg@4.0.0"
+  - "@effect/vitest@4.0.0"
+  - effect@4.0.0
 
 onlyBuiltDependencies:
   - esbuild
   - msgpackr-extract
 
-overrides:
-  "@effect/platform-node-shared": 4.0.0-beta.101
-
 patchedDependencies:
-  "@effect/vitest@4.0.0-beta.101": patches/@effect__vitest@4.0.0-beta.101.patch
+  drizzle-orm@1.0.0-rc.5-5935859: patches/drizzle-orm@1.0.0-rc.5-5935859.patch

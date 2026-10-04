@@ -132,7 +132,14 @@ export const toggleTodoMutationOptions = (
 
       queryClient.setQueryData<readonly Todo[]>(todosQueryKey, (todos) =>
         todos?.map((todo) =>
-          todo.id === input.id ? { ...todo, completed: input.completed } : todo
+          todo.id === input.id
+            ? {
+                completed: input.completed,
+                id: todo.id,
+                text: todo.text,
+                userId: todo.userId,
+              }
+            : todo
         )
       );
 

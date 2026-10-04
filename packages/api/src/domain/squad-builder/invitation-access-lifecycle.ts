@@ -34,7 +34,8 @@ export const invitationAccessTransitionTable = {
 >;
 
 /** Failure returned when a lifecycle transition is not legal. */
-export class InvitationAccessTransitionNotAllowed extends Schema.TaggedErrorClass<InvitationAccessTransitionNotAllowed>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvitationAccessTransitionNotAllowed extends Schema.TaggedError<InvitationAccessTransitionNotAllowed>()(
   "InvitationAccessTransitionNotAllowed",
   {
     attempted: InvitationAccessStatusSchema,
@@ -43,7 +44,8 @@ export class InvitationAccessTransitionNotAllowed extends Schema.TaggedErrorClas
 ) {}
 
 /** Failure returned when a persisted lifecycle status is unknown. */
-export class InvalidInvitationAccessStatus extends Schema.TaggedErrorClass<InvalidInvitationAccessStatus>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidInvitationAccessStatus extends Schema.TaggedError<InvalidInvitationAccessStatus>()(
   "InvalidInvitationAccessStatus",
   { value: Schema.String }
 ) {}

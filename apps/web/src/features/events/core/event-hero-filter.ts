@@ -34,7 +34,7 @@ const decodePositiveIntegerId = Schema.decodeUnknownOption(
   PositiveIntegerIdFromString
 );
 
-const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
+const isValidDate = Schema.is(Schema.Date);
 
 /** Schema for a validated URL positive integer ID encoded as a string. */
 export const FilterIdSearchSchema = Schema.String.pipe(

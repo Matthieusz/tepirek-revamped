@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Tracer from "effect/Tracer";
-import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest";
 
 import { withRequestCorrelation } from "./request-correlation.ts";
 

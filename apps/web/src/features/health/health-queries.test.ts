@@ -1,8 +1,8 @@
 import { dehydrate, hydrate } from "@tanstack/react-query";
 import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-contract";
 import { Effect, Layer } from "effect";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import { describe, expect, it } from "vitest";
 
 import {

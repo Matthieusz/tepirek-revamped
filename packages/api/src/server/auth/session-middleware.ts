@@ -1,9 +1,7 @@
 import { BetterAuthService } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
-import * as HttpHeaders from "effect/unstable/http/Headers";
-import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest";
 
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
@@ -15,8 +13,7 @@ import {
 
 const headersFromRequest = (
   request: HttpServerRequest.HttpServerRequest
-): Headers =>
-  new Headers(Schema.encodeSync(HttpHeaders.HeadersSchema)(request.headers));
+): Headers => new Headers(request.headers);
 
 /** Load and decode the request session through the Better Auth boundary. */
 export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(

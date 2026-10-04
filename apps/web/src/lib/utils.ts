@@ -3,7 +3,7 @@ import * as Schema from "effect/Schema";
 
 export { cn } from "cn";
 
-const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
+const isValidDate = Schema.is(Schema.Date);
 
 const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "2-digit",

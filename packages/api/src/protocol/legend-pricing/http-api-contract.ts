@@ -1,7 +1,7 @@
 /* eslint-disable typescript/no-empty-interface, typescript/no-empty-object-type -- Contract interfaces expose inferred schema types to callers. */
 /* eslint-disable max-classes-per-file -- Endpoint errors belong to one closed protocol boundary. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   LegendaryEnemyCategory,
@@ -81,37 +81,43 @@ export interface LegendPriceSummary extends Schema.Schema.Type<
   typeof LegendPriceSummary
 > {}
 
-export class LegendPricingUnauthorized extends Schema.TaggedErrorClass<LegendPricingUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingUnauthorized extends Schema.TaggedError<LegendPricingUnauthorized>()(
   "LegendPricingUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class LegendPricingForbidden extends Schema.TaggedErrorClass<LegendPricingForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingForbidden extends Schema.TaggedError<LegendPricingForbidden>()(
   "LegendPricingForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class LegendPricingBadRequest extends Schema.TaggedErrorClass<LegendPricingBadRequest>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingBadRequest extends Schema.TaggedError<LegendPricingBadRequest>()(
   "LegendPricingBadRequest",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
 
-export class LegendPricingConflict extends Schema.TaggedErrorClass<LegendPricingConflict>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingConflict extends Schema.TaggedError<LegendPricingConflict>()(
   "LegendPricingConflict",
   { message: Schema.String },
   { httpApiStatus: 409 }
 ) {}
 
-export class LegendPricingNotFound extends Schema.TaggedErrorClass<LegendPricingNotFound>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingNotFound extends Schema.TaggedError<LegendPricingNotFound>()(
   "LegendPricingNotFound",
   { message: Schema.String },
   { httpApiStatus: 404 }
 ) {}
 
-export class LegendPricingPersistenceUnavailable extends Schema.TaggedErrorClass<LegendPricingPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class LegendPricingPersistenceUnavailable extends Schema.TaggedError<LegendPricingPersistenceUnavailable>()(
   "LegendPricingPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

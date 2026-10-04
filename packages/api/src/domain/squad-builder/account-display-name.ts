@@ -9,7 +9,7 @@ const accountDisplayNameRules = {
 /** A validated account display name shown to the user and stored. */
 export const AccountDisplayName = Schema.Trim.pipe(
   Schema.check(
-    Schema.isLengthBetween(
+    Schema.isBetweenLength(
       accountDisplayNameRules.minLength,
       accountDisplayNameRules.maxLength
     )
@@ -20,7 +20,8 @@ export const AccountDisplayName = Schema.Trim.pipe(
 export type AccountDisplayName = typeof AccountDisplayName.Type;
 
 /** Expected failure when an account display name is not valid for storage. */
-export class InvalidAccountDisplayName extends Schema.TaggedErrorClass<InvalidAccountDisplayName>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class InvalidAccountDisplayName extends Schema.TaggedError<InvalidAccountDisplayName>()(
   "InvalidAccountDisplayName",
   {
     message: Schema.String,

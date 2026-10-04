@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   ProfessionId,
@@ -112,31 +112,36 @@ export const SkillSummary = Schema.Struct({
 
 export interface SkillSummary extends Schema.Schema.Type<typeof SkillSummary> {}
 
-export class SkillsUnauthorized extends Schema.TaggedErrorClass<SkillsUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SkillsUnauthorized extends Schema.TaggedError<SkillsUnauthorized>()(
   "SkillsUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class SkillsForbidden extends Schema.TaggedErrorClass<SkillsForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SkillsForbidden extends Schema.TaggedError<SkillsForbidden>()(
   "SkillsForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class SkillsBadRequest extends Schema.TaggedErrorClass<SkillsBadRequest>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SkillsBadRequest extends Schema.TaggedError<SkillsBadRequest>()(
   "SkillsBadRequest",
   { message: Schema.String },
   { httpApiStatus: 400 }
 ) {}
 
-export class SkillsConflict extends Schema.TaggedErrorClass<SkillsConflict>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SkillsConflict extends Schema.TaggedError<SkillsConflict>()(
   "SkillsConflict",
   { message: Schema.String },
   { httpApiStatus: 409 }
 ) {}
 
-export class SkillsPersistenceUnavailable extends Schema.TaggedErrorClass<SkillsPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class SkillsPersistenceUnavailable extends Schema.TaggedError<SkillsPersistenceUnavailable>()(
   "SkillsPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

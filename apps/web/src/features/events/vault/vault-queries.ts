@@ -153,7 +153,15 @@ export const togglePaidOutMutationOptions = (
 
       queryClient.setQueryData<readonly VaultRow[]>(queryKey, (current) =>
         current?.map((row) =>
-          row.userId === input.userId ? { ...row, paidOut: input.paidOut } : row
+          row.userId === input.userId
+            ? {
+                paidOut: input.paidOut,
+                totalEarnings: row.totalEarnings,
+                userId: row.userId,
+                userImage: row.userImage,
+                userName: row.userName,
+              }
+            : row
         )
       );
 

@@ -1,5 +1,5 @@
+import { HttpApiBuilder } from "effect/http-api";
 import * as Layer from "effect/Layer";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../protocol/http-api-contract.ts";
 import { AnnouncementHttpApiHandlers } from "./announcement/http-api-handlers.ts";

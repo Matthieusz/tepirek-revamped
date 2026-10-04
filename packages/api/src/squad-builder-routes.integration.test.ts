@@ -3,10 +3,10 @@ import { buildBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { HttpServer } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { HttpServer } from "effect/unstable/http";
 
 import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.ts";
 import { buildApiLiveLayerFromValues } from "./server/effect-app.ts";

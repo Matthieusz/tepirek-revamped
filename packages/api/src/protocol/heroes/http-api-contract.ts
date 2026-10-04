@@ -1,7 +1,7 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 
@@ -46,19 +46,22 @@ export const HeroSummary = Schema.Struct({
 
 export interface HeroSummary extends Schema.Schema.Type<typeof HeroSummary> {}
 
-export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthorized>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class HeroesUnauthorized extends Schema.TaggedError<HeroesUnauthorized>()(
   "HeroesUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
-export class HeroesForbidden extends Schema.TaggedErrorClass<HeroesForbidden>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class HeroesForbidden extends Schema.TaggedError<HeroesForbidden>()(
   "HeroesForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
-export class HeroesPersistenceUnavailable extends Schema.TaggedErrorClass<HeroesPersistenceUnavailable>()(
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class HeroesPersistenceUnavailable extends Schema.TaggedError<HeroesPersistenceUnavailable>()(
   "HeroesPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }
