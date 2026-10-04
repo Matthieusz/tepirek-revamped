@@ -64,6 +64,72 @@ const getSaveStatus = (
   return "Zapisano";
 };
 
+const SquadSaveActions = ({
+  draft,
+  state,
+  variant,
+  role,
+  onSave,
+  onSettingsToggle,
+}: Pick<
+  SquadEditorCommandHeaderProps,
+  "draft" | "state" | "variant" | "role" | "onSave" | "onSettingsToggle"
+>) => {
+  const { isDirty, isSaving, isSettingsOpen } = state;
+  const isViewer = variant === "viewer";
+
+  if (isViewer) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-start gap-1">
+      {role === "owner" && (
+        <Button
+          aria-controls="squad-group-settings-panel"
+          aria-expanded={isSettingsOpen}
+          onClick={onSettingsToggle}
+          type="button"
+          variant={isSettingsOpen ? "secondary" : "outline"}
+        >
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Settings03Icon}
+            className="size-4"
+          />
+          Ustawienia
+        </Button>
+      )}
+      <div className="flex flex-col items-center gap-1">
+        <Button
+          disabled={isSaving || !isDirty || draft.name.trim().length === 0}
+          onClick={onSave}
+          type="button"
+        >
+          {isSaving ? (
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={LoaderCircleIcon}
+              className="size-4 animate-spin"
+            />
+          ) : (
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={SaveIcon}
+              className="size-4"
+            />
+          )}
+          Zapisz
+        </Button>
+        <span aria-live="polite" className="text-muted-foreground text-xs">
+          {getSaveStatus(isViewer, isSaving, isDirty)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/** Renders group naming, permissions, save controls, and recoverable save errors. */
 export const SquadEditorCommandHeader = ({
   draft,
   state,
@@ -78,7 +144,7 @@ export const SquadEditorCommandHeader = ({
   saveError,
   visibility,
 }: SquadEditorCommandHeaderProps) => {
-  const { isDirty, isSaving, isSettingsOpen, isVisibilityPending } = state;
+  const { isDirty, isSaving, isVisibilityPending } = state;
   const isViewer = variant === "viewer";
 
   return (
@@ -137,56 +203,14 @@ export const SquadEditorCommandHeader = ({
               {visibility === "global" ? "publiczna" : "prywatna"}
             </Badge>
           </div>
-          {!isViewer && (
-            <div className="flex items-start gap-1">
-              {role === "owner" && (
-                <Button
-                  aria-controls="squad-group-settings-panel"
-                  aria-expanded={isSettingsOpen}
-                  onClick={onSettingsToggle}
-                  type="button"
-                  variant={isSettingsOpen ? "secondary" : "outline"}
-                >
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Settings03Icon}
-                    className="size-4"
-                  />
-                  Ustawienia
-                </Button>
-              )}
-              <div className="flex flex-col items-center gap-1">
-                <Button
-                  disabled={
-                    isSaving || !isDirty || draft.name.trim().length === 0
-                  }
-                  onClick={onSave}
-                  type="button"
-                >
-                  {isSaving ? (
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={LoaderCircleIcon}
-                      className="size-4 animate-spin"
-                    />
-                  ) : (
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={SaveIcon}
-                      className="size-4"
-                    />
-                  )}
-                  Zapisz
-                </Button>
-                <span
-                  aria-live="polite"
-                  className="text-muted-foreground text-xs"
-                >
-                  {getSaveStatus(isViewer, isSaving, isDirty)}
-                </span>
-              </div>
-            </div>
-          )}
+          <SquadSaveActions
+            draft={draft}
+            state={state}
+            variant={variant}
+            role={role}
+            onSave={onSave}
+            onSettingsToggle={onSettingsToggle}
+          />
           {isViewer && (
             <span aria-live="polite" className="text-muted-foreground text-xs">
               {getSaveStatus(isViewer, isSaving, isDirty)}

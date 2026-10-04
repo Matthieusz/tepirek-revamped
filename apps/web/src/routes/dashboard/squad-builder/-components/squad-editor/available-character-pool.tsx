@@ -1,8 +1,6 @@
 import {
   ChevronDownIcon,
-  Rotate01Icon,
   Search01Icon,
-  TriangleAlertIcon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -15,12 +13,6 @@ import * as HashSet from "effect/HashSet";
 import * as Predicate from "effect/Predicate";
 import { useMemo, useReducer } from "react";
 
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/reui/alert";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,6 +49,7 @@ import type {
 
 import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
 import { getProfessionPresentation } from "../profession-presenters";
+import { SquadDataError } from "../squad-data-error";
 import { AvailableCharacterPoolHeader } from "./available-character-pool-header";
 import type { SquadCharacterMetadata } from "./squad-roster-workspace";
 
@@ -628,29 +621,13 @@ export const AvailableCharacterPool = ({
             />
 
             {result.isError && (
-              <Alert className="m-4" variant="destructive">
-                <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
-                <AlertTitle>Nie udało się wczytać puli postaci</AlertTitle>
-                <AlertDescription>
-                  Zapisane składy są nadal widoczne. Spróbuj ponownie, aby
-                  przydzielać postacie.
-                </AlertDescription>
-                <AlertAction>
-                  <Button
-                    onClick={refresh}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={Rotate01Icon}
-                      className="size-3.5"
-                    />
-                    Spróbuj ponownie
-                  </Button>
-                </AlertAction>
-              </Alert>
+              <SquadDataError
+                onRetry={refresh}
+                title="Nie udało się wczytać puli postaci"
+              >
+                Zapisane składy są nadal widoczne. Spróbuj ponownie, aby
+                przydzielać postacie.
+              </SquadDataError>
             )}
             {(result.isPending || result.data === undefined) && (
               <LoadingSpinner />

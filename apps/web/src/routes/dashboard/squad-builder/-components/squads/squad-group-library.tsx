@@ -1,9 +1,7 @@
 import {
   ChevronRightIcon,
-  Rotate01Icon,
   Search01Icon,
   Sword01Icon,
-  TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
@@ -16,12 +14,6 @@ import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form } from "@/components/forms/form";
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/reui/alert";
 import { Badge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
@@ -45,6 +37,7 @@ import {
 import { sharedSquadGroupsQueryOptions } from "@/features/squad-builder/squad-group-sharing-queries";
 import { formatDateTime } from "@/lib/utils";
 
+import { SquadDataError } from "../squad-data-error";
 import { userInitials } from "../user-presenters";
 import {
   formatCharacterCount,
@@ -182,23 +175,9 @@ const SquadGroupListFilters = ({
 };
 
 const CollectionFailure = ({ onRetry }: { readonly onRetry: () => void }) => (
-  <Alert className="m-4" variant="destructive">
-    <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
-    <AlertTitle>Nie udało się wczytać grup</AlertTitle>
-    <AlertDescription>
-      Ta kolekcja nie jest teraz dostępna. Pozostałe zakładki nadal działają.
-    </AlertDescription>
-    <AlertAction>
-      <Button onClick={onRetry} size="sm" type="button" variant="outline">
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={Rotate01Icon}
-          className="size-3.5"
-        />
-        Spróbuj ponownie
-      </Button>
-    </AlertAction>
-  </Alert>
+  <SquadDataError onRetry={onRetry} title="Nie udało się wczytać grup">
+    Ta kolekcja nie jest teraz dostępna. Pozostałe zakładki nadal działają.
+  </SquadDataError>
 );
 
 const CollectionEmpty = ({
