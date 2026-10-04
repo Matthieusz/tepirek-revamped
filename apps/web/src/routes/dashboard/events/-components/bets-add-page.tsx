@@ -13,46 +13,46 @@ import type { AuthSession } from "@/types/route";
 
 import { BetsAddForm } from "./bets-add-form";
 
+/** Renders the add-bet page for administrators, without querying admin data for other users. */
+export const BetsAddPage = ({ session }: BetsAddPageProps) => {
+  if (isAdmin(session)) {
+    // oxlint-disable-next-line no-use-before-define -- the access boundary owns mounting the query UI
+    return <AdminBetsAddPage />;
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div>
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
+          Dodaj obstawienie
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Tylko administratorzy mogą dodawać obstawienia.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 interface BetsAddPageProps {
   readonly session: AuthSession;
 }
 
-export const BetsAddPage = ({ session }: BetsAddPageProps) => {
-  const isAdminUser = isAdmin(session);
+const AdminBetsAddPage = () => {
   const eventsQuery = useQuery(eventsQueryOptions());
   const heroesQuery = useQuery(heroesQueryOptions());
   const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
   const latestBetQuery = useQuery(latestBetForCopyQueryOptions());
 
-  const events = isAdminUser ? [...(eventsQuery.data ?? [])] : [];
-  const heroes = isAdminUser ? [...(heroesQuery.data ?? [])] : [];
-
-  const users =
-    isAdminUser && verifiedUsersQuery.data !== undefined
-      ? [...verifiedUsersQuery.data]
-      : [];
-
-  const latestBetRaw = isAdminUser ? (latestBetQuery.data ?? null) : null;
+  const events = [...(eventsQuery.data ?? [])];
+  const heroes = [...(heroesQuery.data ?? [])];
+  const users = [...(verifiedUsersQuery.data ?? [])];
+  const latestBetRaw = latestBetQuery.data ?? null;
 
   const lastBet: LastBetState =
     latestBetRaw === null
       ? LastBetState.unavailable()
       : LastBetState.available({ members: latestBetRaw.members });
-
-  if (!isAdminUser) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
-            Dodaj obstawienie
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Tylko administratorzy mogą dodawać obstawienia.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (
     eventsQuery.isPending ||

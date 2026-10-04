@@ -421,23 +421,7 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Label>Gracze ({availableCount} dostępnych)</Label>
-        {props.variant === "add" ? (
-          <SelectionActions
-            {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
-            lastBet={props.lastBet}
-            onChange={props.onChange}
-            selectedUserIds={props.selectedUserIds}
-            variant="add"
-          />
-        ) : (
-          <SelectionActions
-            {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
-            initialMemberIds={props.initialMemberIds}
-            onChange={props.onChange}
-            selectedUserIds={props.selectedUserIds}
-            variant="edit"
-          />
-        )}
+        <SelectionActions {...props} />
       </div>
 
       <div className="relative">

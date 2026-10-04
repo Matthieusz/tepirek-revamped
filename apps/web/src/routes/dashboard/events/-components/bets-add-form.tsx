@@ -91,6 +91,112 @@ const BETS_ADD_DEFAULT_VALUES: BetsAddFormValues = {
   userIds: [],
 };
 
+interface BetEventFieldProps {
+  readonly events: readonly EventOption[];
+  readonly eventsLoading: boolean;
+  readonly onChange: (value: string) => void;
+  readonly field: {
+    readonly name: string;
+    readonly form: { readonly state: { readonly submissionAttempts: number } };
+    readonly state: {
+      readonly value: string;
+      readonly meta: {
+        readonly errors: readonly unknown[];
+        readonly isTouched: boolean;
+      };
+    };
+    readonly handleBlur: () => void;
+  };
+}
+
+const BetEventField = ({
+  events,
+  eventsLoading,
+  field,
+  onChange,
+}: BetEventFieldProps) => {
+  const fieldId = getFieldId(field.name);
+  const errorId = getFieldErrorId(fieldId);
+  const error = getFieldErrorMessage(field.state.meta.errors);
+
+  const showError =
+    error !== undefined &&
+    (field.state.meta.isTouched || field.form.state.submissionAttempts > 0);
+
+  const selectedEvent = events.find(
+    (event) => event.id.toString() === field.state.value
+  );
+
+  const SelectedIcon = selectedEvent ? getEventIcon(selectedEvent.icon) : null;
+
+  return (
+    <FormFieldFrame
+      error={showError ? error : undefined}
+      fieldId={fieldId}
+      label="Event"
+    >
+      <Select
+        name={field.name}
+        onValueChange={(value) => {
+          if (value !== null) {
+            onChange(value);
+          }
+        }}
+        value={field.state.value}
+      >
+        <SelectTrigger
+          aria-describedby={showError ? errorId : undefined}
+          aria-errormessage={showError ? errorId : undefined}
+          aria-invalid={showError || undefined}
+          aria-labelledby={`${fieldId}-label`}
+          id={fieldId}
+          onBlur={field.handleBlur}
+        >
+          <SelectValue placeholder="Wybierz event">
+            {selectedEvent && SelectedIcon && (
+              <span className="flex items-center gap-2">
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  className="size-4"
+                  icon={SelectedIcon}
+                  style={{ color: selectedEvent.color }}
+                />
+                {selectedEvent.name}
+              </span>
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {eventsLoading ? (
+            <SelectItem disabled value="loading">
+              Ładowanie...
+            </SelectItem>
+          ) : (
+            events.map((event) => {
+              const IconComponent = getEventIcon(event.icon);
+
+              return (
+                <SelectItem key={event.id} value={event.id.toString()}>
+                  <span className="flex items-center gap-2">
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      className="size-4"
+                      icon={IconComponent}
+                      style={{ color: event.color }}
+                    />
+                    {event.name}
+                  </span>
+                </SelectItem>
+              );
+            })
+          )}
+        </SelectContent>
+      </Select>
+    </FormFieldFrame>
+  );
+};
+
+/** Renders and submits an administrator bet, retaining event and hero selection after success. */
 export const BetsAddForm = ({
   events,
   eventsLoading,
@@ -168,94 +274,17 @@ export const BetsAddForm = ({
         <Form className="space-y-6" form={form}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <form.Field name="eventId">
-              {(field) => {
-                const fieldId = getFieldId(field.name);
-                const errorId = getFieldErrorId(fieldId);
-                const error = getFieldErrorMessage(field.state.meta.errors);
-
-                const showError =
-                  error !== undefined &&
-                  (field.state.meta.isTouched ||
-                    field.form.state.submissionAttempts > 0);
-
-                const selectedEvent = events.find(
-                  (event) => event.id.toString() === field.state.value
-                );
-
-                const SelectedIcon = selectedEvent
-                  ? getEventIcon(selectedEvent.icon)
-                  : null;
-
-                return (
-                  <FormFieldFrame
-                    error={showError ? error : undefined}
-                    fieldId={fieldId}
-                    label="Event"
-                  >
-                    <Select
-                      name={field.name}
-                      onValueChange={(value) => {
-                        if (value !== null) {
-                          field.handleChange(value);
-                          form.setFieldValue("heroId", "");
-                        }
-                      }}
-                      value={field.state.value}
-                    >
-                      <SelectTrigger
-                        aria-describedby={showError ? errorId : undefined}
-                        aria-errormessage={showError ? errorId : undefined}
-                        aria-invalid={showError || undefined}
-                        aria-labelledby={`${fieldId}-label`}
-                        id={fieldId}
-                        onBlur={field.handleBlur}
-                      >
-                        <SelectValue placeholder="Wybierz event">
-                          {selectedEvent && SelectedIcon && (
-                            <span className="flex items-center gap-2">
-                              <HugeiconsIcon
-                                aria-hidden="true"
-                                className="size-4"
-                                icon={SelectedIcon}
-                                style={{ color: selectedEvent.color }}
-                              />
-                              {selectedEvent.name}
-                            </span>
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventsLoading ? (
-                          <SelectItem disabled value="loading">
-                            Ładowanie...
-                          </SelectItem>
-                        ) : (
-                          events.map((event) => {
-                            const IconComponent = getEventIcon(event.icon);
-
-                            return (
-                              <SelectItem
-                                key={event.id}
-                                value={event.id.toString()}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <HugeiconsIcon
-                                    aria-hidden="true"
-                                    className="size-4"
-                                    icon={IconComponent}
-                                    style={{ color: event.color }}
-                                  />
-                                  {event.name}
-                                </span>
-                              </SelectItem>
-                            );
-                          })
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </FormFieldFrame>
-                );
-              }}
+              {(field) => (
+                <BetEventField
+                  events={events}
+                  eventsLoading={eventsLoading}
+                  field={field}
+                  onChange={(value) => {
+                    field.handleChange(value);
+                    form.setFieldValue("heroId", "");
+                  }}
+                />
+              )}
             </form.Field>
             <Button
               className="h-10"

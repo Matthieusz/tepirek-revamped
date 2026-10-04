@@ -51,6 +51,82 @@ const buildRankingContent = (params: {
   return <RankingList players={params.sortedRanking} />;
 };
 
+const RankingSortControls = ({
+  currentSortBy,
+  selectedEventId,
+  selectedHeroId,
+  isAdminUser,
+  navigateSort,
+  pointWorth,
+  totalBets,
+}: {
+  readonly currentSortBy: RankingSort;
+  readonly selectedEventId: string;
+  readonly selectedHeroId: string;
+  readonly isAdminUser: boolean;
+  readonly navigateSort: (updates: { sortBy: RankingSort | undefined }) => void;
+  readonly pointWorth: ReturnType<typeof useRankingData>["pointWorth"];
+  readonly totalBets: ReturnType<typeof useRankingData>["totalBets"];
+}) => (
+  <div className="flex items-center justify-center gap-1 sm:justify-start">
+    {/* Stats Popover */}
+    {selectedHeroId !== ALL_FILTER && (
+      <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
+    )}
+    <Button
+      onClick={() => {
+        navigateSort({ sortBy: undefined });
+      }}
+      size="sm"
+      variant={currentSortBy === "points" ? "secondary" : "ghost"}
+    >
+      Punkty
+    </Button>
+    <Button
+      onClick={() => {
+        navigateSort({ sortBy: "bets" });
+      }}
+      size="sm"
+      variant={currentSortBy === "bets" ? "secondary" : "ghost"}
+    >
+      Obstawienia
+    </Button>
+    <Button
+      className={currentSortBy === "gold" ? "border-primary border" : ""}
+      onClick={() => {
+        navigateSort({ sortBy: "gold" });
+      }}
+      size="sm"
+      variant={currentSortBy === "gold" ? "outline" : "ghost"}
+    >
+      Złoto
+    </Button>
+
+    {/* Gold Distribution Button - Admin Only */}
+    {isAdminUser && (
+      <DistributeGoldModal
+        selectedEventId={selectedEventId}
+        selectedHeroId={selectedHeroId}
+        trigger={
+          <Button
+            aria-label="Rozdziel złoto"
+            className="ml-1 shrink-0"
+            size="icon"
+            variant="outline"
+          >
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Coins02Icon}
+              className="text-muted-foreground size-4"
+            />
+          </Button>
+        }
+      />
+    )}
+  </div>
+);
+
+/** Renders the filtered ranking with administrator-only gold distribution controls. */
 export const RankingPage = ({ session }: { session: AuthSession }) => {
   const { sortBy } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/ranking" });
@@ -161,62 +237,15 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
         </div>
 
         {/* Sort Buttons with Gold Distribution */}
-        <div className="flex items-center justify-center gap-1 sm:justify-start">
-          {/* Stats Popover */}
-          {filter.state.heroId !== ALL_FILTER && (
-            <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
-          )}
-          <Button
-            onClick={() => {
-              navigateSort({ sortBy: undefined });
-            }}
-            size="sm"
-            variant={currentSortBy === "points" ? "secondary" : "ghost"}
-          >
-            Punkty
-          </Button>
-          <Button
-            onClick={() => {
-              navigateSort({ sortBy: "bets" });
-            }}
-            size="sm"
-            variant={currentSortBy === "bets" ? "secondary" : "ghost"}
-          >
-            Obstawienia
-          </Button>
-          <Button
-            className={currentSortBy === "gold" ? "border-primary border" : ""}
-            onClick={() => {
-              navigateSort({ sortBy: "gold" });
-            }}
-            size="sm"
-            variant={currentSortBy === "gold" ? "outline" : "ghost"}
-          >
-            Złoto
-          </Button>
-
-          {/* Gold Distribution Button - Admin Only */}
-          {isAdminUser && (
-            <DistributeGoldModal
-              selectedEventId={filter.state.eventId}
-              selectedHeroId={filter.state.heroId}
-              trigger={
-                <Button
-                  aria-label="Rozdziel złoto"
-                  className="ml-1 shrink-0"
-                  size="icon"
-                  variant="outline"
-                >
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Coins02Icon}
-                    className="text-muted-foreground size-4"
-                  />
-                </Button>
-              }
-            />
-          )}
-        </div>
+        <RankingSortControls
+          currentSortBy={currentSortBy}
+          selectedEventId={filter.state.eventId}
+          selectedHeroId={filter.state.heroId}
+          isAdminUser={isAdminUser}
+          navigateSort={navigateSort}
+          pointWorth={pointWorth}
+          totalBets={totalBets}
+        />
       </div>
 
       {/* Ranking List */}

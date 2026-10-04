@@ -147,6 +147,179 @@ interface VaultContentProps extends EventsVaultPageProps {
   readonly vaultEventId: number | undefined;
 }
 
+interface VaultPlayer {
+  readonly paidOut: boolean;
+  readonly userId: string;
+  readonly userName: string | null;
+  readonly userImage: string | null;
+  readonly totalEarnings: string;
+}
+
+interface PayoutControls {
+  readonly canTogglePaidOut: boolean;
+  readonly toggleMutation: {
+    readonly isPending: boolean;
+    readonly mutate: (input: { userId: string; paidOut: boolean }) => void;
+  };
+}
+
+const NextPaymentCard = ({
+  player,
+  canTogglePaidOut,
+  toggleMutation,
+}: PayoutControls & {
+  readonly player: VaultPlayer;
+}) => (
+  <div className="border-primary/50 bg-primary/5 rounded-xl border-2 p-6">
+    <div className="mb-2 flex items-center justify-center gap-2">
+      <span className="text-primary text-sm font-semibold">
+        Następny do wypłaty
+      </span>
+    </div>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <Avatar className="border-primary size-12 border-2">
+          <AvatarImage
+            alt={player.userName ?? ""}
+            src={player.userImage ?? undefined}
+          />
+          <AvatarFallback>
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={UserIcon}
+              className="size-6"
+            />
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="text-lg font-bold">{player.userName}</p>
+          <p className="text-muted-foreground font-mono">
+            {formatVaultEarnings(player.totalEarnings)} złota
+          </p>
+        </div>
+      </div>
+      {canTogglePaidOut && (
+        <Button
+          disabled={toggleMutation.isPending}
+          onClick={() => {
+            toggleMutation.mutate({
+              paidOut: true,
+              userId: player.userId,
+            });
+          }}
+          size="sm"
+          variant="default"
+        >
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={CheckIcon}
+            className="size-4 sm:mr-2"
+          />
+          <span className="hidden sm:inline">Oznacz jako wypłacone</span>
+        </Button>
+      )}
+    </div>
+  </div>
+);
+
+const VaultPayoutCheckbox = ({
+  player,
+  canTogglePaidOut,
+  toggleMutation,
+}: PayoutControls & {
+  readonly player: VaultPlayer;
+}) => {
+  if (!canTogglePaidOut) {
+    return null;
+  }
+
+  return (
+    <Checkbox
+      aria-label={`Status wypłaty: ${player.userName ?? "gracz"}`}
+      checked={player.paidOut}
+      disabled={toggleMutation.isPending}
+      onClick={(event) => {
+        event.preventDefault();
+      }}
+      onCheckedChange={(checked) => {
+        if (Predicate.isBoolean(checked)) {
+          toggleMutation.mutate({ paidOut: checked, userId: player.userId });
+        }
+      }}
+    />
+  );
+};
+
+const VaultUnpaidUsers = ({
+  unpaidUsers,
+  canTogglePaidOut,
+  toggleMutation,
+}: PayoutControls & {
+  readonly unpaidUsers: readonly VaultPlayer[];
+}) => {
+  if (unpaidUsers.length <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2">
+      <h2 className="text-lg font-semibold">
+        Do wypłaty ({unpaidUsers.length})
+      </h2>
+      {unpaidUsers.slice(1).map((player, index) => (
+        <div
+          className="border-border bg-card hover:bg-accent/50 rounded-xl border transition-colors"
+          key={player.userId}
+        >
+          <div className="flex items-center gap-4 px-4 py-3">
+            {/* Position */}
+            <div className="flex w-8 shrink-0 items-center justify-center">
+              <span className="text-muted-foreground font-medium">
+                {index + 2}
+              </span>
+            </div>
+            {/* Avatar */}
+            <Avatar className="border-border size-10 shrink-0 border">
+              <AvatarImage
+                alt={player.userName ?? ""}
+                src={player.userImage ?? undefined}
+              />
+              <AvatarFallback>
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={UserIcon}
+                  className="size-5"
+                />
+              </AvatarFallback>
+            </Avatar>
+            {/* Name */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{player.userName}</p>
+            </div>
+            {/* Earnings */}
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Coins02Icon}
+                className="text-muted-foreground size-4"
+              />
+              <p className="font-mono font-semibold">
+                {formatVaultEarnings(player.totalEarnings)}
+              </p>
+            </div>
+            {/* Checkbox for admin */}
+            <VaultPayoutCheckbox
+              player={player}
+              canTogglePaidOut={canTogglePaidOut}
+              toggleMutation={toggleMutation}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const VaultContent = ({
   effectiveEventId,
   events,
@@ -213,6 +386,7 @@ const VaultContent = ({
   }
 
   const isAdminUser = isAdmin(session);
+  const canTogglePaidOut = isAdminUser && hasSpecificEvent;
   const nextToPay = Arr.findFirst(vault, (entry) => !entry.paidOut);
 
   const unpaidUsers = Arr.filter<(typeof vault)[number]>(
@@ -270,60 +444,11 @@ const VaultContent = ({
 
         {/* Next to receive payment - highlighted */}
         {Option.isSome(nextToPay) && (
-          <div className="border-primary/50 bg-primary/5 rounded-xl border-2 p-6">
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="text-primary text-sm font-semibold">
-                Następny do wypłaty
-              </span>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="border-primary size-12 border-2">
-                  <AvatarImage
-                    alt={nextToPay.value.userName ?? ""}
-                    src={nextToPay.value.userImage ?? undefined}
-                  />
-                  <AvatarFallback>
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={UserIcon}
-                      className="size-6"
-                    />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-lg font-bold">
-                    {nextToPay.value.userName}
-                  </p>
-                  <p className="text-muted-foreground font-mono">
-                    {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
-                  </p>
-                </div>
-              </div>
-              {isAdminUser && hasSpecificEvent && (
-                <Button
-                  disabled={toggleMutation.isPending}
-                  onClick={() => {
-                    toggleMutation.mutate({
-                      paidOut: true,
-                      userId: nextToPay.value.userId,
-                    });
-                  }}
-                  size="sm"
-                  variant="default"
-                >
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={CheckIcon}
-                    className="size-4 sm:mr-2"
-                  />
-                  <span className="hidden sm:inline">
-                    Oznacz jako wypłacone
-                  </span>
-                </Button>
-              )}
-            </div>
-          </div>
+          <NextPaymentCard
+            player={nextToPay.value}
+            canTogglePaidOut={canTogglePaidOut}
+            toggleMutation={toggleMutation}
+          />
         )}
 
         {/* Empty state */}
@@ -335,75 +460,11 @@ const VaultContent = ({
         )}
 
         {/* Unpaid users list */}
-        {unpaidUsers.length > 1 && (
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">
-              Do wypłaty ({unpaidUsers.length})
-            </h2>
-            {unpaidUsers.slice(1).map((player, index) => (
-              <div
-                className="border-border bg-card hover:bg-accent/50 rounded-xl border transition-colors"
-                key={player.userId}
-              >
-                <div className="flex items-center gap-4 px-4 py-3">
-                  {/* Position */}
-                  <div className="flex w-8 shrink-0 items-center justify-center">
-                    <span className="text-muted-foreground font-medium">
-                      {index + 2}
-                    </span>
-                  </div>
-                  {/* Avatar */}
-                  <Avatar className="border-border size-10 shrink-0 border">
-                    <AvatarImage
-                      alt={player.userName ?? ""}
-                      src={player.userImage ?? undefined}
-                    />
-                    <AvatarFallback>
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={UserIcon}
-                        className="size-5"
-                      />
-                    </AvatarFallback>
-                  </Avatar>
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{player.userName}</p>
-                  </div>
-                  {/* Earnings */}
-                  <div className="flex items-center gap-2">
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={Coins02Icon}
-                      className="text-muted-foreground size-4"
-                    />
-                    <p className="font-mono font-semibold">
-                      {formatVaultEarnings(player.totalEarnings)}
-                    </p>
-                  </div>
-                  {/* Checkbox for admin */}
-                  {isAdminUser && hasSpecificEvent && (
-                    <Checkbox
-                      checked={player.paidOut}
-                      disabled={toggleMutation.isPending}
-                      onClick={(event) => {
-                        event.preventDefault();
-                      }}
-                      onCheckedChange={(checked) => {
-                        if (Predicate.isBoolean(checked)) {
-                          toggleMutation.mutate({
-                            paidOut: checked,
-                            userId: player.userId,
-                          });
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <VaultUnpaidUsers
+          unpaidUsers={unpaidUsers}
+          canTogglePaidOut={canTogglePaidOut}
+          toggleMutation={toggleMutation}
+        />
 
         {/* Paid users list */}
         {paidUsers.length > 0 && (
@@ -416,24 +477,11 @@ const VaultContent = ({
                 className="hover:bg-accent/50 opacity-60 transition-colors"
                 key={player.userId}
                 rightSlot={
-                  isAdminUser &&
-                  hasSpecificEvent && (
-                    <Checkbox
-                      checked={player.paidOut}
-                      disabled={toggleMutation.isPending}
-                      onClick={(event) => {
-                        event.preventDefault();
-                      }}
-                      onCheckedChange={(checked) => {
-                        if (Predicate.isBoolean(checked)) {
-                          toggleMutation.mutate({
-                            paidOut: checked,
-                            userId: player.userId,
-                          });
-                        }
-                      }}
-                    />
-                  )
+                  <VaultPayoutCheckbox
+                    player={player}
+                    canTogglePaidOut={canTogglePaidOut}
+                    toggleMutation={toggleMutation}
+                  />
                 }
                 totalEarnings={player.totalEarnings}
                 userImage={player.userImage}
