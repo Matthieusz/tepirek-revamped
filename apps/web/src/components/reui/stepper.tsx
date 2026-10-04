@@ -365,6 +365,8 @@ function StepperIndicator({
 }: React.ComponentProps<"div">) {
   const { state, isLoading } = useStepItem();
   const { indicators } = useStepper();
+  const indicator =
+    (isLoading && indicators.loading) || indicators[state] || children;
 
   return (
     <div
@@ -376,18 +378,7 @@ function StepperIndicator({
         className
       )}
     >
-      <div className="absolute">
-        {indicators &&
-        ((isLoading && indicators.loading) ||
-          (state === "completed" && indicators.completed) ||
-          (state === "active" && indicators.active) ||
-          (state === "inactive" && indicators.inactive))
-          ? (isLoading && indicators.loading) ||
-            (state === "completed" && indicators.completed) ||
-            (state === "active" && indicators.active) ||
-            (state === "inactive" && indicators.inactive)
-          : children}
-      </div>
+      <div className="absolute">{indicator}</div>
     </div>
   );
 }
