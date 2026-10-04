@@ -1,25 +1,18 @@
-import type { QueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { healthQueryOptions } from "@/features/health/health-queries";
 import { createPageTitle } from "@/lib/metadata";
 
 import HomePage from "./-components/home-page";
+import { loadHealth } from "./-load-health";
 
-/** Loads the public health query for the request's router-owned cache. */
-export const loadHealth = async (
-  queryClient: QueryClient,
-  options: ReturnType<typeof healthQueryOptions> = healthQueryOptions()
-): Promise<void> => {
-  await queryClient.query(options);
-};
-
+/* oxlint-disable sort-keys -- TanStack Router inference requires dependency order, not alphabetical order. */
 export const Route = createFileRoute("/")({
+  loader: async ({ context }) => {
+    await loadHealth(context.queryClient);
+  },
   component: HomePage,
   head: () => ({
     meta: [{ title: createPageTitle("Strona główna") }],
   }),
-  loader: async ({ context }) => {
-    await loadHealth(context.queryClient);
-  },
 });
+/* oxlint-enable sort-keys */

@@ -26,7 +26,9 @@ const decodeVaultSearch = Schema.decodeUnknownSync(
 
 const validateVaultSearch = decodeVaultSearch;
 
+/* oxlint-disable sort-keys -- TanStack Router inference requires dependency order, not alphabetical order. */
 export const Route = createFileRoute("/dashboard/events/vault")({
+  validateSearch: validateVaultSearch,
   component: EventsVaultRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
@@ -39,5 +41,5 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   staticData: {
     crumb: "Skarbiec",
   },
-  validateSearch: validateVaultSearch,
 });
+/* oxlint-enable sort-keys */

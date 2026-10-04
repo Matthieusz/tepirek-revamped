@@ -18,7 +18,14 @@ const RankingRoute = () => {
   return <RankingPage session={session} />;
 };
 
+/* oxlint-disable sort-keys -- TanStack Router inference requires dependency order, not alphabetical order. */
 export const Route = createFileRoute("/dashboard/events/ranking")({
+  validateSearch: Schema.decodeUnknownSync(
+    Schema.Struct({
+      ...EventHeroFilterSearchSchema.fields,
+      sortBy: Schema.optional(RankingSortSchema),
+    })
+  ),
   component: RankingRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
@@ -28,10 +35,5 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   staticData: {
     crumb: "Ranking",
   },
-  validateSearch: Schema.decodeUnknownSync(
-    Schema.Struct({
-      ...EventHeroFilterSearchSchema.fields,
-      sortBy: Schema.optional(RankingSortSchema),
-    })
-  ),
 });
+/* oxlint-enable sort-keys */

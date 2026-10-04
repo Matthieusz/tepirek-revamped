@@ -22,7 +22,9 @@ const CennikSearchSchema = Schema.Struct({
 
 export type CennikSearch = typeof CennikSearchSchema.Type;
 
+/* oxlint-disable sort-keys -- TanStack Router inference requires dependency order, not alphabetical order. */
 export const Route = createFileRoute("/dashboard/cennik")({
+  validateSearch: Schema.decodeUnknownSync(CennikSearchSchema),
   component: CennikRoute,
   loader: async ({ context }) => {
     await context.queryClient.query(legendPricesQueryOptions());
@@ -30,5 +32,5 @@ export const Route = createFileRoute("/dashboard/cennik")({
   staticData: {
     crumb: "Cennik legend",
   },
-  validateSearch: Schema.decodeUnknownSync(CennikSearchSchema),
 });
+/* oxlint-enable sort-keys */

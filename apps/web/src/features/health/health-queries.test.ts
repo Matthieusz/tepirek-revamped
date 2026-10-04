@@ -10,7 +10,7 @@ import {
   makeHealthHttpApiRunner,
 } from "@/lib/health-http-api-client-runtime";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
-import { loadHealth } from "@/routes/index";
+import { loadHealth } from "@/routes/-load-health";
 
 import { healthQueryOptions } from "./health-queries";
 

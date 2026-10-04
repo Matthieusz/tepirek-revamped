@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CaughtError } from "@/lib/errors";
 import type { RouterAppContext } from "@/routes/__root";
-import { loadDashboardSession, Route } from "@/routes/dashboard/route";
+import { loadDashboardSession } from "@/routes/dashboard/-load-dashboard-session";
+import { Route } from "@/routes/dashboard/route";
 import type { UserSession } from "@/types/route";
 
 const getUser = vi.fn<RouterAppContext["getUser"]>();

@@ -17,7 +17,9 @@ const HistoryRoute = () => {
   return <HistoryPage session={session} />;
 };
 
+/* oxlint-disable sort-keys -- TanStack Router inference requires dependency order, not alphabetical order. */
 export const Route = createFileRoute("/dashboard/events/history")({
+  validateSearch: Schema.decodeUnknownSync(EventHeroFilterSearchSchema),
   component: HistoryRoute,
   errorComponent: EventsRouteError,
   loader: async ({ context }) => {
@@ -27,5 +29,5 @@ export const Route = createFileRoute("/dashboard/events/history")({
   staticData: {
     crumb: "Historia obstawień",
   },
-  validateSearch: Schema.decodeUnknownSync(EventHeroFilterSearchSchema),
 });
+/* oxlint-enable sort-keys */
