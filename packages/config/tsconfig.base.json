@@ -31,6 +31,7 @@
     "plugins": [
       {
         "name": "@effect/language-service",
+        "ignoreEffectWarningsInTscExitCode": true,
         "diagnosticSeverity": {
           "lazyEffect": "off"
         }
