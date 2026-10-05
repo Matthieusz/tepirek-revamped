@@ -5,3 +5,5 @@ packages/api/dist
 .local
 .pi
 .fallow
+/mise.local.toml
+/.mise.local.toml

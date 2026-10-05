@@ -32,7 +32,7 @@ Tepirek Revamped is guild operations software for [Margonem](https://www.margone
 ## At a glance
 
 <div align="center">
-  <img alt="Node.js 24 or newer" src="https://shieldcn.dev/badge/node.js-24%2B-79ad98.svg?variant=secondary" />
+  <img alt="Node.js 26 or newer" src="https://shieldcn.dev/badge/node.js-26%2B-79ad98.svg?variant=secondary" />
   <img alt="pnpm 12" src="https://shieldcn.dev/badge/pnpm-12-79ad98.svg?variant=secondary" />
   <img alt="PostgreSQL 16" src="https://shieldcn.dev/badge/postgresql-16-79ad98.svg?variant=secondary" />
 </div>
@@ -47,19 +47,23 @@ Tepirek Revamped is guild operations software for [Margonem](https://www.margone
 
 You need:
 
-- Node.js 24 or newer
-- pnpm 12.2.1
+- [mise](https://mise.jdx.dev/getting-started.html) on your shell and Git runtime `PATH`
 - Docker
+
+[`mise.toml`](mise.toml) pins Node.js 26.10.0 and pnpm 12.9.1. CI uses the same versions; keep the pnpm pin aligned with `packageManager` in `package.json`.
 
 ### Install
 
 ```bash
 git clone https://github.com/Matthieusz/tepirek-revamped.git
 cd tepirek-revamped
-corepack enable
-pnpm install
+mise trust
+mise install
+mise exec -- pnpm install
 cp apps/server/.env.example apps/server/.env
 ```
+
+Activate mise in your shell as described in its getting-started guide, or prefix project commands with `mise exec --`.
 
 Fill in `apps/server/.env`. The local database started by this repository uses:
 
@@ -120,6 +124,10 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 | `pnpm db:migrate`       | Apply committed migrations                   |
 | `pnpm db:studio`        | Open Drizzle Studio                          |
 | `pnpm db:stop`          | Stop local PostgreSQL                        |
+
+## Deployment toolchain
+
+Dokploy's selected build type has not been verified from this checkout. Before relying on `mise.toml` for deployment, check that the application's build type is Railpack and verify the generated image's toolchain. Do not copy ignored `mise.local.toml` files into production build contexts.
 
 ## Testing safely
 
