@@ -4,7 +4,6 @@ packages:
 
 allowBuilds:
   esbuild: true
-  lefthook: true
   msgpackr-extract: true
 
 catalog:

@@ -65,6 +65,22 @@ cp apps/server/.env.example apps/server/.env
 
 Activate mise in your shell as described in its getting-started guide, or prefix project commands with `mise exec --`.
 
+### Git hooks (developer-only)
+
+Add hk to the ignored, checkout-local mise config, then validate and install the repository-scoped hook:
+
+```bash
+mise use --env local hk@2.5.0
+mise exec -- hk validate
+mise exec -- hk install --mise --legacy
+```
+
+This installs no machine-global hooks. hk stays out of the shared tool list and production builds. If installation refuses an existing hook, inspect it and back up/remove the obsolete hook before retrying; do not force-replace an unknown hook. The mise-integrated launcher requires mise on Git's runtime `PATH`, including in GUI Git clients.
+
+The pre-commit hook runs the pnpm-managed Oxlint fixer, then Oxfmt, on the same staged-file extensions as before. It stages fixes and stashes/restores unstaged work to protect partial commits. Preview selection with `mise exec -- hk run pre-commit --plan`.
+
+### Application configuration
+
 Fill in `apps/server/.env`. The local database started by this repository uses:
 
 ```env

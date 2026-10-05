@@ -38,7 +38,6 @@
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.3",
     "knip": "^6.39.0",
-    "lefthook": "latest",
     "oxfmt": "^0.71.0",
     "oxlint": "1.85.0",
     "oxlint-tsgolint": "^7.0.2003",
