@@ -1,13 +1,6 @@
-import {
-  Cancel01Icon,
-  CopyIcon,
-  CopyXIcon,
-  Search01Icon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import * as HashSet from "effect/HashSet";
 import * as Predicate from "effect/Predicate";
+import { X, Copy, CopyX, Search, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -113,12 +106,7 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
         type="button"
         variant="outline"
       >
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={CopyXIcon}
-          className="size-4"
-          data-icon="inline-start"
-        />
+        <CopyX aria-hidden="true" className="size-4" data-icon="inline-start" />
         {variant === "edit" ? (
           <span>Wyczyść</span>
         ) : (
@@ -138,9 +126,8 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <HugeiconsIcon
+          <Copy
             aria-hidden="true"
-            icon={CopyIcon}
             className="size-4"
             data-icon="inline-start"
           />
@@ -157,9 +144,8 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <HugeiconsIcon
+          <Copy
             aria-hidden="true"
-            icon={CopyIcon}
             className="size-4"
             data-icon="inline-start"
           />
@@ -224,11 +210,7 @@ const AvailableUsers = ({
           <Avatar className="size-8">
             <AvatarImage alt={user.name} src={user.image ?? undefined} />
             <AvatarFallback>
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={UserIcon}
-                className="size-4"
-              />
+              <User aria-hidden="true" className="size-4" />
             </AvatarFallback>
           </Avatar>
           <span className="truncate font-normal">{user.name}</span>
@@ -290,11 +272,7 @@ const SelectedUsers = ({
                       src={user.image ?? undefined}
                     />
                     <AvatarFallback>
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={UserIcon}
-                        className="size-4"
-                      />
+                      <User aria-hidden="true" className="size-4" />
                     </AvatarFallback>
                   </Avatar>
                   <span className="truncate font-normal">{user.name}</span>
@@ -319,11 +297,7 @@ const SelectedUsers = ({
             <Avatar className="size-6">
               <AvatarImage alt={user.name} src={user.image ?? undefined} />
               <AvatarFallback className="text-xs">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={UserIcon}
-                  className="size-3"
-                />
+                <User aria-hidden="true" className="size-3" />
               </AvatarFallback>
             </Avatar>
             <span className="text-sm">{user.name}</span>
@@ -336,11 +310,7 @@ const SelectedUsers = ({
               onBlur={onBlur}
               type="button"
             >
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={Cancel01Icon}
-                className="size-3"
-              />
+              <X aria-hidden="true" className="size-3" />
             </button>
           </div>
         ))}
@@ -425,9 +395,8 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
       </div>
 
       <div className="relative">
-        <HugeiconsIcon
+        <Search
           aria-hidden="true"
-          icon={Search01Icon}
           className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
         />
         <Input

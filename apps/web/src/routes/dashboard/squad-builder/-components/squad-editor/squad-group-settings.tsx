@@ -1,12 +1,6 @@
-import {
-  Delete01Icon,
-  LoaderCircleIcon,
-  Rotate01Icon,
-  UserAdd01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { Trash2, Loader2, RotateCw, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -166,8 +160,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
       <div className="space-y-4 px-4 py-4">
         <div>
           <h2 className="flex items-center gap-2 text-base font-semibold">
-            <HugeiconsIcon
-              icon={UserAdd01Icon}
+            <UserPlus
               aria-hidden="true"
               className="text-muted-foreground size-4"
             />
@@ -234,17 +227,12 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                       variant="outline"
                     >
                       {sendingUserId === target.userId ? (
-                        <HugeiconsIcon
+                        <Loader2
                           aria-hidden="true"
-                          icon={LoaderCircleIcon}
                           className="size-3.5 animate-spin"
                         />
                       ) : (
-                        <HugeiconsIcon
-                          aria-hidden="true"
-                          icon={UserAdd01Icon}
-                          className="size-3.5"
-                        />
+                        <UserPlus aria-hidden="true" className="size-3.5" />
                       )}
                       Zaproś
                     </Button>
@@ -264,11 +252,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   type="button"
                   variant="outline"
                 >
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Rotate01Icon}
-                    className="size-3.5"
-                  />
+                  <RotateCw aria-hidden="true" className="size-3.5" />
                   Ponów
                 </Button>
               </AlertAction>
@@ -296,11 +280,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                 type="button"
                 variant="outline"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Rotate01Icon}
-                  className="size-3.5"
-                />
+                <RotateCw aria-hidden="true" className="size-3.5" />
                 Ponów
               </Button>
             </AlertAction>
@@ -308,11 +288,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
         )}
         {grantsResult.isPending && (
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={LoaderCircleIcon}
-              className="size-3 animate-spin"
-            />
+            <Loader2 aria-hidden="true" className="size-3 animate-spin" />
             Wczytywanie edytorów…
           </div>
         )}
@@ -362,15 +338,13 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   variant="ghost"
                 >
                   {revokingInvitationId === grant.invitationId ? (
-                    <HugeiconsIcon
+                    <Loader2
                       aria-hidden="true"
-                      icon={LoaderCircleIcon}
                       className="size-3.5 animate-spin"
                     />
                   ) : (
-                    <HugeiconsIcon
+                    <Trash2
                       aria-hidden="true"
-                      icon={Delete01Icon}
                       className="text-destructive size-3.5"
                     />
                   )}
@@ -427,17 +401,13 @@ export const SquadGroupSettings = ({
             </div>
             <AlertDialog>
               <AlertDialogTrigger render={<Button variant="destructive" />}>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Delete01Icon}
-                  className="size-4"
-                />
+                <Trash2 aria-hidden="true" className="size-4" />
                 Usuń grupę
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogMedia className="text-destructive">
-                    <HugeiconsIcon icon={Delete01Icon} aria-hidden="true" />
+                    <Trash2 aria-hidden="true" />
                   </AlertDialogMedia>
                   <AlertDialogTitle>
                     Usunąć grupę „{groupName}”?
@@ -459,17 +429,12 @@ export const SquadGroupSettings = ({
                     variant="destructive"
                   >
                     {isDeleting ? (
-                      <HugeiconsIcon
+                      <Loader2
                         aria-hidden="true"
-                        icon={LoaderCircleIcon}
                         className="size-4 animate-spin"
                       />
                     ) : (
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={Delete01Icon}
-                        className="size-4"
-                      />
+                      <Trash2 aria-hidden="true" className="size-4" />
                     )}
                     Usuń trwale
                   </AlertDialogAction>

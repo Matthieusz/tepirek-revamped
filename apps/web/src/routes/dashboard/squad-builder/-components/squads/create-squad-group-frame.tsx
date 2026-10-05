@@ -1,14 +1,9 @@
-import {
-  Add01Icon,
-  Cancel01Icon,
-  LoaderCircleIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { Plus, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -124,17 +119,9 @@ export const CreateSquadGroupFrame = ({
                 type="submit"
               >
                 {isCreating ? (
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={LoaderCircleIcon}
-                    className="size-4 animate-spin"
-                  />
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
                 ) : (
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Add01Icon}
-                    className="size-4"
-                  />
+                  <Plus aria-hidden="true" className="size-4" />
                 )}
                 Utwórz grupę
               </Button>
@@ -146,11 +133,7 @@ export const CreateSquadGroupFrame = ({
                 type="button"
                 variant="ghost"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Cancel01Icon}
-                  className="size-4"
-                />
+                <X aria-hidden="true" className="size-4" />
               </Button>
             </div>
             <FormFeedback failure={submissionFailure} />

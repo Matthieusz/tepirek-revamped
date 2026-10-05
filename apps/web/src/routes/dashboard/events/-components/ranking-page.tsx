@@ -1,6 +1,5 @@
-import { Coins02Icon, Medal06Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Coins, Trophy } from "lucide-react";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
@@ -42,7 +41,7 @@ const buildRankingContent = (params: {
   if (params.sortedRanking.length === 0) {
     return (
       <EmptyState
-        icon={<HugeiconsIcon aria-hidden="true" icon={Medal06Icon} />}
+        icon={<Trophy aria-hidden="true" />}
         message="Brak danych do wyświetlenia rankingu"
       />
     );
@@ -114,9 +113,8 @@ const RankingSortControls = ({
             size="icon"
             variant="outline"
           >
-            <HugeiconsIcon
+            <Coins
               aria-hidden="true"
-              icon={Coins02Icon}
               className="text-muted-foreground size-4"
             />
           </Button>

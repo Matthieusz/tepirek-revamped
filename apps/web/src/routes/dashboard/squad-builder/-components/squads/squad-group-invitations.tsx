@@ -1,11 +1,5 @@
-import {
-  Cancel01Icon,
-  CheckIcon,
-  Rotate01Icon,
-  TriangleAlertIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { X, Check, RotateCw, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -49,7 +43,7 @@ export const SquadGroupInvitations = () => {
   if (result.isError) {
     return (
       <Alert variant="destructive">
-        <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
+        <AlertTriangle aria-hidden="true" />
         <AlertTitle>Nie udało się wczytać zaproszeń</AlertTitle>
         <AlertDescription>
           Sprawdź połączenie i spróbuj ponownie. Biblioteka grup pozostaje
@@ -57,11 +51,7 @@ export const SquadGroupInvitations = () => {
         </AlertDescription>
         <AlertAction>
           <Button onClick={refresh} size="sm" type="button" variant="outline">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Rotate01Icon}
-              className="size-3.5"
-            />
+            <RotateCw aria-hidden="true" className="size-3.5" />
             Spróbuj ponownie
           </Button>
         </AlertAction>
@@ -161,11 +151,7 @@ export const SquadGroupInvitations = () => {
                     size="sm"
                     type="button"
                   >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={CheckIcon}
-                      className="size-3.5"
-                    />
+                    <Check aria-hidden="true" className="size-3.5" />
                     Przyjmij
                   </Button>
                   <Button
@@ -177,11 +163,7 @@ export const SquadGroupInvitations = () => {
                     type="button"
                     variant="ghost"
                   >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={Cancel01Icon}
-                      className="size-3.5"
-                    />
+                    <X aria-hidden="true" className="size-3.5" />
                     Odrzuć
                   </Button>
                 </div>

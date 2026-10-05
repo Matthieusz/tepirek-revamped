@@ -1,6 +1,5 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -87,11 +86,7 @@ const SkillsIndexContent = ({
             <AddProfessionModal
               trigger={
                 <Button>
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Add01Icon}
-                    className="size-4"
-                  />
+                  <Plus aria-hidden="true" className="size-4" />
                   <span className="hidden sm:inline">Dodaj profesję</span>
                   <span className="sm:hidden">Profesja</span>
                 </Button>
@@ -100,11 +95,7 @@ const SkillsIndexContent = ({
             <AddRangeModal
               trigger={
                 <Button>
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={Add01Icon}
-                    className="size-4"
-                  />
+                  <Plus aria-hidden="true" className="size-4" />
                   <span className="hidden sm:inline">Dodaj przedział</span>
                   <span className="sm:hidden">Przedział</span>
                 </Button>

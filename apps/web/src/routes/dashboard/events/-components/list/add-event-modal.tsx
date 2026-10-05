@@ -1,5 +1,3 @@
-import { Calendar04Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
@@ -7,6 +5,7 @@ import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -189,7 +188,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                         </legend>
                         <div className="grid grid-cols-3 gap-2">
                           {EVENT_ICON_OPTIONS.map((item) => {
-                            const icon = EVENT_ICON_MAP[item.id];
+                            const IconComponent = EVENT_ICON_MAP[item.id];
 
                             return (
                               <button
@@ -209,10 +208,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                                 }}
                                 type="button"
                               >
-                                <HugeiconsIcon
+                                <IconComponent
                                   aria-hidden="true"
                                   className="size-5"
-                                  icon={icon}
                                   style={{ color: selectedColor }}
                                 />
                                 <span className="text-xs">{item.name}</span>
@@ -317,9 +315,8 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                             />
                           }
                         >
-                          <HugeiconsIcon
+                          <CalendarIcon
                             aria-hidden="true"
-                            icon={Calendar04Icon}
                             className="mr-2 size-4"
                           />
                           {field.state.value

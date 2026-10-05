@@ -1,11 +1,5 @@
-import {
-  Add01Icon,
-  Calendar04Icon,
-  Delete01Icon,
-  Megaphone02Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Calendar, Trash2, Megaphone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -120,11 +114,7 @@ const DashboardHomeContent = ({
           <AddAnnouncementModal
             trigger={
               <Button>
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Add01Icon}
-                  className="size-4"
-                />
+                <Plus aria-hidden="true" className="size-4" />
                 Dodaj ogłoszenie
               </Button>
             }
@@ -157,7 +147,7 @@ const DashboardHomeContent = ({
 
       {announcements.length === 0 && (
         <EmptyState
-          icon={<HugeiconsIcon aria-hidden="true" icon={Megaphone02Icon} />}
+          icon={<Megaphone aria-hidden="true" />}
           message="Brak ogłoszeń do wyświetlenia"
         />
       )}
@@ -194,11 +184,7 @@ const DashboardHomeContent = ({
                       orientation="vertical"
                     />
                     <div className="flex items-center gap-1">
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        icon={Calendar04Icon}
-                        className="size-3.5"
-                      />
+                      <Calendar aria-hidden="true" className="size-3.5" />
                       <span>{formatDateTime(announcement.createdAt)}</span>
                     </div>
                   </div>
@@ -215,11 +201,7 @@ const DashboardHomeContent = ({
                     size="sm"
                     variant="ghost"
                   >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={Delete01Icon}
-                      className="size-4"
-                    />
+                    <Trash2 aria-hidden="true" className="size-4" />
                   </Button>
                 )}
               </div>

@@ -1,5 +1,3 @@
-import { Delete01Icon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AUCTION_SLOT_LEVELS,
@@ -10,6 +8,7 @@ import {
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
+import { Trash2, Loader2 } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 
@@ -73,11 +72,7 @@ const CellContent: React.FC<CellContentProps> = ({
         variant="outline"
       >
         {isMutating ? (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={LoaderCircleIcon}
-            className="size-4 animate-spin"
-          />
+          <Loader2 aria-hidden="true" className="size-4 animate-spin" />
         ) : (
           "Zapisz się"
         )}
@@ -110,11 +105,7 @@ const CellContent: React.FC<CellContentProps> = ({
             {signup.userName}
           </span>
           <span className="text-destructive absolute inset-0 hidden items-center justify-center group-hover/signup:inline-flex">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Delete01Icon}
-              className="size-4"
-            />
+            <Trash2 aria-hidden="true" className="size-4" />
           </span>
         </span>
         {formattedDate ? (

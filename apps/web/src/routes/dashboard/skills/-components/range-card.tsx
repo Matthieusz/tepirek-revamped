@@ -1,7 +1,6 @@
-import { Delete01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -98,11 +97,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
               type="button"
               variant="destructive"
             >
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={Delete01Icon}
-                className="size-4"
-              />
+              <Trash2 aria-hidden="true" className="size-4" />
               Usuń
             </Button>
           </div>

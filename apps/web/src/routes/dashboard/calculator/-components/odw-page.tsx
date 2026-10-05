@@ -1,6 +1,5 @@
-import { Unlink05Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import * as Schema from "effect/Schema";
+import { Unlink } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -150,9 +149,8 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
             >
               <div className="mb-4">
                 <h2 className="flex items-center gap-2 text-base font-semibold">
-                  <HugeiconsIcon
+                  <Unlink
                     aria-hidden="true"
-                    icon={Unlink05Icon}
                     className={`size-5 ${rarityColors[result.itemRarity]}`}
                   />
                   Koszt odwiązania
@@ -213,9 +211,8 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border border-b p-6">
             <h2 className="flex items-center gap-2 text-base font-semibold">
-              <HugeiconsIcon
+              <Unlink
                 aria-hidden="true"
-                icon={Unlink05Icon}
                 className="text-muted-foreground size-5"
               />
               Formuła obliczania

@@ -1,5 +1,4 @@
-import { InfoIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,11 +21,7 @@ export const StatsPopover = ({ pointWorth, totalBets }: StatsPopoverProps) => (
           size="icon"
           variant="ghost"
         >
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={InfoIcon}
-            className="size-4"
-          />
+          <Info aria-hidden="true" className="size-4" />
         </Button>
       }
     />

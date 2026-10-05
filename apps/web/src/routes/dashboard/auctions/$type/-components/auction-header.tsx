@@ -1,7 +1,6 @@
-import { Delete01Icon, UsersIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import { Trash2, Users } from "lucide-react";
 import type { ReactElement } from "react";
 import type React from "react";
 import { toast } from "sonner";
@@ -82,11 +81,7 @@ const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
               />
             }
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Delete01Icon}
-              className="size-4"
-            />
+            <Trash2 aria-hidden="true" className="size-4" />
             Usuń wszystkie zapisy
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -115,11 +110,7 @@ const AuctionHeaderContent: React.FC<AuctionHeaderContentProps> = ({
         </AlertDialog>
       ) : null}
       <div className="bg-background/50 flex items-center gap-2 rounded-lg px-3 py-2">
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={UsersIcon}
-          className="text-muted-foreground size-4"
-        />
+        <Users aria-hidden="true" className="text-muted-foreground size-4" />
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-semibold">{stats.uniqueUsers}</span>
           <span className="text-muted-foreground text-sm">graczy</span>

@@ -1,17 +1,16 @@
-import {
-  Alert01Icon,
-  CheckmarkCircle02Icon,
-  ChevronRightIcon,
-  Delete01Icon,
-  Link02Icon,
-  LoaderCircleIcon,
-  Search01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  Trash2,
+  Link2,
+  Loader2,
+  Search,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -163,7 +162,7 @@ const PreviewRow = ({
     return (
       <li className="px-5 py-3">
         <Alert variant="destructive">
-          <HugeiconsIcon aria-hidden="true" icon={Alert01Icon} />
+          <AlertTriangle aria-hidden="true" />
           <AlertTitle>
             Wiersz {item.lineNumber}: nie udało się wczytać profilu
           </AlertTitle>
@@ -182,10 +181,9 @@ const PreviewRow = ({
   return (
     <li className="px-5 py-3">
       <div className="flex items-start gap-3">
-        <HugeiconsIcon
+        <CheckCircle2
           aria-hidden="true"
           className="text-primary mt-0.5 size-4 shrink-0"
-          icon={CheckmarkCircle02Icon}
         />
         <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
@@ -216,15 +214,13 @@ const PreviewRow = ({
                       className="flex min-w-0 items-start gap-1.5 text-xs"
                       key={character.characterId}
                     >
-                      <HugeiconsIcon
+                      <ChevronRight
                         aria-hidden="true"
                         className="text-muted-foreground mt-0.5 size-3 shrink-0"
-                        icon={ChevronRightIcon}
                       />
-                      <HugeiconsIcon
+                      <profession.icon
                         aria-hidden="true"
                         className={`mt-0.5 size-3.5 shrink-0 ${profession.colorClass}`}
-                        icon={profession.icon}
                       />
                       <span className="min-w-0 font-medium break-words">
                         {character.name}
@@ -269,17 +265,9 @@ const PreviewRow = ({
                 type="submit"
               >
                 {isConfirmingThis ? (
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    className="size-4 animate-spin"
-                    icon={LoaderCircleIcon}
-                  />
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
                 ) : (
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    className="size-4"
-                    icon={CheckmarkCircle02Icon}
-                  />
+                  <CheckCircle2 aria-hidden="true" className="size-4" />
                 )}
                 Zapisz konto
               </Button>
@@ -325,11 +313,7 @@ const ImportPanel = ({
     <FramePanel className="p-0 shadow-none">
       <div className="border-border border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <HugeiconsIcon
-            aria-hidden="true"
-            className="text-muted-foreground size-4"
-            icon={Link02Icon}
-          />
+          <Link2 aria-hidden="true" className="text-muted-foreground size-4" />
           Import kont
         </h2>
         <p className="text-muted-foreground text-sm">
@@ -378,10 +362,9 @@ const ImportPanel = ({
 
             {previewItems.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
-                <HugeiconsIcon
+                <CheckCircle2
                   aria-hidden="true"
                   className="text-success size-7"
-                  icon={CheckmarkCircle02Icon}
                 />
                 <div>
                   <h3 className="font-medium">
@@ -531,17 +514,9 @@ export const AccountImportFrame = () => {
       <div className="flex items-center gap-2">
         <Button disabled={isPreviewPending} type="submit">
           {isPreviewPending ? (
-            <HugeiconsIcon
-              aria-hidden="true"
-              className="size-4 animate-spin"
-              icon={LoaderCircleIcon}
-            />
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
           ) : (
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Search01Icon}
-              className="size-4"
-            />
+            <Search aria-hidden="true" className="size-4" />
           )}
           Sprawdź konta
         </Button>
@@ -552,11 +527,7 @@ export const AccountImportFrame = () => {
             type="button"
             variant="ghost"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Delete01Icon}
-              className="size-4"
-            />
+            <Trash2 aria-hidden="true" className="size-4" />
             Wyczyść
           </Button>
         )}

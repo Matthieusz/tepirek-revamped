@@ -1,6 +1,5 @@
-import { TriangleAlertIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type * as HashMap from "effect/HashMap";
+import { AlertTriangle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -95,7 +94,7 @@ export const SquadEditorLayout = ({
 
       {!isOwner && (
         <Alert variant={isViewer ? "default" : "info"}>
-          <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
+          <AlertTriangle aria-hidden="true" />
           <AlertTitle>
             {isViewer ? "Tryb tylko do odczytu" : "Uprawnienia edytora"}
           </AlertTitle>

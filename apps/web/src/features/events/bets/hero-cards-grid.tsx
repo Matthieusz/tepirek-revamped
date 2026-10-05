@@ -1,5 +1,4 @@
-import { Sword01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Sword } from "lucide-react";
 
 interface HeroCardOption {
   id: number;
@@ -52,9 +51,8 @@ export const HeroCardsGrid = ({
           />
         ) : (
           <div className="bg-muted mb-2 flex h-16 w-14 items-center justify-center rounded">
-            <HugeiconsIcon
+            <Sword
               aria-hidden="true"
-              icon={Sword01Icon}
               className="text-muted-foreground size-6"
             />
           </div>

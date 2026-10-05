@@ -1,13 +1,6 @@
-import {
-  CalculatorIcon,
-  Shield01Icon,
-  TriangleAlertIcon,
-  UserIcon,
-  UsersIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
+import { Calculator, Shield, AlertTriangle, User, Users } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -52,6 +45,8 @@ const PenaltyResultTitle = ({
   readonly hasPenalty: boolean;
   readonly mode: "single" | "group";
 }) => {
+  const ResultIcon = hasPenalty ? AlertTriangle : Shield;
+
   const penaltyMessage =
     mode === "single"
       ? "Otrzymasz punkt karny!"
@@ -62,9 +57,8 @@ const PenaltyResultTitle = ({
 
   return (
     <h2 className="flex items-center gap-2 text-base font-semibold">
-      <HugeiconsIcon
+      <ResultIcon
         aria-hidden="true"
-        icon={hasPenalty ? TriangleAlertIcon : Shield01Icon}
         className={
           hasPenalty ? "text-destructive size-5" : "text-primary size-5"
         }
@@ -112,11 +106,7 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
 
       <div className="border-border grid gap-3 border-t pt-4">
         <div className="text-muted-foreground text-sm">
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={UsersIcon}
-            className="mr-1 mb-1 inline size-4"
-          />
+          <Users aria-hidden="true" className="mr-1 mb-1 inline size-4" />
           Przydatne informacje:
         </div>
         <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
@@ -323,11 +313,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           size="sm"
           variant={mode === "single" ? "default" : "ghost"}
         >
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={UserIcon}
-            className="mr-2 size-4"
-          />
+          <User aria-hidden="true" className="mr-2 size-4" />
           Walka 1v1
         </Button>
         <Button
@@ -338,11 +324,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           size="sm"
           variant={mode === "group" ? "default" : "ghost"}
         >
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={UsersIcon}
-            className="mr-2 size-4"
-          />
+          <Users aria-hidden="true" className="mr-2 size-4" />
           Walka grupowa
         </Button>
       </div>
@@ -352,11 +334,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={CalculatorIcon}
-                  className="size-5"
-                />
+                <Calculator aria-hidden="true" className="size-5" />
                 Parametry walki
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -395,11 +373,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={CalculatorIcon}
-                  className="size-5"
-                />
+                <Calculator aria-hidden="true" className="size-5" />
                 Parametry walki grupowej
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -436,9 +410,8 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
       <div className="border-border bg-card rounded-xl border">
         <div className="border-border border-b p-6">
           <h2 className="flex items-center gap-2 text-base font-semibold">
-            <HugeiconsIcon
+            <AlertTriangle
               aria-hidden="true"
-              icon={TriangleAlertIcon}
               className="text-muted-foreground size-5"
             />
             Zasady listów gończych

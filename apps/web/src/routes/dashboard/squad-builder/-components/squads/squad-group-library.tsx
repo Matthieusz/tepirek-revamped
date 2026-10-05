@@ -1,15 +1,10 @@
-import {
-  ChevronRightIcon,
-  Search01Icon,
-  Sword01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { ChevronRight, Search, Swords } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -150,11 +145,7 @@ const SquadGroupListFilters = ({
         </form.AppField>
         <div className="flex gap-2">
           <Button disabled={isSubmitting} type="submit">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Search01Icon}
-              className="size-3.5"
-            />
+            <Search aria-hidden="true" className="size-3.5" />
             Filtruj
           </Button>
           <Button
@@ -191,16 +182,12 @@ const CollectionEmpty = ({
 }) => {
   let copy = "Nie ma jeszcze publicznych grup składów.";
 
-  let icon = (
-    <HugeiconsIcon aria-hidden="true" icon={Search01Icon} className="size-5" />
-  );
+  let icon = <Search aria-hidden="true" className="size-5" />;
 
   if (kind === "mine") {
     copy =
       "Nie masz jeszcze grup składów. Utwórz pierwszą grupę i dodaj postacie z Jaruny.";
-    icon = (
-      <HugeiconsIcon aria-hidden="true" icon={Sword01Icon} className="size-5" />
-    );
+    icon = <Swords aria-hidden="true" className="size-5" />;
   } else if (kind === "shared") {
     copy = "Zaakceptowane zaproszenia edytora pojawią się tutaj.";
   } else if (filtered) {
@@ -286,8 +273,7 @@ const GroupRow = (props: GroupRowProps) => {
             </span>
           </div>
         </div>
-        <HugeiconsIcon
-          icon={ChevronRightIcon}
+        <ChevronRight
           aria-hidden="true"
           className="text-muted-foreground size-4 shrink-0 transition-transform group-hover:translate-x-0.5"
         />

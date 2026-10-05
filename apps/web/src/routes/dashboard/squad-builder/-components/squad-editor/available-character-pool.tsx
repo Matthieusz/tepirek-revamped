@@ -1,9 +1,3 @@
-import {
-  ChevronDownIcon,
-  Search01Icon,
-  UserAdd01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
@@ -11,6 +5,7 @@ import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Predicate from "effect/Predicate";
+import { ChevronDown, Search, UserPlus } from "lucide-react";
 import { useMemo, useReducer } from "react";
 
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -227,11 +222,7 @@ const CharacterImageTrigger = ({
           aria-hidden="true"
           className="bg-background/75 text-foreground pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(pointer:coarse)]:opacity-100"
         >
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={UserAdd01Icon}
-            className="size-3.5"
-          />
+          <UserPlus aria-hidden="true" className="size-3.5" />
         </span>
       </button>
     }
@@ -363,11 +354,7 @@ const CharacterPoolTile = ({
           <span
             className={`flex max-w-24 shrink-0 items-center gap-1 truncate text-xs ${profession.colorClass}`}
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              className="size-3 shrink-0"
-              icon={profession.icon}
-            />
+            <profession.icon aria-hidden="true" className="size-3 shrink-0" />
             <span className="truncate">{profession.label}</span>
           </span>
         </div>
@@ -635,11 +622,7 @@ export const AvailableCharacterPool = ({
             {result.data !== undefined && characters.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
                 <IconStack aria-hidden="true">
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={UserAdd01Icon}
-                    className="size-5"
-                  />
+                  <UserPlus aria-hidden="true" className="size-5" />
                 </IconStack>
                 <p className="text-muted-foreground max-w-sm text-sm">
                   Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić
@@ -658,11 +641,7 @@ export const AvailableCharacterPool = ({
               unassignedCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
                   <IconStack aria-hidden="true">
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={UserAdd01Icon}
-                      className="size-5"
-                    />
+                    <UserPlus aria-hidden="true" className="size-5" />
                   </IconStack>
                   <p className="text-muted-foreground max-w-sm text-sm">
                     Wszystkie dostępne postacie są już przypisane do składów.
@@ -673,8 +652,7 @@ export const AvailableCharacterPool = ({
               unassignedCharacters.length > 0 &&
               filteredCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                  <HugeiconsIcon
-                    icon={Search01Icon}
+                  <Search
                     aria-hidden="true"
                     className="text-muted-foreground size-5"
                   />
@@ -727,8 +705,7 @@ export const AvailableCharacterPool = ({
                             type="button"
                             variant="ghost"
                           >
-                            <HugeiconsIcon
-                              icon={ChevronDownIcon}
+                            <ChevronDown
                               aria-hidden="true"
                               className={cn(
                                 "size-4 transition-transform duration-150 motion-reduce:transition-none",

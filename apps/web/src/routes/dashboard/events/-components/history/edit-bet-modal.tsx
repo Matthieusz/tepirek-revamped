@@ -1,9 +1,8 @@
-import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { Pencil } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -165,11 +164,7 @@ const EditBetModalContent = ({
             type="button"
             variant="ghost"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={PencilEdit01Icon}
-              className="size-4"
-            />
+            <Pencil aria-hidden="true" className="size-4" />
           </Button>
         )}
       </ResponsiveDialogTrigger>

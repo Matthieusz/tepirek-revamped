@@ -1,5 +1,4 @@
-import { Rotate01Icon, TriangleAlertIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { RotateCw, AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -21,16 +20,12 @@ export const SquadDataError = ({
   readonly title: string;
 }) => (
   <Alert className="m-4" variant="destructive">
-    <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
+    <AlertTriangle aria-hidden="true" />
     <AlertTitle>{title}</AlertTitle>
     <AlertDescription>{children}</AlertDescription>
     <AlertAction>
       <Button onClick={onRetry} size="sm" type="button" variant="outline">
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={Rotate01Icon}
-          className="size-3.5"
-        />
+        <RotateCw aria-hidden="true" className="size-3.5" />
         Spróbuj ponownie
       </Button>
     </AlertAction>

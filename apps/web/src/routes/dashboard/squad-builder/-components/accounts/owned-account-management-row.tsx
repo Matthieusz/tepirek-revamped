@@ -1,18 +1,17 @@
-import {
-  Cancel01Icon,
-  Delete01Icon,
-  ExternalLinkIcon,
-  LoaderCircleIcon,
-  PencilEdit01Icon,
-  SaveIcon,
-  Share06Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import {
+  X,
+  Trash2,
+  ExternalLink,
+  Loader2,
+  Pencil,
+  Save,
+  Share2,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -123,17 +122,9 @@ const RenameAccountForm = ({
         <div className="flex flex-wrap gap-2">
           <Button disabled={isSubmitting} size="sm" type="submit">
             {isSubmitting ? (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={LoaderCircleIcon}
-                className="size-3.5 animate-spin"
-              />
+              <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
             ) : (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={SaveIcon}
-                className="size-3.5"
-              />
+              <Save aria-hidden="true" className="size-3.5" />
             )}
             Zapisz
           </Button>
@@ -144,11 +135,7 @@ const RenameAccountForm = ({
             type="button"
             variant="ghost"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Cancel01Icon}
-              className="size-3.5"
-            />
+            <X aria-hidden="true" className="size-3.5" />
             Anuluj
           </Button>
         </div>
@@ -222,17 +209,9 @@ const DeleteAccountDialog = ({
             variant="destructive"
           >
             {isDeleting ? (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={LoaderCircleIcon}
-                className="size-4 animate-spin"
-              />
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             ) : (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={Delete01Icon}
-                className="size-4"
-              />
+              <Trash2 aria-hidden="true" className="size-4" />
             )}
             Usuń konto
           </AlertDialogAction>
@@ -286,11 +265,7 @@ export const OwnedAccountManagementRow = ({
             rel="noopener noreferrer"
             target="_blank"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={ExternalLinkIcon}
-              className="size-3"
-            />
+            <ExternalLink aria-hidden="true" className="size-3" />
             Profil Margonem
           </a>
           <span className="text-muted-foreground font-mono text-xs">
@@ -310,11 +285,7 @@ export const OwnedAccountManagementRow = ({
               type="button"
               variant="ghost"
             >
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={PencilEdit01Icon}
-                className="size-3.5"
-              />
+              <Pencil aria-hidden="true" className="size-3.5" />
               Edytuj nazwę
             </Button>
           )}
@@ -327,11 +298,7 @@ export const OwnedAccountManagementRow = ({
             type="button"
             variant="ghost"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Delete01Icon}
-              className="size-3.5"
-            />
+            <Trash2 aria-hidden="true" className="size-3.5" />
             Usuń konto
           </Button>
         </AccountRefetchWorkflow>
@@ -347,11 +314,7 @@ export const OwnedAccountManagementRow = ({
       </div>
       <section className="border-border min-w-0 lg:border-l lg:pl-6">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-          <HugeiconsIcon
-            icon={Share06Icon}
-            aria-hidden="true"
-            className="text-muted-foreground size-4"
-          />
+          <Share2 aria-hidden="true" className="text-muted-foreground size-4" />
           Udostępnianie konta
         </h3>
         <AccountSharingPanel

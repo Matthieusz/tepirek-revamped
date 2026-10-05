@@ -1,11 +1,6 @@
-import {
-  Link02Icon,
-  LogInIcon,
-  UserAdd01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Link2, LogIn, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -60,11 +55,7 @@ const HomeContent = ({
                 className="flex w-full items-center justify-center gap-2"
                 to="/login"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={LogInIcon}
-                  className="size-5"
-                />
+                <LogIn aria-hidden="true" className="size-5" />
                 Zaloguj się
               </Link>
             }
@@ -77,11 +68,7 @@ const HomeContent = ({
                 className="flex w-full items-center justify-center gap-2"
                 to="/signup"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={UserAdd01Icon}
-                  className="size-5"
-                />
+                <UserPlus aria-hidden="true" className="size-5" />
                 Utwórz konto
               </Link>
             }
@@ -113,11 +100,7 @@ const HomeContent = ({
             aria-label="Status strony"
             className="text-muted-foreground hover:text-foreground inline-flex min-h-6 min-w-6 items-center justify-center transition-colors"
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Link02Icon}
-              className="size-3.5"
-            />
+            <Link2 aria-hidden="true" className="size-3.5" />
           </a>
         </div>
       </main>

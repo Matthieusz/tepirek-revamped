@@ -1,11 +1,4 @@
-import {
-  Calendar04Icon,
-  Delete01Icon,
-  PencilEdit01Icon,
-  Sword01Icon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { CalendarDays, Trash2, Pencil, Sword, User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -85,11 +78,7 @@ export const BetCard = ({
                     type="button"
                     variant="ghost"
                   >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={PencilEdit01Icon}
-                      className="size-4"
-                    />
+                    <Pencil aria-hidden="true" className="size-4" />
                   </Button>
                 }
               />
@@ -107,11 +96,7 @@ export const BetCard = ({
                 type="button"
                 variant="ghost"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Delete01Icon}
-                  className="size-4"
-                />
+                <Trash2 aria-hidden="true" className="size-4" />
               </Button>
             </>
           )}
@@ -131,9 +116,8 @@ export const BetCard = ({
           />
         ) : (
           <div className="bg-muted mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg sm:mx-0 sm:h-16 sm:w-14">
-            <HugeiconsIcon
+            <Sword
               aria-hidden="true"
-              icon={Sword01Icon}
               className="text-muted-foreground size-6"
             />
           </div>
@@ -151,11 +135,7 @@ export const BetCard = ({
                   src={member.userImage ?? undefined}
                 />
                 <AvatarFallback className="text-xs">
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    icon={UserIcon}
-                    className="size-3"
-                  />
+                  <User aria-hidden="true" className="size-3" />
                 </AvatarFallback>
               </Avatar>
               <span className="text-xs sm:text-sm">{member.userName}</span>
@@ -174,11 +154,7 @@ export const BetCard = ({
                 src={bet.createdByImage ?? undefined}
               />
               <AvatarFallback className="text-[10px]">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={UserIcon}
-                  className="h-2.5 w-2.5"
-                />
+                <User aria-hidden="true" className="h-2.5 w-2.5" />
               </AvatarFallback>
             </Avatar>
             <span className="text-foreground font-medium">
@@ -187,11 +163,7 @@ export const BetCard = ({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={Calendar04Icon}
-            className="h-3.5 w-3.5"
-          />
+          <CalendarDays aria-hidden="true" className="h-3.5 w-3.5" />
           <span>{formattedCreatedAt}</span>
         </div>
       </div>

@@ -1,14 +1,9 @@
-import {
-  Delete01Icon,
-  LoaderCircleIcon,
-  UserAdd01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AccountAccessGrantSummarySchema,
   AccountInviteTargetSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
+import { Trash2, Loader2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -230,11 +225,7 @@ export const AccountSharingPanel = ({
                     type="button"
                     variant="outline"
                   >
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={UserAdd01Icon}
-                      className="size-3.5"
-                    />
+                    <UserPlus aria-hidden="true" className="size-3.5" />
                     Zaproś
                   </Button>
                 </AutocompleteItem>
@@ -259,11 +250,7 @@ export const AccountSharingPanel = ({
         </h3>
         {grantsQuery.isPending && (
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={LoaderCircleIcon}
-              className="size-3 animate-spin"
-            />
+            <Loader2 aria-hidden="true" className="size-3 animate-spin" />
             Wczytywanie…
           </div>
         )}
@@ -332,9 +319,8 @@ export const AccountSharingPanel = ({
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <HugeiconsIcon
+                  <Trash2
                     aria-hidden="true"
-                    icon={Delete01Icon}
                     className="text-destructive size-3.5"
                   />
                 </Button>

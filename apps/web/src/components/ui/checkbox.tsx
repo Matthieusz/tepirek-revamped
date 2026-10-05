@@ -1,8 +1,7 @@
 "use client";
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
-import { CheckIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { CheckIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -19,7 +18,7 @@ const Checkbox = ({ className, ...props }: CheckboxPrimitive.Root.Props) => (
       data-slot="checkbox-indicator"
       className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
     >
-      <HugeiconsIcon aria-hidden="true" icon={CheckIcon} />
+      <CheckIcon aria-hidden="true" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 );

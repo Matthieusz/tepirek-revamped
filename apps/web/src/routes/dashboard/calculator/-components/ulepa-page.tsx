@@ -1,6 +1,5 @@
-import { SparklesIcon, TrendingUpIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import * as Schema from "effect/Schema";
+import { Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -88,9 +87,8 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
   >
     <div className="mb-4">
       <h2 className="flex items-center gap-2 text-base font-semibold">
-        <HugeiconsIcon
+        <Sparkles
           aria-hidden="true"
-          icon={SparklesIcon}
           className={`size-5 ${rarityColors[result.itemRarity]}`}
         />
         Ekstrakcja
@@ -142,11 +140,7 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
   <div className="border-border bg-card rounded-xl border">
     <div className="border-border border-b p-6">
       <h2 className="flex items-center gap-2 text-base font-semibold">
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={TrendingUpIcon}
-          className="size-5"
-        />
+        <TrendingUp aria-hidden="true" className="size-5" />
         Koszty ulepszenia
       </h2>
       <p className="text-muted-foreground text-sm">

@@ -1,13 +1,13 @@
 import {
-  AxeIcon,
-  CrosshairIcon,
-  FootprintsIcon,
-  HelpCircleIcon,
-  MagicWand02Icon,
-  Shield01Icon,
-  Sword01Icon,
-} from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+  Axe,
+  Crosshair,
+  Footprints,
+  CircleHelp,
+  Wand2,
+  Shield,
+  Swords,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type KnownProfession =
   | "bladeDancer"
@@ -19,45 +19,45 @@ type KnownProfession =
 
 interface ProfessionPresentation {
   readonly colorClass: string;
-  readonly icon: IconSvgElement;
+  readonly icon: LucideIcon;
   readonly label: string;
 }
 
 const UNKNOWN_PROFESSION_PRESENTATION: ProfessionPresentation = {
   colorClass: "text-muted-foreground",
-  icon: HelpCircleIcon,
+  icon: CircleHelp,
   label: "Nieznana profesja",
 };
 
 const PROFESSION_PRESENTATIONS = {
   bladeDancer: {
     colorClass: "text-chart-1",
-    icon: Sword01Icon,
+    icon: Swords,
     label: "Tancerz ostrzy",
   },
   hunter: {
     colorClass: "text-info",
-    icon: CrosshairIcon,
+    icon: Crosshair,
     label: "Łowca",
   },
   mage: {
     colorClass: "text-warning",
-    icon: MagicWand02Icon,
+    icon: Wand2,
     label: "Mag",
   },
   paladin: {
     colorClass: "text-success",
-    icon: Shield01Icon,
+    icon: Shield,
     label: "Paladyn",
   },
   tracker: {
     colorClass: "text-chart-4",
-    icon: FootprintsIcon,
+    icon: Footprints,
     label: "Tropiciel",
   },
   warrior: {
     colorClass: "text-destructive",
-    icon: AxeIcon,
+    icon: Axe,
     label: "Wojownik",
   },
 } satisfies Record<KnownProfession, ProfessionPresentation>;

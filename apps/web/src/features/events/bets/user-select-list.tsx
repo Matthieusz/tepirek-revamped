@@ -1,6 +1,5 @@
-import { UserIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import * as HashSet from "effect/HashSet";
+import { User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,11 +53,7 @@ export const UserSelectList = ({
           <Avatar className="size-8">
             <AvatarImage alt={user.name} src={user.image ?? undefined} />
             <AvatarFallback>
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={UserIcon}
-                className="size-4"
-              />
+              <User aria-hidden="true" className="size-4" />
             </AvatarFallback>
           </Avatar>
           <span className="truncate font-normal">{user.name}</span>

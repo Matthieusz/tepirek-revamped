@@ -1,11 +1,10 @@
-import { LoaderCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { VerifiedMember } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +34,7 @@ import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
 import type { LastBetState } from "@/features/events/bets/member-selection";
+import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { getEventIcon } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -123,12 +123,6 @@ const BetEventField = ({
     error !== undefined &&
     (field.state.meta.isTouched || field.form.state.submissionAttempts > 0);
 
-  const selectedEvent = events.find(
-    (event) => event.id.toString() === field.state.value
-  );
-
-  const SelectedIcon = selectedEvent ? getEventIcon(selectedEvent.icon) : null;
-
   return (
     <FormFieldFrame
       error={showError ? error : undefined}
@@ -153,17 +147,10 @@ const BetEventField = ({
           onBlur={field.handleBlur}
         >
           <SelectValue placeholder="Wybierz event">
-            {selectedEvent && SelectedIcon && (
-              <span className="flex items-center gap-2">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  className="size-4"
-                  icon={SelectedIcon}
-                  style={{ color: selectedEvent.color }}
-                />
-                {selectedEvent.name}
-              </span>
-            )}
+            {getEventSelectDisplay({
+              events,
+              selectedEventId: field.state.value,
+            })}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -178,10 +165,9 @@ const BetEventField = ({
               return (
                 <SelectItem key={event.id} value={event.id.toString()}>
                   <span className="flex items-center gap-2">
-                    <HugeiconsIcon
+                    <IconComponent
                       aria-hidden="true"
                       className="size-4"
-                      icon={IconComponent}
                       style={{ color: event.color }}
                     />
                     {event.name}
@@ -295,11 +281,7 @@ export const BetsAddForm = ({
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <HugeiconsIcon
-                    aria-hidden="true"
-                    className="size-4 animate-spin"
-                    icon={LoaderCircleIcon}
-                  />
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
                   Tworzenie obstawienia
                 </span>
               ) : (

@@ -1,8 +1,7 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -322,11 +321,7 @@ const RangeDetailsContent = ({
         defaultRangeId={rangeData.id}
         trigger={
           <Button size="sm" type="button">
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Add01Icon}
-              className="size-4"
-            />
+            <Plus aria-hidden="true" className="size-4" />
             Dodaj zestaw
           </Button>
         }

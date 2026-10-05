@@ -1,11 +1,10 @@
 import {
-  CheckmarkCircle02Icon,
+  CircleCheckIcon,
   InfoIcon,
-  LoaderCircleIcon,
-  AlertCircleIcon,
+  Loader2Icon,
+  OctagonXIcon,
   TriangleAlertIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+} from "lucide-react";
 import { Toaster as Sonner } from "sonner";
 import type { ToasterProps } from "sonner";
 
@@ -15,41 +14,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="dark"
       className="toaster group"
       icons={{
-        error: (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={AlertCircleIcon}
-            className="size-4"
-          />
-        ),
-        info: (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={InfoIcon}
-            className="size-4"
-          />
-        ),
+        error: <OctagonXIcon aria-hidden="true" className="size-4" />,
+        info: <InfoIcon aria-hidden="true" className="size-4" />,
         loading: (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={LoaderCircleIcon}
-            className="size-4 animate-spin"
-          />
+          <Loader2Icon aria-hidden="true" className="size-4 animate-spin" />
         ),
-        success: (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={CheckmarkCircle02Icon}
-            className="size-4"
-          />
-        ),
-        warning: (
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={TriangleAlertIcon}
-            className="size-4"
-          />
-        ),
+        success: <CircleCheckIcon aria-hidden="true" className="size-4" />,
+        warning: <TriangleAlertIcon aria-hidden="true" className="size-4" />,
       }}
       style={
         {

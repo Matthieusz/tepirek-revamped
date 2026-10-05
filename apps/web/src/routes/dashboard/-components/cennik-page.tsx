@@ -1,11 +1,10 @@
-import { Search01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   LegendaryEquipmentType,
   LegendaryProfession,
 } from "@tepirek-revamped/api/protocol/legend-pricing/http-api-contract";
+import { Search } from "lucide-react";
 import {
   useCallback,
   useDeferredValue,
@@ -582,8 +581,7 @@ const SearchFilter = ({
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <div className="relative">
-        <HugeiconsIcon
-          icon={Search01Icon}
+        <Search
           aria-hidden="true"
           className="text-muted-foreground absolute top-2.5 left-2.5 size-4"
         />

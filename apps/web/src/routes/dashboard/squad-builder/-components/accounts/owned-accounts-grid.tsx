@@ -1,12 +1,7 @@
-import {
-  ExternalLinkIcon,
-  Link02Icon,
-  UsersIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useTable } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import { ExternalLink, Link2, Users } from "lucide-react";
 import { useMemo } from "react";
 
 import { Badge as ReuiBadge } from "@/components/reui/badge";
@@ -54,10 +49,9 @@ const OwnedAccountCharacterPreview = ({
           <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
         ) : null}
         <AvatarFallback className="rounded-none">
-          <HugeiconsIcon
+          <profession.icon
             aria-hidden="true"
             className={`size-3.5 ${profession.colorClass}`}
-            icon={profession.icon}
           />
         </AvatarFallback>
       </Avatar>
@@ -110,11 +104,7 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<DataGridFeatures, OwnedAccount>[] = [
         target="_blank"
         rel="noopener noreferrer"
       >
-        <HugeiconsIcon
-          aria-hidden="true"
-          icon={ExternalLinkIcon}
-          className="size-3.5"
-        />
+        <ExternalLink aria-hidden="true" className="size-3.5" />
         Margonem
       </a>
     ),
@@ -169,10 +159,9 @@ export const OwnedAccountsGrid = ({
       <FramePanel className="p-0 shadow-none">
         <FrameHeader className="border-border flex-row items-center justify-between border-b px-5 py-3">
           <FrameTitle className="flex items-center gap-2 text-base">
-            <HugeiconsIcon
+            <Users
               aria-hidden="true"
               className="text-muted-foreground size-4"
-              icon={UsersIcon}
             />
             Twoje konta
           </FrameTitle>
@@ -188,11 +177,7 @@ export const OwnedAccountsGrid = ({
           emptyMessage={
             <div className="flex flex-col items-center gap-2 py-6">
               <IconStack aria-hidden="true">
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={UsersIcon}
-                  className="size-5"
-                />
+                <Users aria-hidden="true" className="size-5" />
               </IconStack>
               <p>Nie masz jeszcze zapisanych kont. Dodaj profil powyżej.</p>
               <Button
@@ -201,11 +186,7 @@ export const OwnedAccountsGrid = ({
                 type="button"
                 variant="outline"
               >
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={Link02Icon}
-                  className="size-3.5"
-                />
+                <Link2 aria-hidden="true" className="size-3.5" />
                 Dodaj konto
               </Button>
             </div>

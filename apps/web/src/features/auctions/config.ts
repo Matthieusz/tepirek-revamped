@@ -1,15 +1,13 @@
-import {
-  AxeIcon,
-  CrosshairIcon,
-  FlameIcon,
-  FootprintsIcon,
-  MagicWand02Icon,
-  Shield01Icon,
-  Sword01Icon,
-  Target01Icon,
-} from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import {
+  Axe,
+  Crosshair,
+  Footprints,
+  Wand2,
+  Shield,
+  Swords,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export {
   AUCTION_PROFESSIONS,
@@ -39,58 +37,58 @@ export const AUCTION_TYPE_META = {
 } satisfies Record<AuctionType, AuctionTypeMeta>;
 
 interface AuctionProfessionMeta {
-  cardIcon: Record<AuctionType, IconSvgElement>;
-  headerIcon: IconSvgElement;
+  cardIcon: Record<AuctionType, LucideIcon>;
+  headerIcon: LucideIcon;
   name: string;
 }
 
 export const AUCTION_PROFESSION_META = {
   "blade-dancer": {
     cardIcon: {
-      main: Sword01Icon,
-      support: Sword01Icon,
+      main: Swords,
+      support: Swords,
     },
-    headerIcon: Sword01Icon,
+    headerIcon: Swords,
     name: "Tancerz Ostrzy",
   },
   hunter: {
     cardIcon: {
-      main: CrosshairIcon,
-      support: CrosshairIcon,
+      main: Crosshair,
+      support: Crosshair,
     },
-    headerIcon: Target01Icon,
+    headerIcon: Crosshair,
     name: "Łowca",
   },
   mage: {
     cardIcon: {
-      main: MagicWand02Icon,
-      support: MagicWand02Icon,
+      main: Wand2,
+      support: Wand2,
     },
-    headerIcon: FlameIcon,
+    headerIcon: Wand2,
     name: "Mag",
   },
   paladin: {
     cardIcon: {
-      main: Shield01Icon,
-      support: Shield01Icon,
+      main: Shield,
+      support: Shield,
     },
-    headerIcon: Shield01Icon,
+    headerIcon: Shield,
     name: "Paladyn",
   },
   tracker: {
     cardIcon: {
-      main: FootprintsIcon,
-      support: FootprintsIcon,
+      main: Footprints,
+      support: Footprints,
     },
-    headerIcon: FootprintsIcon,
+    headerIcon: Footprints,
     name: "Tropiciel",
   },
   warrior: {
     cardIcon: {
-      main: AxeIcon,
-      support: AxeIcon,
+      main: Axe,
+      support: Axe,
     },
-    headerIcon: AxeIcon,
+    headerIcon: Axe,
     name: "Wojownik",
   },
 } satisfies Record<AuctionProfession, AuctionProfessionMeta>;

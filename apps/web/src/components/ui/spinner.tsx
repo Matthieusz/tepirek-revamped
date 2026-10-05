@@ -1,32 +1,14 @@
-import { LoaderCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Loader2Icon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-function Spinner({
-  className,
-  strokeWidth,
-  ...props
-}: React.ComponentProps<"svg">) {
-  const normalizedStrokeWidth =
-    typeof strokeWidth === "number"
-      ? strokeWidth
-      : typeof strokeWidth === "string"
-        ? Number(strokeWidth)
-        : undefined;
-  const strokeProps =
-    normalizedStrokeWidth === undefined || Number.isNaN(normalizedStrokeWidth)
-      ? {}
-      : { strokeWidth: normalizedStrokeWidth };
-
+function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
   return (
-    <HugeiconsIcon
-      icon={LoaderCircleIcon}
+    <Loader2Icon
       data-slot="spinner"
       role="status"
       aria-label="Loading"
       className={cn("size-4 animate-spin", className)}
-      {...strokeProps}
       {...props}
     />
   );

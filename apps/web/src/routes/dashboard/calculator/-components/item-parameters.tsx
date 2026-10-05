@@ -1,7 +1,6 @@
-import { CalculatorIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import type { AnyFormApi } from "@tanstack/react-form";
+import { Calculator } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Form } from "@/components/forms/form";
@@ -36,11 +35,7 @@ export const ItemParametersForm = ({
     <div className="border-border bg-card rounded-xl border">
       <div className="border-border border-b p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={CalculatorIcon}
-            className="size-5"
-          />
+          <Calculator aria-hidden="true" className="size-5" />
           Parametry przedmiotu
         </h2>
         <p className="text-muted-foreground text-sm">

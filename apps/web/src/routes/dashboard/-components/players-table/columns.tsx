@@ -1,17 +1,16 @@
-import {
-  CheckmarkCircle02Icon,
-  Delete01Icon,
-  MoreIcon,
-  PencilEdit01Icon,
-  Shield01Icon,
-  UserIcon,
-  UserRemove02Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { Player as PlayerSchema } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import {
+  CheckCircle2,
+  Trash2,
+  MoreHorizontal,
+  Pencil,
+  Shield,
+  User,
+  UserX,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -112,11 +111,7 @@ const ActionCell = ({ player }: { player: Player }) => {
         <DropdownMenuTrigger
           render={
             <Button size="icon" type="button" variant="ghost">
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={MoreIcon}
-                className="size-4"
-              />
+              <MoreHorizontal aria-hidden="true" className="size-4" />
               <span className="sr-only">Otwórz akcje</span>
             </Button>
           }
@@ -135,17 +130,9 @@ const ActionCell = ({ player }: { player: Player }) => {
             }}
           >
             {player.verified ? (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={UserRemove02Icon}
-                className="mr-2 size-4"
-              />
+              <UserX aria-hidden="true" className="mr-2 size-4" />
             ) : (
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={CheckmarkCircle02Icon}
-                className="mr-2 size-4"
-              />
+              <CheckCircle2 aria-hidden="true" className="mr-2 size-4" />
             )}
             {player.verified ? "Odbierz weryfikację" : "Zweryfikuj"}
           </DropdownMenuItem>
@@ -160,11 +147,7 @@ const ActionCell = ({ player }: { player: Player }) => {
               });
             }}
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Shield01Icon}
-              className="mr-2 size-4"
-            />
+            <Shield aria-hidden="true" className="mr-2 size-4" />
             {player.role === "admin" ? "Ustaw jako user" : "Ustaw jako admin"}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -172,11 +155,7 @@ const ActionCell = ({ player }: { player: Player }) => {
               setShowRenameDialog(true);
             }}
           >
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={PencilEdit01Icon}
-              className="mr-2 size-4"
-            />
+            <Pencil aria-hidden="true" className="mr-2 size-4" />
             Zmień nazwę
           </DropdownMenuItem>
           {!player.verified && (
@@ -186,11 +165,7 @@ const ActionCell = ({ player }: { player: Player }) => {
                 setShowDeleteDialog(true);
               }}
             >
-              <HugeiconsIcon
-                aria-hidden="true"
-                icon={Delete01Icon}
-                className="mr-2 size-4"
-              />
+              <Trash2 aria-hidden="true" className="mr-2 size-4" />
               Usuń konto
             </DropdownMenuItem>
           )}
@@ -292,11 +267,7 @@ const baseColumns = columnHelper.columns([
           src={info.getValue() ?? undefined}
         />
         <AvatarFallback>
-          <HugeiconsIcon
-            aria-hidden="true"
-            icon={UserIcon}
-            className="size-5"
-          />
+          <User aria-hidden="true" className="size-5" />
         </AvatarFallback>
       </Avatar>
     ),

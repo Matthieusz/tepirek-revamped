@@ -1,20 +1,20 @@
 import {
-  Brain03Icon,
-  CalculatorIcon,
-  CalendarCheckIcon,
-  Coins02Icon,
-  AuctionIcon,
-  ListChecksIcon,
-  Sword01Icon,
-  UserIcon,
-  UsersIcon,
-} from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+  Brain,
+  Calculator,
+  CalendarCheck,
+  Coins,
+  Gavel,
+  ListChecks,
+  Swords,
+  User,
+  Users,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 /** A route displayed in dashboard navigation surfaces. */
 export interface DashboardNavigationItem {
   readonly disabled?: boolean;
-  readonly icon?: IconSvgElement;
+  readonly icon?: LucideIcon;
   readonly title: string;
   readonly url: string;
 }
@@ -22,7 +22,7 @@ export interface DashboardNavigationItem {
 /** A named group of related dashboard routes. */
 export interface DashboardNavigationGroup {
   readonly disabled?: boolean;
-  readonly icon: IconSvgElement;
+  readonly icon: LucideIcon;
   readonly isActive?: boolean;
   readonly items: readonly DashboardNavigationItem[];
   readonly title: string;
@@ -31,7 +31,7 @@ export interface DashboardNavigationGroup {
 /** Grouped dashboard routes shared by the sidebar and command menu. */
 export const dashboardNavigationGroups = [
   {
-    icon: CalendarCheckIcon,
+    icon: CalendarCheck,
     items: [
       {
         title: "Lista eventów",
@@ -61,7 +61,7 @@ export const dashboardNavigationGroups = [
     title: "Eventy",
   },
   {
-    icon: AuctionIcon,
+    icon: Gavel,
     items: [
       {
         title: "Broni głównych",
@@ -75,7 +75,7 @@ export const dashboardNavigationGroups = [
     title: "Licytacje",
   },
   {
-    icon: Sword01Icon,
+    icon: Swords,
     items: [
       {
         title: "Konta",
@@ -89,7 +89,7 @@ export const dashboardNavigationGroups = [
     title: "Składy",
   },
   {
-    icon: CalculatorIcon,
+    icon: Calculator,
     items: [
       {
         title: "Ulepy",
@@ -111,27 +111,27 @@ export const dashboardNavigationGroups = [
 /** Standalone dashboard routes shared by the sidebar and command menu. */
 export const dashboardOtherNavigationItems = [
   {
-    icon: Coins02Icon,
+    icon: Coins,
     title: "Cennik legend",
     url: "/dashboard/cennik",
   },
   {
-    icon: ListChecksIcon,
+    icon: ListChecks,
     title: "Lista zadań",
     url: "/dashboard/tasks",
   },
   {
-    icon: Brain03Icon,
+    icon: Brain,
     title: "Umiejętności",
     url: "/dashboard/skills",
   },
   {
-    icon: UsersIcon,
+    icon: Users,
     title: "Lista graczy",
     url: "/dashboard/player-list",
   },
   {
-    icon: UserIcon,
+    icon: User,
     title: "Profil",
     url: "/dashboard/profile",
   },

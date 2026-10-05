@@ -1,12 +1,6 @@
-import {
-  CheckIcon,
-  LoaderCircleIcon,
-  Rotate01Icon,
-  TriangleAlertIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
+import { Check, Loader2, RotateCw, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -166,17 +160,9 @@ export const AccountRefetchWorkflow = ({
           variant="outline"
         >
           {previewRefetch.isPending ? (
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={LoaderCircleIcon}
-              className="size-3.5 animate-spin"
-            />
+            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
           ) : (
-            <HugeiconsIcon
-              aria-hidden="true"
-              icon={Rotate01Icon}
-              className="size-3.5"
-            />
+            <RotateCw aria-hidden="true" className="size-3.5" />
           )}
           Odśwież
         </Button>
@@ -203,7 +189,7 @@ export const AccountRefetchWorkflow = ({
             </div>
             {preview.diff.removed.length > 0 && (
               <Alert variant="warning">
-                <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
+                <AlertTriangle aria-hidden="true" />
                 <AlertTitle>Zmiana wpłynie na zapisane składy</AlertTitle>
                 <AlertDescription>
                   Usunięte postacie zostaną również usunięte z zapisanych
@@ -279,17 +265,9 @@ export const AccountRefetchWorkflow = ({
               size="sm"
             >
               {applyRefetch.isPending ? (
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={LoaderCircleIcon}
-                  className="size-3.5 animate-spin"
-                />
+                <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
               ) : (
-                <HugeiconsIcon
-                  aria-hidden="true"
-                  icon={CheckIcon}
-                  className="size-3.5"
-                />
+                <Check aria-hidden="true" className="size-3.5" />
               )}
               Zastosuj zmiany
             </Button>

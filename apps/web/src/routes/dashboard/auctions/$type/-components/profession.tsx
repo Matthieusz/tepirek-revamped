@@ -1,5 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-
 import {
   AUCTION_PROFESSION_META,
   AUCTION_TYPE_META,
@@ -30,9 +28,7 @@ const AuctionsProfessionPage = ({
     <div className="mx-auto w-full max-w-6xl space-y-2">
       <AuctionHeader
         description={AUCTION_TYPE_META[type].professionDescription}
-        icon={
-          <HugeiconsIcon aria-hidden="true" icon={professionMeta.headerIcon} />
-        }
+        icon={<professionMeta.headerIcon aria-hidden="true" />}
         isAdmin={isAdmin(session)}
         profession={profession}
         title={professionMeta.name}

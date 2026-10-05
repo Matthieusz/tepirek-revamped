@@ -1,10 +1,5 @@
-import {
-  Moon02Icon,
-  Search01Icon,
-  Sun03Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -33,7 +28,7 @@ const DIACRITIC_MARK_PATTERN = /\p{Mark}/gu;
 const routeCommandGroups: readonly DashboardNavigationGroup[] = [
   ...dashboardNavigationGroups,
   {
-    icon: Search01Icon,
+    icon: Search,
     items: dashboardOtherNavigationItems,
     title: "Inne",
   },
@@ -134,11 +129,7 @@ const RouteCommand = ({
       role="option"
       to={item.url}
     >
-      <HugeiconsIcon
-        aria-hidden="true"
-        className="text-muted-foreground size-4"
-        icon={Icon}
-      />
+      <Icon aria-hidden="true" className="text-muted-foreground size-4" />
       <span>{item.title}</span>
     </Link>
   );
@@ -159,7 +150,7 @@ export const DashboardCommandMenu = () => {
     visibleGroups,
     showThemeCommand
   );
-  const themeIcon = resolvedTheme === "dark" ? Sun03Icon : Moon02Icon;
+  const ThemeIcon = resolvedTheme === "dark" ? Sun : Moon;
   const themeDescription =
     resolvedTheme === "dark" ? "Włącz jasny motyw" : "Włącz ciemny motyw";
 
@@ -247,11 +238,7 @@ export const DashboardCommandMenu = () => {
         size="sm"
         variant="outline"
       >
-        <HugeiconsIcon
-          aria-hidden="true"
-          className="size-4"
-          icon={Search01Icon}
-        />
+        <Search aria-hidden="true" className="size-4" />
         <span className="hidden sm:inline">Szukaj</span>
         <kbd className="bg-muted text-muted-foreground hidden rounded border px-1.5 py-0.5 font-mono text-[10px] sm:inline">
           ⌘K
@@ -267,10 +254,9 @@ export const DashboardCommandMenu = () => {
             Wyszukaj stronę panelu lub wybierz szybką akcję.
           </DialogDescription>
           <div className="flex items-center gap-2 px-4">
-            <HugeiconsIcon
+            <Search
               aria-hidden="true"
               className="text-muted-foreground size-4 shrink-0"
-              icon={Search01Icon}
             />
             <input
               aria-activedescendant={
@@ -340,10 +326,9 @@ export const DashboardCommandMenu = () => {
                   role="option"
                   type="button"
                 >
-                  <HugeiconsIcon
+                  <ThemeIcon
                     aria-hidden="true"
                     className="text-muted-foreground size-4"
-                    icon={themeIcon}
                   />
                   <span className="flex flex-col">
                     <span>Przełącz motyw</span>

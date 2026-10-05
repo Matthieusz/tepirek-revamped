@@ -1,6 +1,5 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
-import { CheckIcon, ChevronRightIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -114,11 +113,7 @@ const DropdownMenuSubTrigger = ({
     {...props}
   >
     {children}
-    <HugeiconsIcon
-      aria-hidden="true"
-      icon={ChevronRightIcon}
-      className="ml-auto"
-    />
+    <ChevronRightIcon aria-hidden="true" className="ml-auto" />
   </MenuPrimitive.SubmenuTrigger>
 );
 
@@ -168,7 +163,7 @@ const DropdownMenuCheckboxItem = ({
       data-slot="dropdown-menu-checkbox-item-indicator"
     >
       <MenuPrimitive.CheckboxItemIndicator>
-        <HugeiconsIcon aria-hidden="true" icon={CheckIcon} />
+        <CheckIcon aria-hidden="true" />
       </MenuPrimitive.CheckboxItemIndicator>
     </span>
     {children}
@@ -203,7 +198,7 @@ const DropdownMenuRadioItem = ({
       data-slot="dropdown-menu-radio-item-indicator"
     >
       <MenuPrimitive.RadioItemIndicator>
-        <HugeiconsIcon aria-hidden="true" icon={CheckIcon} />
+        <CheckIcon aria-hidden="true" />
       </MenuPrimitive.RadioItemIndicator>
     </span>
     {children}

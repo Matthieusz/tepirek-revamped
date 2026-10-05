@@ -1,24 +1,17 @@
-import {
-  BirthdayCakeIcon,
-  Calendar04Icon,
-  EggIcon,
-  GhostIcon,
-  SnowIcon,
-  Sun03Icon,
-} from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import { DEFAULT_EVENT_ICON_ID, isEventIconId } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
+import { Cake, Calendar, Egg, Ghost, Snowflake, Sun } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-/** Map of event icon names to their Hugeicons icon data. */
+/** Map of event icon names to their Lucide icon components. */
 export const EVENT_ICON_MAP = {
-  cake: BirthdayCakeIcon,
-  calendar: Calendar04Icon,
-  egg: EggIcon,
-  ghost: GhostIcon,
-  snowflake: SnowIcon,
-  sun: Sun03Icon,
-} satisfies Record<EventIconId, IconSvgElement>;
+  cake: Cake,
+  calendar: Calendar,
+  egg: Egg,
+  ghost: Ghost,
+  snowflake: Snowflake,
+  sun: Sun,
+} satisfies Record<EventIconId, LucideIcon>;
 
 const getNormalizedEventIconId = (
   iconName: string | null | undefined
@@ -30,6 +23,6 @@ const getNormalizedEventIconId = (
   return DEFAULT_EVENT_ICON_ID;
 };
 
-/** Get event icon data by name, with a calendar fallback. */
-export const getEventIcon = (iconName?: string | null): IconSvgElement =>
+/** Get an event icon component by name, with a calendar fallback. */
+export const getEventIcon = (iconName?: string | null): LucideIcon =>
   EVENT_ICON_MAP[getNormalizedEventIconId(iconName)];

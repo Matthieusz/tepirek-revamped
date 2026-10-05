@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 
 import type { DashboardNavigationItem } from "@/components/dashboard-navigation";
@@ -40,11 +39,7 @@ export const NavOther = ({
                   tooltip={item.title}
                 >
                   {ItemIcon ? (
-                    <HugeiconsIcon
-                      aria-hidden="true"
-                      icon={ItemIcon}
-                      className="size-4"
-                    />
+                    <ItemIcon aria-hidden="true" className="size-4" />
                   ) : null}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
@@ -53,11 +48,7 @@ export const NavOther = ({
                   render={
                     <Link to={item.url}>
                       {ItemIcon ? (
-                        <HugeiconsIcon
-                          aria-hidden="true"
-                          icon={ItemIcon}
-                          className="size-4"
-                        />
+                        <ItemIcon aria-hidden="true" className="size-4" />
                       ) : null}
                       <span>{item.title}</span>
                     </Link>

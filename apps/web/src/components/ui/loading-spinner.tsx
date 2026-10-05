@@ -1,5 +1,4 @@
-import { LoaderCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Loader2 } from "lucide-react";
 
 interface LoadingSpinnerProps {
   className?: string;
@@ -11,11 +10,7 @@ export const LoadingSpinner = ({
   iconClassName = "size-8 animate-spin text-muted-foreground",
 }: LoadingSpinnerProps) => (
   <div aria-live="polite" className={className} role="status">
-    <HugeiconsIcon
-      icon={LoaderCircleIcon}
-      aria-hidden="true"
-      className={iconClassName}
-    />
+    <Loader2 aria-hidden="true" className={iconClassName} />
     <span className="text-muted-foreground text-sm">Ładowanie</span>
   </div>
 );
