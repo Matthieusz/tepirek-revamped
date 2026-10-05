@@ -79,6 +79,17 @@ This installs no machine-global hooks. hk stays out of the shared tool list and 
 
 The pre-commit hook runs the pnpm-managed Oxlint fixer, then Oxfmt, on the same staged-file extensions as before. It stages fixes and stashes/restores unstaged work to protect partial commits. Preview selection with `mise exec -- hk run pre-commit --plan`.
 
+With mise activated, you can also run:
+
+```bash
+hk check                   # Check modified files without editing them
+hk check --all             # Check all eligible files
+hk fix                     # Fix modified files without staging them
+hk run pre-commit          # Fix staged files and stage the fixes
+```
+
+Use `--plan` to preview any of these commands without running the linters.
+
 ### Application configuration
 
 Fill in `apps/server/.env`. The local database started by this repository uses:

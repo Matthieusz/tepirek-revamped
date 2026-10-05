@@ -1,20 +1,23 @@
 amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
 
+steps {
+  ["oxlint"] {
+    glob = "*.{ts,tsx,js,jsx,mjs,cjs}"
+    check = "pnpm exec oxlint --no-error-on-unmatched-pattern {{files}}"
+    fix = "pnpm exec oxlint --no-error-on-unmatched-pattern --fix {{files}}"
+  }
+  ["oxfmt"] {
+    glob = "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}"
+    depends = "oxlint"
+    check = "pnpm exec oxfmt --no-error-on-unmatched-pattern --check {{files}}"
+    fix = "pnpm exec oxfmt --no-error-on-unmatched-pattern --write {{files}}"
+  }
+}
+
 hooks {
   ["pre-commit"] {
     fix = true
     stage = true
     stash = "git"
-    steps {
-      ["oxlint"] {
-        glob = "*.{ts,tsx,js,jsx,mjs,cjs}"
-        fix = "pnpm exec oxlint --no-error-on-unmatched-pattern --fix {{files}}"
-      }
-      ["oxfmt"] {
-        glob = "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}"
-        depends = "oxlint"
-        fix = "pnpm exec oxfmt --no-error-on-unmatched-pattern --write {{files}}"
-      }
-    }
   }
 }
