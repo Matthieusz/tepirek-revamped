@@ -7,14 +7,14 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "infisical run --env=dev --path=/ -- turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
     "test": "turbo test",
     "test:integration": "turbo -F @tepirek-revamped/api test:integration",
     "test:smoke": "turbo test:smoke",
-    "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F server dev",
+    "dev:web": "infisical run --env=dev --path=/ -- turbo -F web dev",
+    "dev:server": "infisical run --env=dev --path=/ -- turbo -F server dev",
     "db:push": "turbo -F @tepirek-revamped/db db:push",
     "db:studio": "turbo -F @tepirek-revamped/db db:studio",
     "db:generate": "turbo -F @tepirek-revamped/db db:generate",
@@ -42,7 +42,8 @@
     "ultracite": "7.12.0"
   },
   "engines": {
-    "node": ">=26"
+    "node": ">=26",
+    "pnpm": "12.9.1"
   },
   "packageManager": "pnpm@12.9.1"
 }
