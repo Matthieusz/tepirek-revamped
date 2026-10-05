@@ -5,17 +5,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
-  build: {
-    rolldownOptions: {
-      output: {
-        manualChunks(id) {
-          return id.includes("/node_modules/@hugeicons/core-free-icons/")
-            ? "hugeicons-icons"
-            : undefined;
-        },
-      },
-    },
-  },
   plugins:
     mode === "test"
       ? []
