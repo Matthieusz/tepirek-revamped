@@ -8,6 +8,7 @@
     "packages/db/drizzle.config.ts"
   ],
   "ignoreDependencies": ["@effect/language-service", "dotenv"],
+  "ignoreBinaries": ["infisical"],
   "workspaces": {
     "apps/server": {
       "vitest": {
