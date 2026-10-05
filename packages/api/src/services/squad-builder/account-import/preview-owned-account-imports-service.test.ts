@@ -12,6 +12,7 @@ import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
+import { SquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.ts";
 import {
   AccountImportStoreService,
   ProfileAccessState,
@@ -89,6 +90,96 @@ it.effect(
         pendingImportId: 123,
         suggestedAccountName: "informati",
       });
+      expect(output.items[1]).toHaveProperty("_tag", "PreviewFailed");
+      expect(output.items[1]).toHaveProperty(
+        "error._tag",
+        "DuplicateProfileInBatch"
+      );
+    }).pipe(
+      Effect.provideService(FirecrawlConfigService)({
+        apiKey: Redacted.make("test-key"),
+        monthlyRequestBudget: 900,
+        perUserMonthlyRequestBudget: 100,
+      }),
+      Effect.provideService(FirecrawlClientService)(firecrawl),
+      Effect.provideService(AccountImportStoreService)(store),
+      Effect.provideService(FirecrawlRequestAccountingStoreService)(
+        requestAccounting
+      )
+    );
+  }
+);
+
+it.effect(
+  "keeps successful scrape accounting when pending import persistence fails",
+  () => {
+    const actorUserId = parseTestUserId();
+
+    const successes: number[] = [];
+    const failures: string[] = [];
+
+    const error = new SquadBuilderPersistenceUnavailable({
+      cause: new Error("unavailable"),
+      operation: "createPendingImport",
+      provider: "postgres",
+    });
+
+    const firecrawl: FirecrawlClient = {
+      scrapeProfileHtml: () =>
+        Effect.succeed({
+          html: htmlWithJarunaCharacter,
+          metadata: {
+            cacheState: "hit",
+            creditsUsed: 1,
+            statusCode: 200,
+          },
+        }),
+      scrapeUrlHtml: () =>
+        Effect.die(new Error("URL scraping is not used by this test")),
+    };
+
+    const store = makeAccountImportStoreServiceTestService({
+      createPendingImport: () => Effect.fail(error),
+      findProfileAccessState: () =>
+        Effect.succeed(ProfileAccessState.Available()),
+    });
+
+    const requestAccounting =
+      makeFirecrawlRequestAccountingStoreServiceTestService({
+        markRequestFailed: (input) =>
+          Effect.sync(() => {
+            failures.push(input.errorTag);
+          }),
+        markRequestSucceeded: (input) =>
+          Effect.sync(() => {
+            successes.push(input.requestId);
+          }),
+        reserveRequest: (input) =>
+          Effect.succeed({
+            budgetState: {
+              monthlyRequestBudget: input.monthlyRequestBudget,
+              remainingRequests: input.monthlyRequestBudget - 1,
+              usedRequests: 1,
+              yearMonth: input.yearMonth,
+            },
+            requestId: 123,
+          }),
+      });
+
+    return Effect.gen(function* previewBatchEffect() {
+      const output = yield* preview({
+        actorUserId,
+        profileUrls: [
+          "https://www.margonem.pl/profile/view,7298897",
+          "https://www.margonem.pl/profile/view,7298897",
+        ],
+      });
+
+      expect(output.items).toHaveLength(2);
+      expect(output.items[0]).toHaveProperty("_tag", "PreviewFailed");
+      expect(output.items[0]).toHaveProperty("error._tag", error._tag);
+      expect(successes).toEqual([123]);
+      expect(failures).toEqual([]);
       expect(output.items[1]).toHaveProperty("_tag", "PreviewFailed");
       expect(output.items[1]).toHaveProperty(
         "error._tag",

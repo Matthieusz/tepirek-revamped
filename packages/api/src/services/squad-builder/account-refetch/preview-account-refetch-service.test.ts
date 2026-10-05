@@ -1,9 +1,5 @@
 import { expect, it } from "@effect/vitest";
-import * as Cause from "effect/Cause";
-import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import * as Fiber from "effect/Fiber";
 import * as Redacted from "effect/Redacted";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -26,6 +22,11 @@ import {
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
+import {
+  MargonemAccountNotFound,
+  ActorDoesNotOwnMargonemAccount,
+  SquadBuilderPersistenceUnavailable,
+} from "../squad-groups/squad-group-errors.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 import { preview } from "./preview-account-refetch-service.ts";
 
@@ -143,82 +144,119 @@ it.effect("previews account refetch and stores the pending diff", () => {
   );
 });
 
-it.effect("marks a reserved refetch request failed when interrupted", () =>
-  Effect.gen(function* interruptedRefetch() {
-    const actorUserId = parseTestUserId();
-    const accountId = yield* parseMargonemAccountId(123);
-    const displayName = yield* parseAccountDisplayName("informati");
-    const profileId = yield* parseMargonemProfileId(7_298_897);
-    const scrapeStarted = yield* Deferred.make<boolean>();
-    const pendingScrape = yield* Deferred.make<never>();
-    const failedRequests: { errorTag: string; requestId: number }[] = [];
+for (const scenario of ["missing", "unowned", "html", "pending"] as const) {
+  it.effect(`preserves workflow boundary: ${scenario}`, () =>
+    Effect.gen(function* lifecycleCase1() {
+      const actorUserId = parseTestUserId();
+      const accountId = yield* parseMargonemAccountId(123);
+      const profileId = yield* parseMargonemProfileId(7_298_897);
+      const displayName = yield* parseAccountDisplayName("informati");
+      const reservations: number[] = [];
+      const scrapes: number[] = [];
+      const successes: number[] = [];
+      const failures: string[] = [];
 
-    const firecrawl: FirecrawlClient = {
-      scrapeProfileHtml: () =>
-        Deferred.succeed(scrapeStarted, true).pipe(
-          Effect.andThen(Deferred.await(pendingScrape))
-        ),
-      scrapeUrlHtml: () =>
-        Effect.die(new Error("URL scraping is not used by this test")),
-    };
+      const pendingError = new SquadBuilderPersistenceUnavailable({
+        cause: new Error("unavailable"),
+        operation: "createPendingRefetch",
+        provider: "postgres",
+      });
 
-    const store = makeAccountRefetchStoreServiceTestService({
-      getAccountForRefetch: () =>
-        Effect.succeed({
-          accountId,
-          currentCharacters: [],
-          displayName,
-          profileId,
-        }),
-    });
+      const store = makeAccountRefetchStoreServiceTestService({
+        createPendingRefetch: () => Effect.fail(pendingError),
+        getAccountForRefetch: () => {
+          if (scenario === "missing") {
+            return Effect.fail(new MargonemAccountNotFound());
+          }
 
-    const requestAccounting =
-      makeFirecrawlRequestAccountingStoreServiceTestService({
+          if (scenario === "unowned") {
+            return Effect.fail(new ActorDoesNotOwnMargonemAccount());
+          }
+
+          return Effect.succeed({
+            accountId,
+            currentCharacters: [],
+            displayName,
+            profileId,
+          });
+        },
+      });
+
+      const accounting = makeFirecrawlRequestAccountingStoreServiceTestService({
         markRequestFailed: (input) =>
           Effect.sync(() => {
-            failedRequests.push(input);
+            failures.push(input.errorTag);
+          }),
+        markRequestSucceeded: (input) =>
+          Effect.sync(() => {
+            successes.push(input.requestId);
           }),
         reserveRequest: (input) =>
-          Effect.succeed({
-            budgetState: {
-              monthlyRequestBudget: input.monthlyRequestBudget,
-              remainingRequests: input.monthlyRequestBudget - 1,
-              usedRequests: 1,
-              yearMonth: input.yearMonth,
-            },
-            requestId: 123,
+          Effect.sync(() => {
+            reservations.push(123);
+
+            return {
+              budgetState: {
+                monthlyRequestBudget: input.monthlyRequestBudget,
+                remainingRequests: 899,
+                usedRequests: 1,
+                yearMonth: input.yearMonth,
+              },
+              requestId: 123,
+            };
           }),
       });
 
-    const operation = preview({ accountId, actorUserId }).pipe(
-      Effect.provideService(FirecrawlConfigService)({
-        apiKey: Redacted.make("test-key"),
-        monthlyRequestBudget: 900,
-        perUserMonthlyRequestBudget: 100,
-      }),
-      Effect.provideService(FirecrawlClientService)(firecrawl),
-      Effect.provideService(AccountRefetchStoreService)(store),
-      Effect.provideService(FirecrawlRequestAccountingStoreService)(
-        requestAccounting
-      )
-    );
+      const error = yield* Effect.flip(
+        preview({ accountId, actorUserId }).pipe(
+          Effect.provideService(AccountRefetchStoreService)(store),
+          Effect.provideService(FirecrawlConfigService)({
+            apiKey: Redacted.make("test-key"),
+            monthlyRequestBudget: 900,
+            perUserMonthlyRequestBudget: 100,
+          }),
+          Effect.provideService(FirecrawlClientService)({
+            scrapeProfileHtml: (id) =>
+              Effect.sync(() => {
+                scrapes.push(id);
 
-    const fiber = yield* Effect.forkChild(operation);
+                return {
+                  html:
+                    scenario === "pending"
+                      ? htmlWithUpdatedJarunaCharacter
+                      : "invalid",
+                  metadata: {},
+                };
+              }),
+            scrapeUrlHtml: () => Effect.die(new Error("Unexpected URL scrape")),
+          }),
+          Effect.provideService(FirecrawlRequestAccountingStoreService)(
+            accounting
+          )
+        )
+      );
 
-    yield* Deferred.await(scrapeStarted);
-    yield* Fiber.interrupt(fiber);
-    const exit = yield* Fiber.await(fiber);
+      const scraped = scenario === "html" || scenario === "pending";
+      expect(reservations).toEqual(scraped ? [123] : []);
+      expect(scrapes).toEqual(scraped ? [7_298_897] : []);
+      expect(successes).toEqual(scraped ? [123] : []);
+      expect(failures).toEqual([]);
 
-    expect(Exit.isFailure(exit)).toBe(true);
+      if (scenario === "html") {
+        expect(error).toHaveProperty("_tag", "MargonemProfileNameNotFound");
+      }
 
-    if (Exit.isFailure(exit)) {
-      expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true);
-    }
+      if (scenario === "missing") {
+        expect(error).toBeInstanceOf(MargonemAccountNotFound);
+      }
 
-    expect(failedRequests).toHaveLength(1);
-    expect(failedRequests[0]).toMatchObject({
-      errorTag: "Interrupted",
-      requestId: 123,
-    });
-  })
-);
+      if (scenario === "unowned") {
+        expect(error).toBeInstanceOf(ActorDoesNotOwnMargonemAccount);
+      }
+
+      if (scenario === "pending") {
+        expect(error).toBe(pendingError);
+      }
+    })
+  );
+}
