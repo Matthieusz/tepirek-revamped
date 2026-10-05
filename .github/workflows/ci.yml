@@ -10,8 +10,61 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify
+  checks:
+    name: Checks and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting and lint
+        run: pnpm check
+
+      - name: Unused-code check
+        run: pnpm check:unused
+
+      - name: Typecheck
+        run: pnpm check-types
+
+      - name: Build
+        run: pnpm build
+
+  tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
+
+  integration:
+    name: Smoke and API integration tests
     runs-on: ubuntu-latest
 
     services:
@@ -41,18 +94,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check formatting and lint
-        run: pnpm check
-
-      - name: Unused-code check
-        run: pnpm check:unused
-
-      - name: Typecheck
-        run: pnpm check-types
-
-      - name: Test
-        run: pnpm test
-
+      # Smoke tests manage their own isolated container and reuse the pulled image.
       - name: Smoke tests
         run: pnpm test:smoke
 
@@ -62,5 +104,14 @@ jobs:
           API_INTEGRATION_ALLOW_DATABASE_RESET: "1"
           TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
 
-      - name: Build
-        run: pnpm build
+  verify:
+    name: Verify
+    if: ${{ always() }}
+    needs: [checks, tests, integration]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require every validation job to pass
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: test "$RESULTS" = "success success success"

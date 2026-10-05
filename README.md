@@ -141,7 +141,9 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 | `pnpm db:studio`        | Open Drizzle Studio                          |
 | `pnpm db:stop`          | Stop local PostgreSQL                        |
 
-## Deployment toolchain
+## CI and deployment toolchains
+
+CI runs checks/build, unit tests, and smoke/API integration tests in independent jobs. Only the smoke/integration job starts PostgreSQL: smoke tests keep their own isolated container and reuse the image pulled for the integration service. The final `Verify` status requires all three jobs to pass. The pnpm store cache is retained. Based on run [37208924083](https://github.com/Matthieusz/tepirek-revamped/actions/runs/37208924083), overlapping the 23-second PostgreSQL startup and 15-second integration suite with the other validations should reduce the previous 1m44s wall-clock time; confirm the gain on the next run. No persistent Turbo cache is added in this transition.
 
 Dokploy's selected build type has not been verified from this checkout. Before relying on `mise.toml` for deployment, check that the application's build type is Railpack and verify the generated image's toolchain. Do not copy ignored `mise.local.toml` files into production build contexts.
 
