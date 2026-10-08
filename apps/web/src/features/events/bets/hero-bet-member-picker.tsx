@@ -303,7 +303,7 @@ const SelectedUsers = ({
             <span className="text-sm">{user.name}</span>
             <button
               aria-label={`Usuń gracza ${user.name}`}
-              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground flex size-6 items-center justify-center rounded-full"
+              className="bg-destructive/10 text-destructive hover:bg-destructive-action hover:text-destructive-foreground flex size-6 items-center justify-center rounded-full"
               onClick={() => {
                 onChange(removeUser(user.id, selectedUserIds));
               }}

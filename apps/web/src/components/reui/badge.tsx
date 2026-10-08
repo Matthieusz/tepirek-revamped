@@ -19,7 +19,7 @@ const badgeVariants = cva(
         info: "bg-info text-white",
         success: "bg-success text-white",
         warning: "bg-warning text-white",
-        destructive: "bg-destructive text-white",
+        destructive: "bg-destructive-action text-white",
         focus: "bg-focus text-focus-foreground",
         invert: "bg-invert text-invert-foreground",
         "primary-light":
