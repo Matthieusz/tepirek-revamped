@@ -75,19 +75,26 @@ const useResponsiveDialog = () => {
   return context;
 };
 
+type ResponsiveDialogTriggerProps = Omit<
+  React.ComponentProps<typeof DialogTrigger>,
+  "className" | "style"
+> &
+  Pick<
+    React.ComponentProps<typeof DrawerTrigger>,
+    "asChild" | "className" | "style"
+  >;
+
 const ResponsiveDialogTrigger = ({
   children,
-  className,
   asChild,
+  render,
   ...props
-}: React.ComponentProps<typeof DialogTrigger> & { asChild?: boolean }) => {
+}: ResponsiveDialogTriggerProps) => {
   const isMobile = useResponsiveDialog();
 
   if (isMobile) {
     return (
-      <DrawerTrigger
-        className={Predicate.isString(className) ? className : undefined}
-      >
+      <DrawerTrigger {...(asChild === undefined ? {} : { asChild })} {...props}>
         {children}
       </DrawerTrigger>
     );
@@ -103,7 +110,7 @@ const ResponsiveDialogTrigger = ({
   }
 
   return (
-    <DialogTrigger className={className} {...props}>
+    <DialogTrigger {...props} {...(render === undefined ? {} : { render })}>
       {children}
     </DialogTrigger>
   );
