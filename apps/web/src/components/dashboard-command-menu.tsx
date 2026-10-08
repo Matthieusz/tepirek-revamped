@@ -266,7 +266,7 @@ export const DashboardCommandMenu = () => {
               aria-expanded="true"
               aria-label="Wyszukaj polecenie"
               autoComplete="off"
-              className="placeholder:text-muted-foreground h-12 w-full bg-transparent text-sm outline-none"
+              className="placeholder:text-muted-foreground focus-visible:ring-ring/50 h-12 w-full bg-transparent text-base outline-none focus-visible:ring-2 focus-visible:ring-inset md:text-sm"
               onChange={handleQueryChange}
               onKeyDown={handleInputKeyDown}
               placeholder="Wpisz nazwę strony lub polecenia…"

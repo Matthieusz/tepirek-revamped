@@ -194,7 +194,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                               <button
                                 aria-pressed={field.state.value === item.id}
                                 className={cn(
-                                  "hover:bg-muted/50 flex flex-col items-center gap-1 rounded-lg border p-3 transition-all",
+                                  "hover:bg-muted/50 active:bg-muted flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors duration-150 ease-out",
                                   field.state.value === item.id
                                     ? "border-primary bg-primary/5 ring-primary ring-2"
                                     : "border-border"
@@ -257,7 +257,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                               aria-label={`Wybierz kolor ${color.name}`}
                               aria-pressed={field.state.value === color.id}
                               className={cn(
-                                "size-8 rounded-full border-2 transition-all",
+                                "size-8 rounded-full border-2 transition-[border-color,scale] duration-150 ease-out active:opacity-75",
                                 field.state.value === color.id
                                   ? "border-foreground scale-110"
                                   : "border-transparent"
