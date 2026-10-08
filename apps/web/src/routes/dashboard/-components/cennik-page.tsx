@@ -179,7 +179,7 @@ const LegendPriceCard = ({
               Cena w złocie
             </Label>
             <Input
-              className="min-w-0 flex-1"
+              className="min-w-0 flex-1 tabular-nums"
               disabled={saving}
               id={priceInputId}
               onChange={(event) => {
@@ -206,7 +206,7 @@ const LegendPriceCard = ({
               className={
                 item.priceGold === null
                   ? "text-muted-foreground"
-                  : "font-semibold"
+                  : "font-semibold tabular-nums"
               }
             >
               {item.priceGold === null
@@ -263,7 +263,7 @@ const LegendPriceMonsterGroup = ({
         />
       </div>
 
-      <ul className="grid min-w-0 items-start gap-2 lg:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] items-start gap-2">
         {group.items.map((item) => (
           <LegendPriceCard
             isAdmin={isAdmin}
@@ -424,7 +424,7 @@ export const CennikContent = ({
           className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
           role="alert"
         >
-          <p className="text-destructive text-sm">
+          <p className="text-destructive min-w-0 flex-1 text-sm break-words">
             {getErrorMessage(refreshError, "Nie udało się odświeżyć cennika.")}
           </p>
           <Button onClick={onRetry} size="sm" variant="outline">
@@ -488,7 +488,8 @@ export const CennikContent = ({
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-semibold">Potwory i ich legendy</h2>
         <p className="text-muted-foreground text-sm">
-          {groups.length} potw. · {itemCount} przedm.
+          <span className="tabular-nums">{groups.length}</span> potw. ·{" "}
+          <span className="tabular-nums">{itemCount}</span> przedm.
         </p>
       </div>
 

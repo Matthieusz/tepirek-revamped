@@ -20,7 +20,7 @@ const DashboardLayout = ({ session }: DashboardLayoutProps) => (
     <AppSidebar session={session} />
     <SidebarInset>
       <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2 px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             className="mr-2 data-[orientation=vertical]:h-4"
@@ -30,7 +30,7 @@ const DashboardLayout = ({ session }: DashboardLayoutProps) => (
         </div>
         <DashboardCommandMenu />
       </header>
-      <div className="flex min-h-0 w-full flex-1 px-6 py-6">
+      <div className="flex min-h-0 w-full flex-1 px-4 py-4 sm:px-6 sm:py-6">
         <Outlet />
       </div>
     </SidebarInset>

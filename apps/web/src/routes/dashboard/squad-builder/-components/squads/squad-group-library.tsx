@@ -447,11 +447,11 @@ export const SquadGroupLibrary = ({
     >
       <nav
         aria-label="Nawigacja kolekcji grup składów"
-        className="max-w-full overflow-x-auto"
+        className="w-full min-w-0 overflow-x-auto px-1 py-1"
       >
         <TabsList
           aria-label="Kolekcje grup składów"
-          className="max-w-full"
+          className="w-max max-w-none min-w-full justify-start [&_[data-slot=tabs-trigger]]:flex-none"
           variant="line"
         >
           <TabsTrigger value="mine">

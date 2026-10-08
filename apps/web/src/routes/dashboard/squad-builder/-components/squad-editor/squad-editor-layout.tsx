@@ -105,9 +105,9 @@ export const SquadEditorLayout = ({
       )}
 
       <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="p-0 shadow-none">
-          <div className="grid gap-5 p-3 xl:min-h-0 xl:grid-cols-[minmax(0,1fr)_28rem] xl:p-4">
-            <div className="order-2 min-w-0 xl:order-1">
+        <FramePanel className="@container/squad-workspace p-0 shadow-none">
+          <div className="grid gap-5 p-3 @min-[64rem]/squad-workspace:min-h-0 @min-[64rem]/squad-workspace:grid-cols-[minmax(0,1fr)_28rem] @min-[64rem]/squad-workspace:p-4">
+            <div className="min-w-0">
               <SquadRosterWorkspace
                 canEditPlacements={canEditPlacements}
                 characterById={characterById}
@@ -120,7 +120,7 @@ export const SquadEditorLayout = ({
                 onRemoveSquad={onRemoveSquad}
               />
             </div>
-            <div className="order-1 flex min-h-0 min-w-0 xl:order-2">
+            <div className="flex min-h-0 min-w-0">
               {canEditPlacements ? (
                 <AvailableCharacterPool
                   characterById={characterById}

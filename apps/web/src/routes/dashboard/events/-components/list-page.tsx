@@ -234,7 +234,7 @@ const EventsListContent = ({
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium break-words whitespace-normal">
                           {event.name}
                         </TableCell>
                         <TableCell>

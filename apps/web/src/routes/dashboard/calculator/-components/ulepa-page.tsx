@@ -103,13 +103,13 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
           <span className="text-muted-foreground text-sm">
             Normalna ekstrakcja (75%)
           </span>
-          <span className="text-lg font-semibold">
+          <span className="text-lg font-semibold tabular-nums">
             {Math.floor(result.total75Percent).toLocaleString("pl-PL")}
           </span>
         </div>
         <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
           <span className="text-sm font-medium">Pełna ekstrakcja (100%)</span>
-          <span className="text-primary text-lg font-bold">
+          <span className="text-primary text-lg font-bold tabular-nums">
             {Math.floor(result.totalUpgradeCost).toLocaleString("pl-PL")}
           </span>
         </div>
@@ -119,7 +119,7 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
           <span className="text-muted-foreground text-sm">
             Koszt ulepszenia do +5
           </span>
-          <span className="text-primary text-lg font-semibold">
+          <span className="text-primary text-lg font-semibold tabular-nums">
             {formatGold(result.upgradeGoldCost)}
           </span>
         </div>
@@ -127,7 +127,7 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
           <span className="text-muted-foreground text-sm">
             Koszt ekstrakcji
           </span>
-          <span className="text-primary text-lg font-semibold">
+          <span className="text-primary text-lg font-semibold tabular-nums">
             {formatGold(result.extractionGoldCost)}
           </span>
         </div>
@@ -174,10 +174,10 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
                     +{level}
                   </span>
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell className="font-medium tabular-nums">
                   {Math.floor(cost).toLocaleString("pl-PL")} pkt
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground tabular-nums">
                   {Math.floor(result.cumulativeCosts[idx] ?? 0).toLocaleString(
                     "pl-PL"
                   )}{" "}
@@ -190,7 +190,7 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
             <TableCell>
               <span className="font-semibold">Suma</span>
             </TableCell>
-            <TableCell className="text-primary font-bold">
+            <TableCell className="text-primary font-bold tabular-nums">
               {Math.floor(result.totalUpgradeCost).toLocaleString("pl-PL")} pkt
             </TableCell>
             <TableCell />

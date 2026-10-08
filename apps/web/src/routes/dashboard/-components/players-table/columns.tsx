@@ -234,7 +234,7 @@ const ActionCell = ({ player }: { player: Player }) => {
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive-action text-destructive-foreground hover:bg-destructive-action/90"
               disabled={pendingAction === "delete"}
               onClick={() => {
                 runAction("delete", async () => {

@@ -15,7 +15,9 @@ export const QueryErrorState = ({
     className="border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center gap-3 rounded-xl border p-6 text-center"
     role="alert"
   >
-    <p className="text-destructive text-sm">{message}</p>
+    <p className="text-destructive max-w-full text-sm wrap-break-word">
+      {message}
+    </p>
     <Button onClick={onRetry} size="sm" variant="outline">
       Spróbuj ponownie
     </Button>
