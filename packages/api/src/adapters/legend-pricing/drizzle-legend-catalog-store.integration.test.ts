@@ -22,10 +22,7 @@ import {
 import type { ReconcileLegendCatalogInput } from "../../services/legend-pricing/legend-catalog-store.ts";
 import { LegendCatalogStoreService } from "../../services/legend-pricing/legend-catalog-store.ts";
 import { createVerifiedMember } from "../../test/integration/builders.ts";
-import {
-  defaultTestDatabaseUrl,
-  testDb,
-} from "../../test/integration/database.ts";
+import { testDatabaseUrl, testDb } from "../../test/integration/database.ts";
 import { DrizzleLegendCatalogStoreServiceLayer } from "./drizzle-legend-catalog-store.ts";
 
 const firstSynchronizedAt = new Date("2026-08-19T10:00:00.000Z");
@@ -164,7 +161,7 @@ const makeReducedSnapshot = (): ReconcileLegendCatalogInput => {
 };
 
 const integrationLayer = DrizzleLegendCatalogStoreServiceLayer.pipe(
-  Layer.provide(makeLiveDatabaseLayer(defaultTestDatabaseUrl))
+  Layer.provide(makeLiveDatabaseLayer(testDatabaseUrl))
 );
 
 effectIt.layer(integrationLayer, { excludeTestServices: true })(

@@ -18,14 +18,11 @@ import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { ApplicationConflict } from "../../services/application-errors.ts";
 import { LegendPricingStore } from "../../services/legend-pricing/legend-pricing-store.ts";
 import { createVerifiedMember } from "../../test/integration/builders.ts";
-import {
-  defaultTestDatabaseUrl,
-  testDb,
-} from "../../test/integration/database.ts";
+import { testDatabaseUrl, testDb } from "../../test/integration/database.ts";
 import { DrizzleLegendPricingStoreLayer } from "./drizzle-legend-pricing-store.ts";
 
 const integrationLayer = DrizzleLegendPricingStoreLayer.pipe(
-  Layer.provide(makeLiveDatabaseLayer(defaultTestDatabaseUrl))
+  Layer.provide(makeLiveDatabaseLayer(testDatabaseUrl))
 );
 
 effectIt.layer(integrationLayer, { excludeTestServices: true })(

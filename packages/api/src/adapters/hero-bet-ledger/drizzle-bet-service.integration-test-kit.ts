@@ -25,7 +25,7 @@ import type {
   VaultServiceInterface,
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
-import { defaultTestDatabaseUrl } from "../../test/integration/database.ts";
+import { testDatabaseUrl } from "../../test/integration/database.ts";
 import { DrizzleBetServiceLayer } from "./drizzle-bet-service.ts";
 import { DrizzleRankingServiceLayer } from "./drizzle-ranking-service.ts";
 import { DrizzleVaultServiceLayer } from "./drizzle-vault-service.ts";
@@ -38,7 +38,7 @@ export {
 /** Shared live layers used by the hero-bet-ledger integration tests. */
 export const testLayer = (() => {
   // Pool eviction uses real time; ledger timestamps remain controlled by TestClock.
-  const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl).pipe(
+  const databaseLayer = makeLiveDatabaseLayer(testDatabaseUrl).pipe(
     Layer.provide(Layer.succeed(Clock.Clock, Clock.Clock.defaultValue()))
   );
 

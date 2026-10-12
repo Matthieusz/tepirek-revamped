@@ -6,11 +6,11 @@ import { parseMargonemAccountId } from "../../domain/squad-builder/margonem-acco
 import { parseMargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 import { buildApiLiveLayerFromValues } from "../../server/effect-app.ts";
 import { parseFirecrawlCreditCount } from "../../services/squad-builder/firecrawl-config.ts";
-import { defaultTestDatabaseUrl } from "../integration/database.ts";
+import { testDatabaseUrl } from "../integration/database.ts";
 
 /** Live squad-builder layer backed by the integration test database. */
 export const squadBuilderIntegrationTestLayer = buildApiLiveLayerFromValues({
-  databaseUrl: defaultTestDatabaseUrl,
+  databaseUrl: testDatabaseUrl,
   discordGuildId: "test-discord-server-id",
   firecrawl: {
     apiKey: Redacted.make("test-firecrawl-api-key"),

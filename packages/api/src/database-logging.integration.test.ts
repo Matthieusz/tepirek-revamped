@@ -20,9 +20,9 @@ import { makeStderrLogger } from "./observability/logging.ts";
 import * as Otlp from "./observability/otlp.ts";
 import { ApplicationDependencyUnavailable } from "./services/application-errors.ts";
 import { createVerifiedMember } from "./test/integration/builders.ts";
-import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.ts";
+import { testDatabaseUrl, testDb } from "./test/integration/database.ts";
 
-const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
+const databaseLayer = makeLiveDatabaseLayer(testDatabaseUrl);
 
 const userPersistenceQuery = buildDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
