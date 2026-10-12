@@ -68,4 +68,50 @@ export default defineConfig({
     "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}":
       "vp check --fix --no-error-on-unmatched-pattern",
   },
+  test: {
+    exclude: ["src/**/*.integration.test.ts", "src/**/*.smoke.test.ts"],
+    fsModuleCache: true,
+    include: ["src/**/*.test.{ts,tsx}"],
+    projects: [
+      {
+        extends: true,
+        test: { name: "config", root: "packages/config" },
+      },
+      {
+        extends: true,
+        test: { name: "db", root: "packages/db" },
+      },
+      {
+        extends: true,
+        test: { name: "auth", root: "packages/auth" },
+      },
+      {
+        extends: true,
+        test: { name: "api", root: "packages/api" },
+      },
+      {
+        extends: true,
+        test: {
+          include: [
+            "src/server-lifecycle.test.ts",
+            "src/startup-config.test.ts",
+          ],
+          name: "server",
+          root: "apps/server",
+        },
+      },
+      {
+        define: {
+          "import.meta.env.VITE_SERVER_URL": JSON.stringify(
+            "http://localhost:3000"
+          ),
+        },
+        extends: true,
+        resolve: { tsconfigPaths: true },
+        test: { name: "web", root: "apps/web" },
+      },
+    ],
+    // Effect's test helpers must share the active runner's Vitest context.
+    server: { deps: { inline: ["@effect/vitest"] } },
+  },
 });

@@ -10,7 +10,7 @@
     "dev": "infisical run --env=dev --path=/ -- vp run -r --parallel --no-cache dev",
     "build": "vp run -r --cache build",
     "check-types": "vp run -r --no-cache check-types",
-    "test": "vp run -r --cache test",
+    "test": "vp test run",
     "test:integration": "vp run --no-cache --filter @tepirek-revamped/api test:integration",
     "test:smoke": "vp run -r --no-cache test:smoke",
     "dev:web": "infisical run --env=dev --path=/ -- vp run --no-cache --filter web dev",
