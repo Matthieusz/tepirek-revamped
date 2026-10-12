@@ -81,7 +81,7 @@ const applicationTables = [
   verification,
 ] as const;
 
-export const defaultTestDatabaseUrl =
+const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
 
 const hasExplicitTestDatabaseUrl = process.env.TEST_DATABASE_URL !== undefined;

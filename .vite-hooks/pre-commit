@@ -1,1 +1,2 @@
 mise exec -- pnpm exec vp staged
+mise exec -- pnpm check:unused

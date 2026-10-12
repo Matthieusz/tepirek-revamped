@@ -67,7 +67,7 @@ Activate mise in your shell as described in its getting-started guide, or prefix
 
 ### Git hooks
 
-`pnpm install` installs Vite+'s repository-local hook dispatcher. The pre-commit hook runs `vp staged` using the pinned mise toolchain, fixes staged files, and stashes/restores unstaged changes to protect partial commits. No global hooks are installed.
+`pnpm install` installs Vite+'s repository-local hook dispatcher. The pre-commit hook runs `vp staged` using the pinned mise toolchain, fixes staged files, and stashes/restores unstaged changes to protect partial commits; it also runs `pnpm check:unused`. No global hooks are installed.
 
 ```bash
 pnpm exec vp hooks status   # Inspect the active dispatcher
