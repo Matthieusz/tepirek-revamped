@@ -65,30 +65,18 @@ cp apps/server/.env.example apps/server/.env
 
 Activate mise in your shell as described in its getting-started guide, or prefix project commands with `mise exec --`.
 
-### Git hooks (developer-only)
+### Git hooks
 
-Add hk to the ignored, checkout-local mise config, then validate and install the repository-scoped hook:
-
-```bash
-mise use --env local hk@2.5.0
-mise exec -- hk validate
-mise exec -- hk install --mise --legacy
-```
-
-This installs no machine-global hooks. hk stays out of the shared tool list and production builds. If installation refuses an existing hook, inspect it and back up/remove the obsolete hook before retrying; do not force-replace an unknown hook. The mise-integrated launcher requires mise on Git's runtime `PATH`, including in GUI Git clients.
-
-The pre-commit hook runs the pnpm-managed Oxlint fixer, then Oxfmt, on the same staged-file extensions as before. It stages fixes and stashes/restores unstaged work to protect partial commits. Preview selection with `mise exec -- hk run pre-commit --plan`.
-
-With mise activated, you can also run:
+`pnpm install` installs Vite+'s repository-local hook dispatcher. The pre-commit hook runs `vp staged` using the pinned mise toolchain, fixes staged files, and stashes/restores unstaged changes to protect partial commits. No global hooks are installed.
 
 ```bash
-hk check                   # Check modified files without editing them
-hk check --all             # Check all eligible files
-hk fix                     # Fix modified files without staging them
-hk run pre-commit          # Fix staged files and stage the fixes
+pnpm exec vp hooks status   # Inspect the active dispatcher
+pnpm exec vp hooks disable  # Disable hooks in this checkout
+pnpm exec vp hooks enable   # Re-enable hooks
+pnpm exec vp staged         # Check and fix staged files
 ```
 
-Use `--plan` to preview any of these commands without running the linters.
+Set `VP_GIT_HOOKS=0` to skip hooks and hook installation in CI or production. The generated `.vite-hooks/_` dispatcher is ignored; `.vite-hooks/pre-commit` and the root `vite.config.ts` staged configuration are versioned.
 
 ### Application configuration
 

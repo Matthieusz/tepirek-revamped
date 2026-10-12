@@ -26,7 +26,7 @@
     "check": "vp check",
     "check:unused": "knip",
     "fix": "vp check --fix",
-    "prepare": "effect-tsgo patch"
+    "prepare": "effect-tsgo patch && vp config --no-agent"
   },
   "devDependencies": {
     "@effect/tsgo": "^0.47.1",

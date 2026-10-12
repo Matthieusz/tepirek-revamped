@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  VP_GIT_HOOKS: "0"
+
 jobs:
   checks:
     name: Checks and build

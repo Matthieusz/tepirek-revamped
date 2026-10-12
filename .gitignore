@@ -1,4 +1,6 @@
 node_modules
+.vite-hooks/_
+# Ignore legacy task artifacts in existing checkouts.
 .turbo
 packages/api/dist
 /plans
