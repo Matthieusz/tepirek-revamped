@@ -9,7 +9,7 @@
   },
   "scripts": {
     "check-types": "tsc -b",
-    "test": "vitest run --dir src"
+    "test": "vp test run --dir src"
   },
   "dependencies": {
     "@tepirek-revamped/db": "workspace:*",

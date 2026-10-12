@@ -39,7 +39,7 @@
   },
   "scripts": {
     "check-types": "tsc -b",
-    "test": "vitest run",
+    "test": "vp test run",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",

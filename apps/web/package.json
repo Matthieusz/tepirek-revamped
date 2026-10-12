@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vp run build:app",
     "check-types": "tsc --noEmit",
-    "test": "vitest run",
-    "serve": "vite preview",
-    "dev": "vite dev --port=3001",
+    "test": "vp test run",
+    "serve": "vp preview",
+    "dev": "vp dev --port=3001",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {

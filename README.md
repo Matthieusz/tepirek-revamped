@@ -154,7 +154,7 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 
 ## CI and deployment toolchains
 
-CI runs checks/build, unit tests, and smoke/API integration tests in independent jobs. Only the smoke/integration job starts PostgreSQL: smoke tests keep their own isolated container and reuse the image pulled for the integration service. The final `Verify` status requires all three jobs to pass. The pnpm store cache is retained. Based on run [37208924083](https://github.com/Matthieusz/tepirek-revamped/actions/runs/37208924083), overlapping the 23-second PostgreSQL startup and 15-second integration suite with the other validations should reduce the previous 1m44s wall-clock time; confirm the gain on the next run. No persistent Turbo cache is added in this transition.
+CI runs checks/build, unit tests, and smoke/API integration tests in independent jobs. Only the smoke/integration job starts PostgreSQL: smoke tests keep their own isolated container and reuse the image pulled for the integration service. The final `Verify` status requires all three jobs to pass. The pnpm store cache is retained. Based on run [37208924083](https://github.com/Matthieusz/tepirek-revamped/actions/runs/37208924083), overlapping the 23-second PostgreSQL startup and 15-second integration suite with the other validations should reduce the previous 1m44s wall-clock time; confirm the gain on the next run. Vite+ caches builds and unit tests locally in `node_modules/.vite/task-cache`; CI does not persist that task cache. Type checks use the patched compiler's incremental state rather than task caching. Dev, database, smoke, and integration tasks are uncached. Use `pnpm exec vp cache clean` to clear task results.
 
 Dokploy's selected build type has not been verified from this checkout. Before relying on `mise.toml` for deployment, check that the application's build type is Railpack and verify the generated image's toolchain. Do not copy ignored `mise.local.toml` files into production build contexts.
 
@@ -195,7 +195,7 @@ Effect diagnostics use their defaults throughout the repository. The API and ser
 - [Hono](https://hono.dev/) and [Node.js](https://nodejs.org/docs/latest-v24.x/api/) — server host and runtime
 - [Better Auth](https://www.better-auth.com/docs) — sessions and Discord OAuth
 - [Drizzle ORM](https://orm.drizzle.team/docs/overview) and [PostgreSQL](https://www.postgresql.org/docs/) — persistence
-- [Turborepo](https://turborepo.com/docs) and [pnpm workspaces](https://pnpm.io/workspaces) — monorepo tooling
+- [Vite+](https://viteplus.dev/guide) and [pnpm workspaces](https://pnpm.io/workspaces) — task running, builds, tests, linting, and formatting
 
 ## Contributing
 

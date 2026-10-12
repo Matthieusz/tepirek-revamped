@@ -10,8 +10,14 @@
   "ignoreDependencies": ["@effect/language-service", "dotenv"],
   "ignoreBinaries": ["infisical"],
   "workspaces": {
+    "packages/api": {
+      "vitest": {
+        "config": ["vitest*.config.ts"]
+      }
+    },
     "apps/server": {
       "vitest": {
+        "config": ["vitest*.config.ts"],
         "entry": ["src/*.test.ts"]
       }
     }
