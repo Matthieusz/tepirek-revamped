@@ -48,13 +48,13 @@ export const SquadGroupLevelBound = Schema.Int.pipe(
 export type SquadGroupLevelBound = typeof SquadGroupLevelBound.Type;
 
 /** Character-level range for squad group list filtering. */
-export type SquadGroupLevelRange = Data.TaggedEnum<{
-  readonly AnyLevel: Record<never, never>;
-  readonly BoundedLevelRange: {
-    readonly minLevel?: SquadGroupLevelBound;
-    readonly maxLevel?: SquadGroupLevelBound;
-  };
-}>;
+export type SquadGroupLevelRange =
+  | { readonly _tag: "AnyLevel" }
+  | {
+      readonly _tag: "BoundedLevelRange";
+      readonly minLevel?: SquadGroupLevelBound;
+      readonly maxLevel?: SquadGroupLevelBound;
+    };
 
 export const SquadGroupLevelRange = Data.taggedEnum<SquadGroupLevelRange>();
 
@@ -109,10 +109,9 @@ export interface ParseSquadGroupListFiltersInput {
   readonly maxLevel?: number | null | undefined;
 }
 
-type ParsedNameQuery = Data.TaggedEnum<{
-  readonly Absent: Record<never, never>;
-  readonly Present: { readonly value: SquadGroupNameQuery };
-}>;
+type ParsedNameQuery =
+  | { readonly _tag: "Absent" }
+  | { readonly _tag: "Present"; readonly value: SquadGroupNameQuery };
 
 const ParsedNameQuery = Data.taggedEnum<ParsedNameQuery>();
 
@@ -145,10 +144,9 @@ const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   });
 });
 
-type ParsedLevelBound = Data.TaggedEnum<{
-  readonly Absent: Record<never, never>;
-  readonly Present: { readonly value: SquadGroupLevelBound };
-}>;
+type ParsedLevelBound =
+  | { readonly _tag: "Absent" }
+  | { readonly _tag: "Present"; readonly value: SquadGroupLevelBound };
 
 const ParsedLevelBound = Data.taggedEnum<ParsedLevelBound>();
 

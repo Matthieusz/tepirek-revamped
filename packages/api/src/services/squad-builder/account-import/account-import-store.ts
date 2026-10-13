@@ -19,12 +19,11 @@ import type {
 } from "../squad-groups/squad-group-errors.ts";
 
 /** Access state for a Margonem profile relative to the current user. */
-export type ProfileAccessState = Data.TaggedEnum<{
-  readonly Available: Record<never, never>;
-  readonly OwnedByActor: Record<never, never>;
-  readonly OwnedByAnotherUser: Record<never, never>;
-  readonly SharedWithActor: Record<never, never>;
-}>;
+export type ProfileAccessState =
+  | { readonly _tag: "Available" }
+  | { readonly _tag: "OwnedByActor" }
+  | { readonly _tag: "OwnedByAnotherUser" }
+  | { readonly _tag: "SharedWithActor" };
 
 export const ProfileAccessState = Data.taggedEnum<ProfileAccessState>();
 

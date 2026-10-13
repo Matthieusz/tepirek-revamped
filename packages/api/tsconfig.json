@@ -11,7 +11,23 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "ignoreEffectWarningsInTscExitCode": true,
+        "ignoreEffectWarningsInTscExitCode": false,
+        // Accepted, version-pinned Effect v4 integrations; other unstable APIs still warn.
+        "allowedUnstableApis": [
+          "@effect/platform-node/NodeCrypto#layer",
+          "@effect/platform-node/NodeFileSystem#layer",
+          "@effect/platform-node/NodeRuntime#runMain",
+          "@effect/sql-pg/PgClient",
+          "@effect/vitest#it",
+          "effect/ConfigProvider#fromDotEnv",
+          "effect/Crypto#Crypto",
+          "effect/http",
+          "effect/http-api",
+          "effect/observability/OtlpLogger#layerFromConfig",
+          "effect/observability/OtlpSerialization#layerJson",
+          "effect/observability/OtlpTracer#layerFromConfig",
+          "effect/sql/SqlError"
+        ],
         "diagnosticSeverity": {
           "lazyEffect": "off"
         },

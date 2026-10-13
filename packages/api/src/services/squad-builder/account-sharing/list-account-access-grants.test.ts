@@ -1,6 +1,5 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
@@ -56,7 +55,7 @@ it.effect("lists account access grants for an owned account", () => {
       invitedUserId,
       status: "accepted",
     });
-  }).pipe(Effect.provide(Layer.succeed(AccountSharingStoreService, store)));
+  }).pipe(Effect.provideService(AccountSharingStoreService, store));
 });
 
 it.effect(
@@ -76,6 +75,6 @@ it.effect(
       );
 
       expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
-    }).pipe(Effect.provide(Layer.succeed(AccountSharingStoreService, store)));
+    }).pipe(Effect.provideService(AccountSharingStoreService, store));
   }
 );

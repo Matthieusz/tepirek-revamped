@@ -18,12 +18,12 @@ import type { SelectableUser } from "@/features/events/bets/user-select-list";
 type PointsPreviewVariant = "default" | "destructive" | "secondary";
 
 /** Closed state for the add-flow copy-last-bet action. */
-export type LastBetState = Data.TaggedEnum<{
-  readonly available: {
-    readonly members: readonly { readonly userId: string }[];
-  };
-  readonly unavailable: Record<never, never>;
-}>;
+export type LastBetState =
+  | {
+      readonly _tag: "available";
+      readonly members: readonly { readonly userId: string }[];
+    }
+  | { readonly _tag: "unavailable" };
 
 export const LastBetState = Data.taggedEnum<LastBetState>();
 

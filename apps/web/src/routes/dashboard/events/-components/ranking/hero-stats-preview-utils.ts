@@ -8,13 +8,12 @@ export interface HeroStats {
   readonly totalPoints: number;
 }
 
-export type HeroStatsPreviewState = Data.TaggedEnum<{
-  readonly hidden: Record<never, never>;
-  readonly loading: Record<never, never>;
-  readonly failure: { readonly onRetry: () => void };
-  readonly empty: Record<never, never>;
-  readonly success: { readonly heroStats: HeroStats };
-}>;
+export type HeroStatsPreviewState =
+  | { readonly _tag: "hidden" }
+  | { readonly _tag: "loading" }
+  | { readonly _tag: "failure"; readonly onRetry: () => void }
+  | { readonly _tag: "empty" }
+  | { readonly _tag: "success"; readonly heroStats: HeroStats };
 
 export const HeroStatsPreviewState = Data.taggedEnum<HeroStatsPreviewState>();
 

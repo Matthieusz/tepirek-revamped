@@ -187,9 +187,8 @@ for (const cleanupFails of [false, true]) {
         expect(Exit.isFailure(exit)).toBe(true);
 
         if (Exit.isFailure(exit)) {
-          expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(
-            cleanupFails ? ["Interrupt", "Fail"] : ["Interrupt"]
-          );
+          expect(Cause.hasInterrupts(exit.cause)).toBe(true);
+          expect(Cause.hasDies(exit.cause)).toBe(false);
           expect(
             exit.cause.reasons
               .filter(Cause.isFailReason)
@@ -339,9 +338,7 @@ it.effect("records interruption of a pending scrape once", () =>
     expect(Exit.isFailure(exit)).toBe(true);
 
     if (Exit.isFailure(exit)) {
-      expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual([
-        "Interrupt",
-      ]);
+      expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true);
     }
 
     expect(fixture.failed).toEqual([

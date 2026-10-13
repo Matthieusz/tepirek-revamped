@@ -39,7 +39,7 @@ it.effect("rejects an anonymous request", () =>
   Effect.gen(function* anonymousPolicyTest() {
     const failure = yield* policy.requireSession().pipe(Effect.flip);
     expect(failure).toBe("unauthorized");
-  }).pipe(Effect.provide(Layer.succeed(CurrentSession, null)))
+  }).pipe(Effect.provideService(CurrentSession, null))
 );
 
 it.effect("rejects an unverified user", () =>

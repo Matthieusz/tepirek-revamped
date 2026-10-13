@@ -48,10 +48,9 @@ export const getAuthProviderErrorMessage = (
 };
 
 /** The result of an authentication mutation that is safe to render in a form. */
-export type AuthFormSubmissionResult = Data.TaggedEnum<{
-  readonly success: Record<never, never>;
-  readonly failure: { readonly error: AuthFormSubmissionError };
-}>;
+export type AuthFormSubmissionResult =
+  | { readonly _tag: "success" }
+  | { readonly _tag: "failure"; readonly error: AuthFormSubmissionError };
 
 export const AuthFormSubmissionResult =
   Data.taggedEnum<AuthFormSubmissionResult>();

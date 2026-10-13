@@ -203,28 +203,26 @@ const persistPendingImport = ({
         profileId: preview.profileId,
       })
       .pipe(
-        EffectRuntime.matchEffect({
-          onFailure: (error) =>
-            EffectRuntime.succeed({
-              item: toFailedItem({ error, inputUrl, lineNumber }),
+        EffectRuntime.match({
+          onFailure: (error) => ({
+            item: toFailedItem({ error, inputUrl, lineNumber }),
+            lineNumber,
+          }),
+          onSuccess: (created) => ({
+            item: PreviewOwnedAccountImportItem.PreviewSucceeded({
+              defaultDisplayName,
+              firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
+              generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
+              inputUrl,
+              jarunaCharacters: preview.jarunaCharacters,
+              lastFetchedAt: preview.lastFetchedAt,
               lineNumber,
+              pendingImportId: created.id,
+              profileId: preview.profileId,
+              suggestedAccountName: preview.suggestedAccountName,
             }),
-          onSuccess: (created) =>
-            EffectRuntime.succeed({
-              item: PreviewOwnedAccountImportItem.PreviewSucceeded({
-                defaultDisplayName,
-                firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-                generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
-                inputUrl,
-                jarunaCharacters: preview.jarunaCharacters,
-                lastFetchedAt: preview.lastFetchedAt,
-                lineNumber,
-                pendingImportId: created.id,
-                profileId: preview.profileId,
-                suggestedAccountName: preview.suggestedAccountName,
-              }),
-              lineNumber,
-            }),
+            lineNumber,
+          }),
         })
       );
   });
@@ -312,22 +310,20 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
           profileId: line.profileId,
         })
         .pipe(
-          EffectRuntime.matchEffect({
-            onFailure: (error) =>
-              EffectRuntime.succeed({
-                _tag: "LineFailure" as const,
-                error,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-              }),
-            onSuccess: (state) =>
-              EffectRuntime.succeed({
-                _tag: "AccessState" as const,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-                profileId: line.profileId,
-                state,
-              }),
+          EffectRuntime.match({
+            onFailure: (error) => ({
+              _tag: "LineFailure" as const,
+              error,
+              inputUrl: line.inputUrl,
+              lineNumber: line.lineNumber,
+            }),
+            onSuccess: (state) => ({
+              _tag: "AccessState" as const,
+              inputUrl: line.inputUrl,
+              lineNumber: line.lineNumber,
+              profileId: line.profileId,
+              state,
+            }),
           })
         )
     );

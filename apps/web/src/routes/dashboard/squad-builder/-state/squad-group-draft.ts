@@ -30,21 +30,25 @@ export interface SquadGroupDraft {
   readonly squads: readonly DraftSquad[];
 }
 
-export type PlacementError = Data.TaggedEnum<{
-  readonly readOnly: Record<never, never>;
-  readonly unknownCharacter: { readonly characterId: number };
-  readonly unknownSquad: { readonly squadKey: string };
-  readonly squadFull: { readonly squadName: string };
-  readonly accountAlreadyRepresented: {
-    readonly squadName: string;
-    readonly accountDisplayName: string;
-  };
-  readonly duplicateCharacterInSquad: {
-    readonly characterId: number;
-    readonly squadName: string;
-  };
-  readonly duplicateCharacterInGroup: { readonly characterId: number };
-}>;
+export type PlacementError =
+  | { readonly _tag: "readOnly" }
+  | { readonly _tag: "unknownCharacter"; readonly characterId: number }
+  | { readonly _tag: "unknownSquad"; readonly squadKey: string }
+  | { readonly _tag: "squadFull"; readonly squadName: string }
+  | {
+      readonly _tag: "accountAlreadyRepresented";
+      readonly squadName: string;
+      readonly accountDisplayName: string;
+    }
+  | {
+      readonly _tag: "duplicateCharacterInSquad";
+      readonly characterId: number;
+      readonly squadName: string;
+    }
+  | {
+      readonly _tag: "duplicateCharacterInGroup";
+      readonly characterId: number;
+    };
 
 export const PlacementError = Data.taggedEnum<PlacementError>();
 

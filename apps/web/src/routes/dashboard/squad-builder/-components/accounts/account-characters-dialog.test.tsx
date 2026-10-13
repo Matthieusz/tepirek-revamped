@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { AccountCharactersDialog } from "./account-characters-dialog";
 
 const makeAccount = (empty: boolean) =>
-  Schema.decodeUnknownSync(OwnedMargonemAccountSummarySchema)({
+  Schema.decodeSync(OwnedMargonemAccountSummarySchema)({
     accountId: 1,
     characterCount: empty ? 0 : 2,
     characterPreviews: [],
