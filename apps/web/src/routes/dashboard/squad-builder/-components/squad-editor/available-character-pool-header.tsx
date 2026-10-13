@@ -1,7 +1,7 @@
 import * as HashSet from "effect/HashSet";
 import { X, Search } from "lucide-react";
 
-import { Badge } from "@/components/reui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,7 +65,7 @@ export const AvailableCharacterPoolHeader = ({
       <>
         <fieldset
           aria-label="Szybkie filtry profesji"
-          className="flex flex-nowrap gap-1 overflow-x-auto pb-0.5"
+          className="flex flex-wrap gap-1.5"
         >
           {[
             "bladeDancer",
@@ -82,7 +82,7 @@ export const AvailableCharacterPoolHeader = ({
               <Button
                 aria-pressed={selected}
                 className={cn(
-                  "h-6 min-h-0 gap-0.5 px-1 text-[10px]",
+                  "h-8 shrink-0 gap-1 px-2 text-xs",
                   selected &&
                     "border-primary bg-primary/25 text-primary hover:bg-primary/30 font-medium"
                 )}
@@ -96,7 +96,7 @@ export const AvailableCharacterPoolHeader = ({
               >
                 <presentation.icon
                   aria-hidden="true"
-                  className={`size-2.5 ${presentation.colorClass}`}
+                  className={`size-3 ${presentation.colorClass}`}
                 />
                 {presentation.label}
               </Button>

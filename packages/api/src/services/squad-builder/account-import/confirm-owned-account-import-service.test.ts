@@ -49,6 +49,15 @@ it.effect("confirms a pending owned account import through services", () => {
             profession: "tracker",
           },
         ],
+        characters: [
+          {
+            avatarUrl: null,
+            characterId,
+            level: 100,
+            name: "informati",
+            profession: "tracker",
+          },
+        ],
         displayName,
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
         lastFetchedAt: new Date("2026-06-29T11:30:00.000Z"),

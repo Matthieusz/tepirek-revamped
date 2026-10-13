@@ -12,7 +12,7 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { AvailableSquadCharacter } from "@/features/squad-builder/squad-group-api";

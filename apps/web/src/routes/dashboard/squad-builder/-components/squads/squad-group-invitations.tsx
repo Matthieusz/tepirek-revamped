@@ -8,11 +8,11 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
-import { Badge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
+} from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   incomingSquadGroupInvitesQueryOptions,
@@ -61,11 +61,11 @@ export const SquadGroupInvitations = () => {
 
   if (result.isPending || result.data === undefined) {
     return (
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="p-0 shadow-none">
+      <div className="space-y-3">
+        <Card className="gap-0 p-0 py-0 shadow-none">
           <LoadingSpinner />
-        </FramePanel>
-      </Frame>
+        </Card>
+      </div>
     );
   }
 
@@ -94,8 +94,8 @@ export const SquadGroupInvitations = () => {
   };
 
   return (
-    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-      <FramePanel className="p-0 shadow-none">
+    <div className="space-y-3">
+      <Card className="gap-0 p-0 py-0 shadow-none">
         <header className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
           <div>
             <h2 className="text-base font-semibold">Zaproszenia do składów</h2>
@@ -103,7 +103,7 @@ export const SquadGroupInvitations = () => {
               Grupy, do których możesz dołączyć jako edytor.
             </p>
           </div>
-          <Badge variant="warning-light">{result.data.length} oczekujące</Badge>
+          <Badge variant="outline">{result.data.length} oczekujące</Badge>
         </header>
         <ul className="divide-border divide-y">
           {result.data.map((invite) => {
@@ -132,9 +132,7 @@ export const SquadGroupInvitations = () => {
                       <span className="text-sm font-medium">
                         {invite.squadGroupName}
                       </span>
-                      <Badge size="sm" variant="warning-light">
-                        oczekuje
-                      </Badge>
+                      <Badge variant="outline">oczekuje</Badge>
                     </div>
                     <p className="text-muted-foreground font-mono text-xs">
                       Od {invite.ownerUserName} ·{" "}
@@ -171,7 +169,7 @@ export const SquadGroupInvitations = () => {
             );
           })}
         </ul>
-      </FramePanel>
-    </Frame>
+      </Card>
+    </div>
   );
 };

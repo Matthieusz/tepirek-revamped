@@ -2,11 +2,7 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "drizzle": false,
   "exclude": ["duplicates"],
-  "ignore": [
-    "apps/web/src/components/reui/**",
-    "apps/web/src/components/ui/**",
-    "packages/db/drizzle.config.ts"
-  ],
+  "ignore": ["apps/web/src/components/ui/**", "packages/db/drizzle.config.ts"],
   "ignoreDependencies": ["@effect/language-service", "dotenv"],
   "ignoreBinaries": ["infisical"],
   "workspaces": {

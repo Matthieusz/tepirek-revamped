@@ -253,7 +253,7 @@ export const DashboardCommandMenu = () => {
           <DialogDescription className="sr-only">
             Wyszukaj stronę panelu lub wybierz szybką akcję.
           </DialogDescription>
-          <div className="flex items-center gap-2 px-4">
+          <div className="focus-within:ring-ring/50 flex items-center gap-2 rounded-t-xl px-4 focus-within:ring-2 focus-within:ring-inset">
             <Search
               aria-hidden="true"
               className="text-muted-foreground size-4 shrink-0"
@@ -266,7 +266,7 @@ export const DashboardCommandMenu = () => {
               aria-expanded="true"
               aria-label="Wyszukaj polecenie"
               autoComplete="off"
-              className="placeholder:text-muted-foreground focus-visible:ring-ring/50 h-12 w-full bg-transparent text-base outline-none focus-visible:ring-2 focus-visible:ring-inset md:text-sm"
+              className="placeholder:text-muted-foreground h-12 w-full bg-transparent text-base outline-none md:text-sm"
               onChange={handleQueryChange}
               onKeyDown={handleInputKeyDown}
               placeholder="Wpisz nazwę strony lub polecenia…"

@@ -135,7 +135,7 @@ export const accountInviteTargetsQueryOptions = (
 };
 
 /** Invalidates account data and all squad resources affected by account access. */
-const invalidateAccountResources = async (
+export const invalidateAccountResources = async (
   queryClient: QueryClient
 ): Promise<void> => {
   await Promise.all([

@@ -5,7 +5,7 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 interface SectionFailureProps {

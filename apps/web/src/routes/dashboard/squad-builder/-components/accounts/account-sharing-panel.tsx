@@ -7,19 +7,12 @@ import { Trash2, Loader2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  Autocomplete,
-  AutocompleteContent,
-  AutocompleteEmpty,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-  AutocompleteStatus,
-} from "@/components/reui/autocomplete";
-import { Badge as ReuiBadge } from "@/components/reui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   accountAccessGrantsQueryOptions,
@@ -58,7 +51,7 @@ const useActorUserId = (): string => {
   return sessionQuery.data?.user.id ?? "";
 };
 
-const getAutocompleteStatus = (
+const getSearchStatus = (
   queryLength: number,
   hasLoaded: boolean
 ): string | undefined => {
@@ -69,7 +62,7 @@ const getAutocompleteStatus = (
   return hasLoaded ? undefined : "Wyszukiwanie…";
 };
 
-const getAutocompleteAnnouncement = (
+const getSearchAnnouncement = (
   queryLength: number,
   hasLoaded: boolean,
   resultCount: number
@@ -116,7 +109,14 @@ export const AccountSharingPanel = ({
     revokeAccountAccessMutationOptions(queryClient)
   );
 
-  const targets = searchQuery.data ?? [];
+  const hasCurrentSearch = query.trim() === trimmedQuery;
+  const searchSucceeded = hasCurrentSearch && searchQuery.isSuccess;
+
+  const targets =
+    hasCurrentSearch && trimmedQuery.length >= 2
+      ? (searchQuery.data ?? [])
+      : [];
+
   const grants: readonly AccountAccessGrant[] = grantsQuery.data ?? [];
 
   if (grantsQuery.isError && grantsQuery.data === undefined) {
@@ -154,33 +154,49 @@ export const AccountSharingPanel = ({
         >
           Zaproś użytkownika
         </Label>
-        <Autocomplete
-          value={query}
-          itemToStringValue={(target: AccountInviteTarget) => target.name}
-          items={targets}
-          onValueChange={setQuery}
-        >
-          <AutocompleteInput
+        <div className="space-y-2">
+          <Input
             autoComplete="off"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+            }}
             id={`share-search-${accountId}`}
             placeholder="Szukaj po nazwie"
-            showClear
           />
-          <AutocompleteContent>
-            <AutocompleteStatus>
-              {getAutocompleteStatus(
-                trimmedQuery.length,
-                searchQuery.isSuccess
-              )}
-            </AutocompleteStatus>
-            <AutocompleteEmpty>
-              {trimmedQuery.length >= 2 && searchQuery.isSuccess
+          {query.length > 0 && (
+            <Button
+              type="button"
+              size="xs"
+              variant="ghost"
+              onClick={() => {
+                setQuery("");
+              }}
+            >
+              Wyczyść wyszukiwanie
+            </Button>
+          )}
+
+          <ScrollArea className="**:data-[slot=scroll-area-viewport]:max-h-64">
+            <output className="text-muted-foreground block text-sm">
+              {getSearchStatus(query.trim().length, searchSucceeded)}
+            </output>
+            <p className="text-muted-foreground text-sm">
+              {query.trim().length >= 2 &&
+              searchSucceeded &&
+              targets.length === 0
                 ? "Brak pasujących zweryfikowanych użytkowników."
                 : null}
-            </AutocompleteEmpty>
-            <AutocompleteList>
-              {(target: AccountInviteTarget) => (
-                <AutocompleteItem key={target.userId} value={target}>
+            </p>
+            <ul
+              aria-label="Wyniki wyszukiwania użytkowników"
+              className="space-y-1"
+            >
+              {targets.map((target: AccountInviteTarget) => (
+                <li
+                  key={target.userId}
+                  className="flex items-center gap-2 rounded-md p-2"
+                >
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Avatar size="sm">
                       {target.image !== null && target.image.length > 0 ? (
@@ -193,7 +209,8 @@ export const AccountSharingPanel = ({
                     <span className="truncate">{target.name}</span>
                   </div>
                   <Button
-                    disabled={sendingUserId === target.userId}
+                    aria-label={`Zaproś ${target.name}`}
+                    disabled={sendingUserId !== null}
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -228,15 +245,15 @@ export const AccountSharingPanel = ({
                     <UserPlus aria-hidden="true" className="size-3.5" />
                     Zaproś
                   </Button>
-                </AutocompleteItem>
-              )}
-            </AutocompleteList>
-          </AutocompleteContent>
-        </Autocomplete>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </div>
         <p aria-live="polite" className="sr-only">
-          {getAutocompleteAnnouncement(
-            trimmedQuery.length,
-            searchQuery.isSuccess,
+          {getSearchAnnouncement(
+            query.trim().length,
+            searchSucceeded,
             targets.length
           )}
         </p>
@@ -282,13 +299,13 @@ export const AccountSharingPanel = ({
                   <span className="truncate text-sm">
                     {grant.invitedUserName}
                   </span>
-                  <ReuiBadge
+                  <Badge
                     variant={
                       grant.status === "accepted" ? "default" : "secondary"
                     }
                   >
                     {grant.status === "accepted" ? "Dostęp" : "Oczekuje"}
-                  </ReuiBadge>
+                  </Badge>
                 </div>
                 <Button
                   aria-label={`Cofnij dostęp dla ${grant.invitedUserName}`}

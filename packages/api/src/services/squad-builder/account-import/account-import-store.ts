@@ -80,6 +80,9 @@ export interface OwnedMargonemAccountSummary {
   readonly lastFetchedAt: Date;
   readonly characterCount: number;
   readonly characterPreviews: readonly OwnedAccountCharacterPreview[];
+  readonly characters: readonly (OwnedAccountCharacterPreview & {
+    readonly level: number;
+  })[];
 }
 
 /** Input for changing an owned account display name. */

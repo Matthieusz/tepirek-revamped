@@ -1,27 +1,22 @@
-import { useTable } from "@tanstack/react-table";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import { ExternalLink, Link2, Users } from "lucide-react";
-import { useMemo } from "react";
+import type { ReactNode } from "react";
 
-import { Badge as ReuiBadge } from "@/components/reui/badge";
-import {
-  DataGrid,
-  DataGridContainer,
-} from "@/components/reui/data-grid/data-grid";
-import { dataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
-import type { DataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
-import { DataGridTable } from "@/components/reui/data-grid/data-grid-table";
-import {
-  Frame,
-  FrameHeader,
-  FramePanel,
-  FrameTitle,
-} from "@/components/reui/frame";
-import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
+import { AccountCharactersDialog } from "@/routes/dashboard/squad-builder/-components/accounts/account-characters-dialog";
 import { OwnedAccountManagementRow } from "@/routes/dashboard/squad-builder/-components/accounts/owned-account-management-row";
 import { MargonemCharacterAvatarImage } from "@/routes/dashboard/squad-builder/-components/margonem-character-avatar-image";
 import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
@@ -59,150 +54,105 @@ const OwnedAccountCharacterPreview = ({
   );
 };
 
-const OWNED_ACCOUNT_COLUMNS: ColumnDef<DataGridFeatures, OwnedAccount>[] = [
-  {
-    accessorKey: "displayName",
-    cell: ({ row }) => (
-      <div className="flex min-w-52 items-center gap-3">
-        <OwnedAccountCharacterPreview account={row.original} />
-        <div className="min-w-0">
-          <p className="truncate font-medium">{row.original.displayName}</p>
-          <p className="text-muted-foreground font-mono text-xs">
-            #{row.original.profileId}
-          </p>
-        </div>
-      </div>
-    ),
-    header: "Konto",
-    meta: {
-      expandedContent: (account) => (
-        <OwnedAccountManagementRow account={account} />
-      ),
-    },
-  },
-  {
-    accessorKey: "characterCount",
-    cell: ({ row }) => (
-      <ReuiBadge variant="secondary">{row.original.characterCount}</ReuiBadge>
-    ),
-    header: "Postacie",
-  },
-  {
-    accessorKey: "lastFetchedAt",
-    cell: ({ row }) => (
-      <span className="font-mono text-xs whitespace-nowrap">
-        {formatDateTime(row.original.lastFetchedAt)}
-      </span>
-    ),
-    header: "Ostatnio pobrano",
-  },
-  {
-    cell: ({ row }) => (
-      <a
-        className="text-primary inline-flex items-center gap-1 whitespace-nowrap hover:underline"
-        href={row.original.generatedProfileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <ExternalLink aria-hidden="true" className="size-3.5" />
-        Margonem
-      </a>
-    ),
-    header: "Profil",
-    id: "profile",
-  },
-  {
-    cell: ({ row }) => (
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        aria-label={`${row.getIsExpanded() ? "Ukryj" : "Pokaż"} szczegóły konta ${row.original.displayName}`}
-        onClick={() => {
-          row.toggleExpanded();
-        }}
-      >
-        {row.getIsExpanded() ? "Ukryj" : "Zarządzaj"}
-      </Button>
-    ),
-    header: "",
-    id: "expand",
-  },
-];
-
 interface OwnedAccountsPanelProps {
   readonly accounts: readonly OwnedAccount[];
   readonly isLoading: boolean;
   readonly onAddAccount: () => void;
+  readonly headerActions?: ReactNode;
 }
 
-/** Displays owned accounts and expands each account's management controls. */
+/** Displays owned accounts with modal management controls that keep rows stationary. */
 export const OwnedAccountsGrid = ({
   accounts,
   isLoading,
   onAddAccount,
-}: OwnedAccountsPanelProps) => {
-  const columns = OWNED_ACCOUNT_COLUMNS;
-  const tableData = useMemo(() => [...accounts], [accounts]);
-
-  const table = useTable({
-    columns,
-    data: tableData,
-    features: dataGridFeatures,
-    // Management controls are custom expanded content, not nested sub-rows.
-    getRowCanExpand: () => true,
-    getRowId: (account) => String(account.accountId),
-  });
-
-  return (
-    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-      <FramePanel className="p-0 shadow-none">
-        <FrameHeader className="border-border flex-row items-center justify-between border-b px-5 py-3">
-          <FrameTitle className="flex items-center gap-2 text-base">
-            <Users
-              aria-hidden="true"
-              className="text-muted-foreground size-4"
-            />
-            Twoje konta
-          </FrameTitle>
-          <span className="text-muted-foreground font-mono text-xs">
-            {accounts.length}
-          </span>
-        </FrameHeader>
-        <DataGrid
-          table={table}
-          recordCount={accounts.length}
-          isLoading={isLoading}
-          loadingMode="spinner"
-          emptyMessage={
-            <div className="flex flex-col items-center gap-2 py-6">
-              <IconStack aria-hidden="true">
-                <Users aria-hidden="true" className="size-5" />
-              </IconStack>
-              <p>Nie masz jeszcze zapisanych kont. Dodaj profil powyżej.</p>
-              <Button
-                onClick={onAddAccount}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <Link2 aria-hidden="true" className="size-3.5" />
-                Dodaj konto
-              </Button>
-            </div>
-          }
-          tableLayout={{
-            cellBorder: false,
-            rowBorder: true,
-            stripped: false,
-            width: "auto",
-          }}
-        >
-          <DataGridContainer className="overflow-x-auto">
-            <DataGridTable />
-          </DataGridContainer>
-        </DataGrid>
-      </FramePanel>
-    </Frame>
-  );
-};
+  headerActions,
+}: OwnedAccountsPanelProps) => (
+  <Card className="gap-0 py-0">
+    <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 border-b px-5 py-3">
+      <CardTitle className="flex items-center gap-2">
+        <Users aria-hidden="true" className="text-muted-foreground size-4" />
+        Twoje konta
+        <Badge variant="secondary">{accounts.length}</Badge>
+      </CardTitle>
+      {headerActions}
+    </CardHeader>
+    {isLoading ? (
+      <LoadingSpinner />
+    ) : (
+      <Table aria-label="Twoje konta Margonem">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="pl-5" scope="col">
+              Konto
+            </TableHead>
+            <TableHead scope="col">Postacie</TableHead>
+            <TableHead scope="col">Ostatnio pobrano</TableHead>
+            <TableHead scope="col">Profil</TableHead>
+            <TableHead scope="col">
+              <span className="sr-only">Zarządzanie</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {accounts.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="whitespace-normal">
+                <div className="text-muted-foreground flex flex-col items-center gap-2 py-6 text-center">
+                  <Users aria-hidden="true" className="size-6" />
+                  <p>
+                    Nie masz jeszcze zapisanych kont. Dodaj profil Margonem.
+                  </p>
+                  <Button
+                    onClick={onAddAccount}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <Link2 aria-hidden="true" className="size-3.5" />
+                    Dodaj konto
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+          {accounts.map((account) => (
+            <TableRow key={account.accountId}>
+              <TableCell className="pl-5">
+                <div className="flex min-w-52 items-center gap-3">
+                  <OwnedAccountCharacterPreview account={account} />
+                  <div>
+                    <p className="font-medium">{account.displayName}</p>
+                    <p className="text-muted-foreground font-mono text-xs">
+                      #{account.profileId}
+                    </p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <AccountCharactersDialog account={account} />
+              </TableCell>
+              <TableCell className="text-muted-foreground font-mono text-xs">
+                {formatDateTime(account.lastFetchedAt)}
+              </TableCell>
+              <TableCell>
+                <a
+                  className="text-primary inline-flex items-center gap-1 hover:underline"
+                  href={account.generatedProfileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                  Margonem
+                </a>
+              </TableCell>
+              <TableCell className="pr-5 text-right">
+                <OwnedAccountManagementRow account={account} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )}
+  </Card>
+);

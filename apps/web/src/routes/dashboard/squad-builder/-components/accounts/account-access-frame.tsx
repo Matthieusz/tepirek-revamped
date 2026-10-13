@@ -3,11 +3,10 @@ import { X, Check, Clock, ExternalLink, Inbox, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Badge as ReuiBadge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
-import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   incomingAccountInvitesQueryOptions,
@@ -52,22 +51,17 @@ const InviteInboxPanel = () => {
           <Inbox aria-hidden="true" className="text-muted-foreground size-4" />
           Zaproszenia do kont
         </h2>
-        <ReuiBadge variant={invites.length > 0 ? "warning-light" : "secondary"}>
+        <Badge variant={invites.length > 0 ? "default" : "secondary"}>
           {invites.length} oczekujących
-        </ReuiBadge>
+        </Badge>
       </div>
 
       {invitesQuery.isPending && <LoadingSpinner />}
 
       {!invitesQuery.isPending && invites.length === 0 && (
-        <div className="flex flex-col items-center px-5 py-8 text-center">
-          <IconStack aria-hidden="true">
-            <Inbox aria-hidden="true" className="size-5" />
-          </IconStack>
-          <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
-            Nie masz oczekujących zaproszeń do kont Margonem.
-          </p>
-        </div>
+        <p className="text-muted-foreground px-5 py-4 text-sm">
+          Brak oczekujących zaproszeń.
+        </p>
       )}
 
       {invites.length > 0 && (
@@ -95,7 +89,7 @@ const InviteInboxPanel = () => {
                     <span className="truncate text-sm font-medium">
                       {invite.accountDisplayName}
                     </span>
-                    <ReuiBadge variant="secondary">oczekuje</ReuiBadge>
+                    <Badge variant="secondary">oczekuje</Badge>
                   </div>
                   <p className="text-muted-foreground font-mono text-xs">
                     Zaproszenie od {invite.ownerUserName}
@@ -194,23 +188,17 @@ const SharedAccountsPanel = () => {
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Users aria-hidden="true" className="text-muted-foreground size-4" />
           Udostępnione mi
+          <Badge variant="secondary">{accounts.length}</Badge>
         </h2>
-        <span className="text-muted-foreground font-mono text-xs">
-          {accounts.length}
-        </span>
       </div>
 
       {sharedQuery.isPending && <LoadingSpinner />}
 
       {!sharedQuery.isPending && accounts.length === 0 && (
-        <div className="flex flex-col items-center px-5 py-8 text-center">
-          <IconStack aria-hidden="true">
-            <Users aria-hidden="true" className="size-5" />
-          </IconStack>
-          <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
-            Gdy właściciel konta przyzna Ci dostęp, konto pojawi się tutaj.
-          </p>
-        </div>
+        <p className="text-muted-foreground px-5 py-4 text-sm">
+          Nie masz udostępnionych kont. Pojawią się tutaj po zaakceptowaniu
+          zaproszenia.
+        </p>
       )}
 
       {accounts.length > 0 && (
@@ -221,10 +209,10 @@ const SharedAccountsPanel = () => {
                 <span className="truncate text-sm font-medium">
                   {account.displayName}
                 </span>
-                <ReuiBadge variant="secondary">
+                <Badge variant="secondary">
                   {account.characterCount}{" "}
                   {account.characterCount === 1 ? "postać" : "postaci"}
-                </ReuiBadge>
+                </Badge>
               </div>
               <div className="flex items-center gap-2">
                 <Avatar size="sm">
@@ -271,12 +259,12 @@ const SharedAccountsPanel = () => {
 
 /** Renders incoming invitations and accounts shared with the current user. */
 export const AccountAccessFrame = () => (
-  <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm" stacked>
-    <FramePanel className="p-0 shadow-none">
-      <InviteInboxPanel />
-    </FramePanel>
-    <FramePanel className="p-0 shadow-none">
+  <div className="space-y-6">
+    <Card className="gap-0 p-0 py-0 shadow-none">
       <SharedAccountsPanel />
-    </FramePanel>
-  </Frame>
+    </Card>
+    <Card className="gap-0 p-0 py-0 shadow-none">
+      <InviteInboxPanel />
+    </Card>
+  </div>
 );

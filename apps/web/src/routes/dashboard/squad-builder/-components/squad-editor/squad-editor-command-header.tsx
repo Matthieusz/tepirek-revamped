@@ -1,13 +1,14 @@
-import { Loader2, Save, Settings } from "lucide-react";
+import { Globe, Loader2, LockKeyhole, Save, Settings } from "lucide-react";
 
 import {
   Alert,
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
-import { Badge } from "@/components/reui/badge";
+} from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -29,7 +30,6 @@ interface SquadEditorCommandHeaderProps {
   readonly onReloadLatest: () => void;
   readonly onNameChange: (name: string) => void;
   readonly onSave: () => void;
-  readonly onSettingsToggle: () => void;
   readonly onVisibilityChange: (visibility: "private" | "global") => void;
 }
 
@@ -65,10 +65,9 @@ const SquadSaveActions = ({
   variant,
   role,
   onSave,
-  onSettingsToggle,
 }: Pick<
   SquadEditorCommandHeaderProps,
-  "draft" | "state" | "variant" | "role" | "onSave" | "onSettingsToggle"
+  "draft" | "state" | "variant" | "role" | "onSave"
 >) => {
   const { isDirty, isSaving, isSettingsOpen } = state;
   const isViewer = variant === "viewer";
@@ -78,20 +77,16 @@ const SquadSaveActions = ({
   }
 
   return (
-    <div className="flex items-start gap-1">
+    <div className="flex shrink-0 items-center gap-2">
       {role === "owner" && (
-        <Button
-          aria-controls="squad-group-settings-panel"
-          aria-expanded={isSettingsOpen}
-          onClick={onSettingsToggle}
-          type="button"
-          variant={isSettingsOpen ? "secondary" : "outline"}
+        <DialogTrigger
+          render={<Button variant={isSettingsOpen ? "secondary" : "outline"} />}
         >
           <Settings aria-hidden="true" className="size-4" />
           Ustawienia
-        </Button>
+        </DialogTrigger>
       )}
-      <div className="flex flex-col items-center gap-1">
+      <div>
         <Button
           disabled={isSaving || !isDirty || draft.name.trim().length === 0}
           onClick={onSave}
@@ -102,11 +97,10 @@ const SquadSaveActions = ({
           ) : (
             <Save aria-hidden="true" className="size-4" />
           )}
-          Zapisz
+          {isDirty && !isSaving
+            ? "Zapisz"
+            : getSaveStatus(false, isSaving, isDirty)}
         </Button>
-        <span aria-live="polite" className="text-muted-foreground text-xs">
-          {getSaveStatus(isViewer, isSaving, isDirty)}
-        </span>
       </div>
     </div>
   );
@@ -119,7 +113,6 @@ export const SquadEditorCommandHeader = ({
   variant,
   onNameChange,
   onSave,
-  onSettingsToggle,
   onVisibilityChange,
   role,
   isSaveConflict,
@@ -132,73 +125,91 @@ export const SquadEditorCommandHeader = ({
 
   return (
     <header className="space-y-3">
-      <div className="flex flex-wrap items-start gap-3">
-        <div className="min-w-0 flex-1 space-y-1">
-          {!isViewer && <Label htmlFor="group-name">Nazwa grupy</Label>}
-          <h1
-            className={
-              isViewer
-                ? "font-serif text-2xl font-bold tracking-tight break-words"
-                : undefined
-            }
-          >
-            {isViewer ? (
-              draft.name
-            ) : (
-              <Input
-                aria-label="Nazwa grupy"
-                className="focus-visible:border-input h-10 max-w-xl border-transparent bg-transparent px-3 py-2 font-sans text-xl leading-6 font-semibold shadow-none"
-                disabled={isSaving}
-                id="group-name"
-                maxLength={80}
-                onChange={(event) => {
-                  onNameChange(event.target.value);
-                }}
-                value={draft.name}
-              />
-            )}
-          </h1>
-        </div>
-        <div className="flex w-full flex-wrap items-start justify-end gap-3 sm:w-auto">
-          {role === "owner" && (
-            <div className="flex items-center gap-2">
+      <div className="bg-card rounded-xl border p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1 space-y-2">
+            {!isViewer && (
               <Label
-                className="text-muted-foreground text-xs"
-                htmlFor="group-visibility-toggle"
+                className="text-foreground/70 text-xs"
+                htmlFor="group-name"
               >
-                Publiczna
+                Nazwa grupy
               </Label>
-              <Switch
-                checked={visibility === "global"}
-                disabled={isSaving || isVisibilityPending}
-                id="group-visibility-toggle"
-                onCheckedChange={(checked) => {
-                  onVisibilityChange(checked ? "global" : "private");
-                }}
-              />
-            </div>
-          )}
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Badge variant={role === "viewer" ? "secondary" : "primary-light"}>
-              {roleLabels[role]}
-            </Badge>
-            <Badge variant={visibility === "global" ? "info-light" : "outline"}>
-              {visibility === "global" ? "publiczna" : "prywatna"}
-            </Badge>
+            )}
+            <h1
+              className={
+                isViewer
+                  ? "font-serif text-2xl font-bold tracking-tight break-words"
+                  : undefined
+              }
+            >
+              {isViewer ? (
+                draft.name
+              ) : (
+                <Input
+                  aria-label="Nazwa grupy"
+                  className="bg-background h-11 w-full max-w-xl px-3 font-sans text-lg font-semibold shadow-none"
+                  disabled={isSaving}
+                  id="group-name"
+                  maxLength={80}
+                  onChange={(event) => {
+                    onNameChange(event.target.value);
+                  }}
+                  value={draft.name}
+                />
+              )}
+            </h1>
           </div>
-          <SquadSaveActions
-            draft={draft}
-            state={state}
-            variant={variant}
-            role={role}
-            onSave={onSave}
-            onSettingsToggle={onSettingsToggle}
-          />
-          {isViewer && (
-            <span aria-live="polite" className="text-muted-foreground text-xs">
-              {getSaveStatus(isViewer, isSaving, isDirty)}
-            </span>
-          )}
+          <div className="flex items-center gap-2 sm:self-end">
+            <SquadSaveActions
+              draft={draft}
+              state={state}
+              variant={variant}
+              role={role}
+              onSave={onSave}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t pt-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <Badge variant="secondary">{roleLabels[role]}</Badge>
+            <div className="text-foreground/70 flex items-center gap-2">
+              {visibility === "global" ? (
+                <Globe aria-hidden="true" className="size-3.5" />
+              ) : (
+                <LockKeyhole aria-hidden="true" className="size-3.5" />
+              )}
+              {role === "owner" ? (
+                <>
+                  <Label className="text-xs" htmlFor="group-visibility-toggle">
+                    Grupa publiczna
+                  </Label>
+                  <Switch
+                    checked={visibility === "global"}
+                    disabled={isSaving || isVisibilityPending}
+                    id="group-visibility-toggle"
+                    onCheckedChange={(checked) => {
+                      onVisibilityChange(checked ? "global" : "private");
+                    }}
+                  />
+                </>
+              ) : (
+                <span className="text-xs">
+                  {visibility === "global"
+                    ? "Grupa publiczna"
+                    : "Grupa prywatna"}
+                </span>
+              )}
+            </div>
+          </div>
+          <span
+            aria-live="polite"
+            className={`text-xs ${isDirty || saveError !== null ? "text-foreground font-medium" : "text-foreground/70"}`}
+          >
+            {saveError === null
+              ? getSaveStatus(isViewer, isSaving, isDirty)
+              : "Zmiany nie zostały zapisane"}
+          </span>
         </div>
       </div>
       {saveError !== null && (

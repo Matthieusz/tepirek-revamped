@@ -9,18 +9,7 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
-import {
-  Autocomplete,
-  AutocompleteContent,
-  AutocompleteEmpty,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-  AutocompleteStatus,
-} from "@/components/reui/autocomplete";
-import { Badge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
+} from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,8 +23,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { deleteSquadGroupMutationOptions } from "@/features/squad-builder/squad-group-queries";
 import type {
@@ -76,7 +69,7 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
   return debounced;
 };
 
-const autocompleteStatus = (
+const searchStatus = (
   queryLength: number,
   loaded: boolean
 ): string | undefined => {
@@ -123,8 +116,13 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
 
   const grants: readonly EditorGrant[] = grantsResult.data ?? [];
 
+  const hasCurrentSearch = query.trim() === debouncedQuery;
+  const searchSucceeded = hasCurrentSearch && searchResult.isSuccess;
+
   const targets: readonly InviteTarget[] =
-    debouncedQuery.length >= 2 ? (searchResult.data ?? []) : [];
+    hasCurrentSearch && debouncedQuery.length >= 2
+      ? (searchResult.data ?? [])
+      : [];
 
   const send = async (target: InviteTarget) => {
     setSendingUserId(target.userId);
@@ -156,7 +154,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
   };
 
   return (
-    <FramePanel className="p-0 shadow-none">
+    <Card className="gap-0 p-0 py-0 shadow-none">
       <div className="space-y-4 px-4 py-4">
         <div>
           <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -177,33 +175,49 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
           <Label htmlFor={`squad-editor-search-${groupId}`}>
             Zaproś zweryfikowanego użytkownika
           </Label>
-          <Autocomplete
-            items={targets}
-            itemToStringValue={(target: InviteTarget) => target.name}
-            onValueChange={setQuery}
-            value={query}
-          >
-            <AutocompleteInput
+          <div className="space-y-2">
+            <Input
               autoComplete="off"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+              }}
               id={`squad-editor-search-${groupId}`}
               placeholder="Szukaj po nazwie"
-              showClear
             />
-            <AutocompleteContent>
-              <AutocompleteStatus>
-                {autocompleteStatus(
-                  debouncedQuery.length,
-                  searchResult.isSuccess
-                )}
-              </AutocompleteStatus>
-              <AutocompleteEmpty>
-                {debouncedQuery.length >= 2 && searchResult.isSuccess
+            {query.length > 0 && (
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
+                onClick={() => {
+                  setQuery("");
+                }}
+              >
+                Wyczyść wyszukiwanie
+              </Button>
+            )}
+
+            <ScrollArea className="**:data-[slot=scroll-area-viewport]:max-h-64">
+              <output className="text-muted-foreground block text-sm">
+                {searchStatus(query.trim().length, searchSucceeded)}
+              </output>
+              <p className="text-muted-foreground text-sm">
+                {query.trim().length >= 2 &&
+                searchSucceeded &&
+                targets.length === 0
                   ? "Brak pasujących zweryfikowanych użytkowników."
                   : null}
-              </AutocompleteEmpty>
-              <AutocompleteList>
-                {(target: InviteTarget) => (
-                  <AutocompleteItem key={target.userId} value={target}>
+              </p>
+              <ul
+                aria-label="Wyniki wyszukiwania użytkowników"
+                className="space-y-1"
+              >
+                {targets.map((target: InviteTarget) => (
+                  <li
+                    key={target.userId}
+                    className="flex items-center gap-2 rounded-md p-2"
+                  >
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <Avatar size="sm">
                         {target.image !== null && target.image.length > 0 ? (
@@ -216,7 +230,8 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                       <span className="truncate">{target.name}</span>
                     </div>
                     <Button
-                      disabled={sendingUserId === target.userId}
+                      aria-label={`Zaproś ${target.name}`}
+                      disabled={sendingUserId !== null}
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -236,11 +251,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                       )}
                       Zaproś
                     </Button>
-                  </AutocompleteItem>
-                )}
-              </AutocompleteList>
-            </AutocompleteContent>
-          </Autocomplete>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </div>
           {searchResult.isError && debouncedQuery.length >= 2 && (
             <Alert variant="destructive">
               <AlertTitle>Nie udało się wyszukać użytkowników</AlertTitle>
@@ -259,7 +274,9 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
             </Alert>
           )}
           <p aria-live="polite" className="sr-only">
-            {debouncedQuery.length >= 2 && searchResult.isSuccess
+            {debouncedQuery.length >= 2 &&
+            searchResult.isSuccess &&
+            targets.length === 0
               ? `Znaleziono ${targets.length} użytkowników`
               : ""}
           </p>
@@ -319,9 +336,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   </span>
                   <Badge
                     variant={
-                      grant.status === "accepted"
-                        ? "success-light"
-                        : "warning-light"
+                      grant.status === "accepted" ? "secondary" : "outline"
                     }
                   >
                     {grant.status === "accepted" ? "aktywny" : "oczekuje"}
@@ -354,10 +369,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
           </ul>
         )}
       </div>
-    </FramePanel>
+    </Card>
   );
 };
 
+/** Renders editor access management and separately confirmed group deletion. */
 export const SquadGroupSettings = ({
   groupId,
   groupName,
@@ -389,9 +405,9 @@ export const SquadGroupSettings = ({
       aria-label="Ustawienia grupy składów"
       id="squad-group-settings-panel"
     >
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
+      <div className="space-y-3">
         <EditorAccessPanel groupId={groupId} />
-        <FramePanel className="p-0 shadow-none">
+        <Card className="border-destructive/20 gap-0 p-0 py-0 shadow-none">
           <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-base font-semibold">Usuń grupę</h2>
@@ -442,8 +458,8 @@ export const SquadGroupSettings = ({
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        </FramePanel>
-      </Frame>
+        </Card>
+      </div>
     </section>
   );
 };

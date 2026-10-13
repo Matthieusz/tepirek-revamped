@@ -3,21 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import {
-  X,
-  Trash2,
-  ExternalLink,
-  Loader2,
-  Pencil,
-  Save,
-  Share2,
-} from "lucide-react";
+import { X, Trash2, Loader2, Pencil, Save, Share2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
-import { Badge as ReuiBadge } from "@/components/reui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +20,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { AccountDisplayNameSchema } from "@/features/squad-builder/account-form-schemas";
 import {
   deleteOwnedAccountMutationOptions,
@@ -37,7 +36,6 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { formatDateTime } from "@/lib/utils";
 import { AccountRefetchWorkflow } from "@/routes/dashboard/squad-builder/-components/accounts/account-refetch-workflow";
 import { AccountSharingPanel } from "@/routes/dashboard/squad-builder/-components/accounts/account-sharing-panel";
 
@@ -188,7 +186,7 @@ const DeleteAccountDialog = ({
 
   return (
     <AlertDialog onOpenChange={onOpenChange} open={open}>
-      <AlertDialogContent size="sm">
+      <AlertDialogContent className="text-left whitespace-normal" size="sm">
         <AlertDialogHeader>
           <AlertDialogTitle>
             Usunąć konto „{account.displayName}”?
@@ -225,7 +223,7 @@ interface OwnedAccountManagementRowProps {
   readonly account: OwnedAccount;
 }
 
-/** Renders account operations and sharing controls for an expanded account row. */
+/** Renders direct account actions with focused rename, sharing, and deletion dialogs. */
 export const OwnedAccountManagementRow = ({
   account,
 }: OwnedAccountManagementRowProps) => {
@@ -233,9 +231,23 @@ export const OwnedAccountManagementRow = ({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   return (
-    <div className="grid gap-6 px-5 py-4 lg:grid-cols-2">
-      <div className="min-w-0">
-        {isEditing ? (
+    <AccountRefetchWorkflow accountId={account.accountId}>
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogTrigger
+          aria-label={`Edytuj nazwę konta ${account.displayName}`}
+          title="Edytuj nazwę"
+          render={<Button size="sm" variant="outline" />}
+        >
+          <Pencil aria-hidden="true" className="size-3.5" />
+          <span className="hidden lg:inline">Edytuj nazwę</span>
+        </DialogTrigger>
+        <DialogContent className="text-left whitespace-normal">
+          <DialogHeader className="pr-8">
+            <DialogTitle>Edytuj nazwę konta</DialogTitle>
+            <DialogDescription>
+              Zmień nazwę konta „{account.displayName}”.
+            </DialogDescription>
+          </DialogHeader>
           <RenameAccountForm
             account={account}
             key={account.displayName}
@@ -247,81 +259,55 @@ export const OwnedAccountManagementRow = ({
               toast.success("Nazwa konta została zmieniona");
             }}
           />
-        ) : (
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-medium">
-              {account.displayName}
-            </span>
-            <ReuiBadge variant="secondary">
-              {account.characterCount}{" "}
-              {account.characterCount === 1 ? "postać" : "postaci"}
-            </ReuiBadge>
+        </DialogContent>
+      </Dialog>
+      <Dialog>
+        <DialogTrigger
+          aria-label={`Udostępnij konto ${account.displayName}`}
+          title="Udostępnij"
+          render={<Button size="sm" variant="outline" />}
+        >
+          <Share2 aria-hidden="true" className="size-3.5" />
+          <span className="hidden lg:inline">Udostępnij</span>
+        </DialogTrigger>
+        <DialogContent className="flex max-h-[85dvh] flex-col overflow-hidden text-left whitespace-normal sm:max-w-xl">
+          <DialogHeader className="shrink-0 pr-8">
+            <DialogTitle>Udostępnij konto „{account.displayName}”</DialogTitle>
+            <DialogDescription>
+              Zaproś użytkowników i zarządzaj dostępem do konta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto overscroll-contain">
+            <AccountSharingPanel
+              accountDisplayName={account.displayName}
+              accountId={account.accountId}
+            />
           </div>
-        )}
-        <div className="mt-1 flex items-center gap-2">
-          <a
-            className="text-primary inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
-            href={account.generatedProfileUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <ExternalLink aria-hidden="true" className="size-3" />
-            Profil Margonem
-          </a>
-          <span className="text-muted-foreground font-mono text-xs">
-            #{account.profileId}
-          </span>
-        </div>
-        <p className="text-muted-foreground mt-1 font-mono text-xs">
-          Ostatnio pobrano: {formatDateTime(account.lastFetchedAt)}
-        </p>
-        <AccountRefetchWorkflow accountId={account.accountId}>
-          {!isEditing && (
-            <Button
-              onClick={() => {
-                setIsEditing(true);
-              }}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              <Pencil aria-hidden="true" className="size-3.5" />
-              Edytuj nazwę
-            </Button>
-          )}
-          <Button
-            className="text-destructive hover:text-destructive"
-            onClick={() => {
-              setIsDeleteOpen(true);
-            }}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <Trash2 aria-hidden="true" className="size-3.5" />
-            Usuń konto
-          </Button>
-        </AccountRefetchWorkflow>
-
-        <DeleteAccountDialog
-          account={account}
-          onDeleted={() => {
-            setIsDeleteOpen(false);
+        </DialogContent>
+      </Dialog>
+      <div className="ml-1 border-l pl-2">
+        <Button
+          aria-label={`Usuń konto ${account.displayName}`}
+          title="Usuń konto"
+          className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
+          onClick={() => {
+            setIsDeleteOpen(true);
           }}
-          onOpenChange={setIsDeleteOpen}
-          open={isDeleteOpen}
-        />
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </Button>
       </div>
-      <section className="border-border min-w-0 lg:border-l lg:pl-6">
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-          <Share2 aria-hidden="true" className="text-muted-foreground size-4" />
-          Udostępnianie konta
-        </h3>
-        <AccountSharingPanel
-          accountDisplayName={account.displayName}
-          accountId={account.accountId}
-        />
-      </section>
-    </div>
+      <DeleteAccountDialog
+        account={account}
+        onDeleted={() => {
+          setIsDeleteOpen(false);
+        }}
+        onOpenChange={setIsDeleteOpen}
+        open={isDeleteOpen}
+      />
+    </AccountRefetchWorkflow>
   );
 };

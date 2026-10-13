@@ -368,6 +368,17 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
               profession: character.profession,
             })
           ),
+          characters: Arr.sortWith(
+            pending.jarunaCharacters,
+            (character) => character.level,
+            Order.flip(Order.Number)
+          ).map((character) => ({
+            avatarUrl: character.avatarUrl,
+            characterId: character.characterId,
+            level: character.level,
+            name: character.name,
+            profession: character.profession,
+          })),
           displayName,
           generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
           lastFetchedAt: pending.fetchedAt,
@@ -438,7 +449,6 @@ const loadOwnedAccountWithDatabase = (
         .from(margonemCharacter)
         .where(eq(margonemCharacter.accountId, accountId))
         .orderBy(desc(margonemCharacter.level), asc(margonemCharacter.id))
-        .limit(ACCOUNT_CHARACTER_PREVIEW_LIMIT)
     );
 
     const accountIdValue = yield* parseMargonemAccountId(
@@ -456,9 +466,18 @@ const loadOwnedAccountWithDatabase = (
     return {
       accountId: accountIdValue,
       characterCount: account.characterCount ?? 0,
-      characterPreviews: characterRows.map((character) => ({
+      characterPreviews: characterRows
+        .slice(0, ACCOUNT_CHARACTER_PREVIEW_LIMIT)
+        .map((character) => ({
+          avatarUrl: character.avatarUrl,
+          characterId: character.characterId,
+          name: character.name,
+          profession: character.profession,
+        })),
+      characters: characterRows.map((character) => ({
         avatarUrl: character.avatarUrl,
         characterId: character.characterId,
+        level: character.level,
         name: character.name,
         profession: character.profession,
       })),
@@ -681,6 +700,15 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
               name: character.name,
               profession: character.profession,
             })) ?? [],
+        characters: (characterRowsByAccount[String(row.accountId)] ?? []).map(
+          (character) => ({
+            avatarUrl: character.avatarUrl,
+            characterId: character.characterId,
+            level: character.level,
+            name: character.name,
+            profession: character.profession,
+          })
+        ),
         displayName,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
         lastFetchedAt: row.lastFetchedAt ?? row.createdAt,

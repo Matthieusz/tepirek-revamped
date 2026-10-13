@@ -144,6 +144,12 @@ export const OwnedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountId,
   characterCount: Schema.Finite,
   characterPreviews: Schema.Array(OwnedAccountCharacterPreviewSchema),
+  characters: Schema.Array(
+    Schema.Struct({
+      ...OwnedAccountCharacterPreviewSchema.fields,
+      level: PositiveInt,
+    })
+  ),
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
   lastFetchedAt: Schema.DateFromString,

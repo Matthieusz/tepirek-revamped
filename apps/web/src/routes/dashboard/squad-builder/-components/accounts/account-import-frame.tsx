@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Trash2,
-  Link2,
   Loader2,
   Search,
 } from "lucide-react";
@@ -17,22 +16,11 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
-import { Badge as ReuiBadge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
-import {
-  Stepper,
-  StepperContent,
-  StepperIndicator,
-  StepperItem,
-  StepperNav,
-  StepperPanel,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from "@/components/reui/stepper";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AccountDisplayNameSchema,
   getProfileLines,
@@ -194,10 +182,10 @@ const PreviewRow = ({
               <span className="text-muted-foreground font-mono text-xs">
                 #{item.profileId}
               </span>
-              <ReuiBadge variant="secondary">
+              <Badge variant="secondary">
                 {item.characterCount}{" "}
                 {item.characterCount === 1 ? "postać" : "postaci"}
-              </ReuiBadge>
+              </Badge>
             </div>
             {item.jarunaCharacters.length > 0 ? (
               <ul
@@ -309,100 +297,83 @@ const ImportPanel = ({
   onStepChange,
   previewForm,
 }: ImportPanelProps) => (
-  <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-    <FramePanel className="p-0 shadow-none">
-      <div className="border-border border-b px-5 py-3">
-        <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Link2 aria-hidden="true" className="text-muted-foreground size-4" />
-          Import kont
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Wklej linki do profili Margonem, aby pobrać postacie z Jaruny.
-        </p>
-      </div>
-
-      <Stepper
-        value={activeStep}
-        onValueChange={(value) => {
-          onStepChange(value === 2 ? 2 : 1);
-        }}
+  <div className="space-y-3">
+    <Tabs
+      value={String(activeStep)}
+      onValueChange={(value) => {
+        onStepChange(value === "2" ? 2 : 1);
+      }}
+      className="flex-col"
+    >
+      <TabsList
+        aria-label="Nawigacja etapów importu kont"
+        className="mb-3"
+        variant="line"
       >
-        <StepperNav
-          aria-label="Nawigacja etapów importu kont"
-          className="border-border border-b px-5 py-3"
+        <TabsTrigger value="1">
+          1 · Wklej profile
+          {isPreviewPending && (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          )}
+        </TabsTrigger>
+        <TabsTrigger
+          value="2"
+          disabled={previewItems.length === 0 && activeStep !== 2}
         >
-          <StepperItem
-            completed={activeStep === 2}
-            loading={isPreviewPending}
-            step={1}
-          >
-            <StepperTrigger>
-              <StepperIndicator>1</StepperIndicator>
-              <StepperTitle>Wklej profile</StepperTitle>
-            </StepperTrigger>
-            <StepperSeparator />
-          </StepperItem>
-          <StepperItem disabled={previewItems.length === 0} step={2}>
-            <StepperTrigger>
-              <StepperIndicator>2</StepperIndicator>
-              <StepperTitle>Sprawdź i zapisz</StepperTitle>
-            </StepperTrigger>
-          </StepperItem>
-        </StepperNav>
-        <StepperPanel>
-          <StepperContent value={1}>{previewForm}</StepperContent>
+          2 · Sprawdź i zapisz
+        </TabsTrigger>
+      </TabsList>
+      <div>
+        <TabsContent value="1">{previewForm}</TabsContent>
 
-          <StepperContent value={2}>
-            <p className="sr-only" aria-live="polite">
-              {previewItems.filter((item) => item.status === "success").length}{" "}
-              kont gotowych,{" "}
-              {previewItems.filter((item) => item.status === "error").length}{" "}
-              błędów
-            </p>
+        <TabsContent value="2">
+          <p className="sr-only" aria-live="polite">
+            {previewItems.filter((item) => item.status === "success").length}{" "}
+            kont gotowych,{" "}
+            {previewItems.filter((item) => item.status === "error").length}{" "}
+            błędów
+          </p>
 
-            {previewItems.length === 0 && (
-              <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
-                <CheckCircle2
-                  aria-hidden="true"
-                  className="text-success size-7"
-                />
-                <div>
-                  <h3 className="font-medium">
-                    Wszystkie konta zostały zapisane
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    Możesz dodać kolejne profile Margonem.
-                  </p>
-                </div>
-                <Button onClick={onClear} type="button" variant="outline">
-                  Dodaj kolejne konta
-                </Button>
+          {previewItems.length === 0 && (
+            <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
+              <CheckCircle2
+                aria-hidden="true"
+                className="text-success size-7"
+              />
+              <div>
+                <h3 className="font-medium">
+                  Wszystkie konta zostały zapisane
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Możesz dodać kolejne profile Margonem.
+                </p>
               </div>
-            )}
+              <Button onClick={onClear} type="button" variant="outline">
+                Dodaj kolejne konta
+              </Button>
+            </div>
+          )}
 
-            {isPreviewPending && previewItems.length === 0 && (
-              <LoadingSpinner />
-            )}
+          {isPreviewPending && previewItems.length === 0 && <LoadingSpinner />}
 
-            {previewItems.length > 0 && (
-              <ul className="divide-border divide-y">
-                {previewItems.map((item) => (
-                  <PreviewRow
-                    confirmingId={confirmingId}
-                    isConfirming={isConfirming}
-                    item={item}
-                    key={item.lineNumber}
-                    onConfirm={onConfirm}
-                    onConfirmed={onConfirmed}
-                  />
-                ))}
-              </ul>
-            )}
-          </StepperContent>
-        </StepperPanel>
-      </Stepper>
-    </FramePanel>
-  </Frame>
+          {previewItems.length > 0 && (
+            <ul className="divide-border divide-y">
+              {previewItems.map((item) => (
+                <PreviewRow
+                  confirmingId={confirmingId}
+                  isConfirming={isConfirming}
+                  item={item}
+                  key={item.lineNumber}
+                  onConfirm={onConfirm}
+                  onConfirmed={onConfirmed}
+                />
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+      </div>
+    </Tabs>
+  </div>
 );
 
 /** Renders and owns the complete two-stage account import workflow. */
@@ -488,7 +459,7 @@ export const AccountImportFrame = () => {
   const profileLineCount = getProfileLines(profileUrls).length;
 
   const previewForm = (
-    <Form className="border-border space-y-4 border-b px-5 py-4" form={form}>
+    <Form className="space-y-4 py-2" form={form}>
       <form.AppField name="profileUrls">
         {(field) => (
           <field.TextareaField

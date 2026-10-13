@@ -9,11 +9,10 @@ import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form } from "@/components/forms/form";
-import { Badge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
-import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -196,7 +195,12 @@ const CollectionEmpty = ({
 
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <IconStack aria-hidden="true">{icon}</IconStack>
+      <div
+        aria-hidden="true"
+        className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-lg"
+      >
+        {icon}
+      </div>
       <p className="text-muted-foreground max-w-md text-sm">{copy}</p>
       {kind === "mine" && onCreateGroup !== undefined && (
         <Button
@@ -251,10 +255,7 @@ const GroupRow = (props: GroupRowProps) => {
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">{group.name}</span>
-            <Badge
-              size="sm"
-              variant={props.kind === "public" ? "info-light" : "secondary"}
-            >
+            <Badge variant={props.kind === "public" ? "outline" : "secondary"}>
               {status}
             </Badge>
           </div>
@@ -467,8 +468,8 @@ export const SquadGroupLibrary = ({
           </TabsTrigger>
         </TabsList>
       </nav>
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="p-0 shadow-none">
+      <div className="space-y-3">
+        <Card className="gap-0 p-0 py-0 shadow-none">
           <TabsContent aria-label="Moje grupy składów" value="mine">
             <CollectionPanel
               filtered={false}
@@ -503,8 +504,8 @@ export const SquadGroupLibrary = ({
               result={publicResult}
             />
           </TabsContent>
-        </FramePanel>
-      </Frame>
+        </Card>
+      </div>
     </Tabs>
   );
 };

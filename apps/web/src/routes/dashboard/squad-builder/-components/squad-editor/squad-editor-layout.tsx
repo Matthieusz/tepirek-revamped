@@ -1,8 +1,15 @@
 import type * as HashMap from "effect/HashMap";
 import { AlertTriangle } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
-import { Frame, FramePanel } from "@/components/reui/frame";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AvailableCharacterPool } from "@/routes/dashboard/squad-builder/-components/squad-editor/available-character-pool";
 import { SquadEditorCommandHeader } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-command-header";
 import { SquadGroupSettings } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-group-settings";
@@ -73,27 +80,45 @@ export const SquadEditorLayout = ({
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <SquadEditorCommandHeader
-        draft={draft}
-        onNameChange={onNameChange}
-        onSave={onSave}
-        onSettingsToggle={onSettingsToggle}
-        onVisibilityChange={onVisibilityChange}
-        role={role}
-        isSaveConflict={isSaveConflict}
-        onReloadLatest={onReloadLatest}
-        saveError={saveError}
-        state={{ isDirty, isSaving, isSettingsOpen, isVisibilityPending }}
-        variant={isViewer ? "viewer" : "editor"}
-        visibility={visibility}
-      />
+      <Dialog
+        open={isOwner && isSettingsOpen}
+        onOpenChange={(open) => {
+          if (open !== isSettingsOpen) {
+            onSettingsToggle();
+          }
+        }}
+      >
+        <SquadEditorCommandHeader
+          draft={draft}
+          onNameChange={onNameChange}
+          onSave={onSave}
+          onVisibilityChange={onVisibilityChange}
+          role={role}
+          isSaveConflict={isSaveConflict}
+          onReloadLatest={onReloadLatest}
+          saveError={saveError}
+          state={{ isDirty, isSaving, isSettingsOpen, isVisibilityPending }}
+          variant={isViewer ? "viewer" : "editor"}
+          visibility={visibility}
+        />
 
-      {isOwner && isSettingsOpen && (
-        <SquadGroupSettings groupId={groupId} groupName={draft.name} />
-      )}
+        {isOwner && (
+          <DialogContent className="flex max-h-[85dvh] flex-col overflow-hidden sm:max-w-2xl">
+            <DialogHeader className="shrink-0 pr-8">
+              <DialogTitle>Ustawienia grupy</DialogTitle>
+              <DialogDescription>
+                Zarządzaj dostępem edytorów i grupą „{draft.name}”.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="min-h-0 overflow-y-auto overscroll-contain">
+              <SquadGroupSettings groupId={groupId} groupName={draft.name} />
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
 
       {!isOwner && (
-        <Alert variant={isViewer ? "default" : "info"}>
+        <Alert variant="default">
           <AlertTriangle aria-hidden="true" />
           <AlertTitle>
             {isViewer ? "Tryb tylko do odczytu" : "Uprawnienia edytora"}
@@ -104,8 +129,8 @@ export const SquadEditorLayout = ({
         </Alert>
       )}
 
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="@container/squad-workspace p-0 shadow-none">
+      <div className="space-y-3">
+        <Card className="@container/squad-workspace gap-0 p-0 py-0 shadow-none">
           <div className="grid gap-5 p-3 @min-[64rem]/squad-workspace:min-h-0 @min-[64rem]/squad-workspace:grid-cols-[minmax(0,1fr)_28rem] @min-[64rem]/squad-workspace:p-4">
             <div className="min-w-0">
               <SquadRosterWorkspace
@@ -132,7 +157,7 @@ export const SquadEditorLayout = ({
                 />
               ) : (
                 <div className="flex items-start">
-                  <Alert className="w-full" variant="info">
+                  <Alert className="w-full" variant="default">
                     <AlertTitle>Brak puli do edycji</AlertTitle>
                     <AlertDescription>
                       Właściciel lub edytor może zmieniać przydział postaci w
@@ -143,8 +168,8 @@ export const SquadEditorLayout = ({
               )}
             </div>
           </div>
-        </FramePanel>
-      </Frame>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,13 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
 import { Check, Loader2, RotateCw, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
-import { Badge as ReuiBadge } from "@/components/reui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   applyAccountRefetchMutationOptions,
   previewAccountRefetchMutationOptions,
@@ -96,6 +103,7 @@ export const AccountRefetchWorkflow = ({
   children,
 }: AccountRefetchWorkflowProps) => {
   const queryClient = useQueryClient();
+  const refreshButtonRef = useRef<HTMLButtonElement>(null);
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
   const previewRefetch = useMutation(previewAccountRefetchMutationOptions());
 
@@ -152,9 +160,12 @@ export const AccountRefetchWorkflow = ({
 
   return (
     <>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="flex items-center justify-end gap-2">
         <Button
-          disabled={previewRefetch.isPending}
+          ref={refreshButtonRef}
+          aria-label="Odśwież postacie konta"
+          title="Odśwież"
+          disabled={previewRefetch.isPending || applyRefetch.isPending}
           onClick={handlePreview}
           size="sm"
           variant="outline"
@@ -164,126 +175,148 @@ export const AccountRefetchWorkflow = ({
           ) : (
             <RotateCw aria-hidden="true" className="size-3.5" />
           )}
-          Odśwież
+          <span className="hidden lg:inline">Odśwież</span>
         </Button>
         {children}
       </div>
 
-      {preview !== null && (
-        <div className="bg-muted/50 mt-3 space-y-3 rounded-lg p-3">
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium">Podgląd odświeżenia</h3>
-            <div className="flex flex-wrap gap-1.5" aria-live="polite">
-              <ReuiBadge variant="success-light">
-                Dodane: {preview.diff.added.length}
-              </ReuiBadge>
-              <ReuiBadge variant="destructive-light">
-                Usunięte: {preview.diff.removed.length}
-              </ReuiBadge>
-              <ReuiBadge variant="warning-light">
-                Zmienione: {preview.diff.changed.length}
-              </ReuiBadge>
-              <ReuiBadge variant="secondary">
-                Bez zmian: {preview.diff.unchangedCount}
-              </ReuiBadge>
-            </div>
-            {preview.diff.removed.length > 0 && (
-              <Alert variant="warning">
-                <AlertTriangle aria-hidden="true" />
-                <AlertTitle>Zmiana wpłynie na zapisane składy</AlertTitle>
-                <AlertDescription>
-                  Usunięte postacie zostaną również usunięte z zapisanych
-                  składów.
-                </AlertDescription>
-              </Alert>
-            )}
-            {!hasDiff && (
-              <p className="text-muted-foreground text-xs">
-                Nie znaleziono zmian w postaciach z Jaruny.
-              </p>
-            )}
-          </div>
+      <Dialog
+        open={preview !== null}
+        onOpenChange={(open) => {
+          if (!open && !applyRefetch.isPending) {
+            setPreview(null);
+          }
+        }}
+      >
+        <DialogContent
+          finalFocus={refreshButtonRef}
+          className="flex max-h-[85dvh] flex-col overflow-hidden text-left whitespace-normal sm:max-w-xl"
+        >
+          <DialogHeader className="shrink-0 pr-8">
+            <DialogTitle>Podgląd odświeżenia</DialogTitle>
+            <DialogDescription>
+              Sprawdź zmiany w postaciach przed ich zastosowaniem.
+            </DialogDescription>
+          </DialogHeader>
+          {preview !== null && (
+            <div className="min-h-0 space-y-3 overflow-y-auto overscroll-contain">
+              <div className="space-y-1">
+                <div className="flex flex-wrap gap-1.5" aria-live="polite">
+                  <Badge variant="secondary">
+                    Dodane: {preview.diff.added.length}
+                  </Badge>
+                  <Badge variant="destructive">
+                    Usunięte: {preview.diff.removed.length}
+                  </Badge>
+                  <Badge variant="outline">
+                    Zmienione: {preview.diff.changed.length}
+                  </Badge>
+                  <Badge variant="secondary">
+                    Bez zmian: {preview.diff.unchangedCount}
+                  </Badge>
+                </div>
+                {preview.diff.removed.length > 0 && (
+                  <Alert variant="default">
+                    <AlertTriangle aria-hidden="true" />
+                    <AlertTitle>Zmiana wpłynie na zapisane składy</AlertTitle>
+                    <AlertDescription>
+                      Usunięte postacie zostaną również usunięte z zapisanych
+                      składów.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {!hasDiff && (
+                  <p className="text-muted-foreground text-xs">
+                    Nie znaleziono zmian w postaciach z Jaruny.
+                  </p>
+                )}
+              </div>
 
-          {preview.diff.added.length > 0 && (
-            <div className="space-y-1">
-              <h4 className="text-xs font-medium">Dodane postacie</h4>
-              <ul className="space-y-1 text-xs">
-                {preview.diff.added.map((character) => (
-                  <li key={character.characterId}>
-                    {character.name} {character.level}{" "}
-                    {formatProfession(character.profession)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preview.diff.removed.length > 0 && (
-            <div className="space-y-1">
-              <h4 className="text-xs font-medium">
-                Usunięte z Jaruny / profilu
-              </h4>
-              <ul className="space-y-1 text-xs">
-                {preview.diff.removed.map((character) => (
-                  <li key={character.databaseCharacterId}>
-                    {character.name} {character.level}{" "}
-                    {formatProfession(character.profession)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preview.diff.changed.length > 0 && (
-            <div className="space-y-1">
-              <h4 className="text-xs font-medium">Zmienione postacie</h4>
-              <ul className="space-y-2 text-xs">
-                {preview.diff.changed.map((character) => (
-                  <li key={character.databaseCharacterId}>
-                    <span className="font-medium">{character.name}</span>
-                    <ul className="text-muted-foreground ml-4 list-disc">
-                      {character.changes.map((change) => (
-                        <li
-                          key={`${character.databaseCharacterId}-${change.field}`}
-                        >
-                          {changeFieldLabel(change.field)}: z „
-                          {formatChangeValue(change.before)}” na „
-                          {formatChangeValue(change.after)}”
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              disabled={applyRefetch.isPending}
-              onClick={handleApply}
-              size="sm"
-            >
-              {applyRefetch.isPending ? (
-                <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
-              ) : (
-                <Check aria-hidden="true" className="size-3.5" />
+              {preview.diff.added.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-medium">Dodane postacie</h4>
+                  <ul className="space-y-1 text-xs">
+                    {preview.diff.added.map((character) => (
+                      <li key={character.characterId}>
+                        {character.name} {character.level}{" "}
+                        {formatProfession(character.profession)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-              Zastosuj zmiany
-            </Button>
-            <Button
-              disabled={applyRefetch.isPending}
-              onClick={() => {
-                setPreview(null);
-              }}
-              size="sm"
-              variant="ghost"
-            >
-              Nie teraz
-            </Button>
-          </div>
-        </div>
-      )}
+
+              {preview.diff.removed.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-medium">
+                    Usunięte z Jaruny / profilu
+                  </h4>
+                  <ul className="space-y-1 text-xs">
+                    {preview.diff.removed.map((character) => (
+                      <li key={character.databaseCharacterId}>
+                        {character.name} {character.level}{" "}
+                        {formatProfession(character.profession)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {preview.diff.changed.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-medium">Zmienione postacie</h4>
+                  <ul className="space-y-2 text-xs">
+                    {preview.diff.changed.map((character) => (
+                      <li key={character.databaseCharacterId}>
+                        <span className="font-medium">{character.name}</span>
+                        <ul className="text-muted-foreground ml-4 list-disc">
+                          {character.changes.map((change) => (
+                            <li
+                              key={`${character.databaseCharacterId}-${change.field}`}
+                            >
+                              {changeFieldLabel(change.field)}: z „
+                              {formatChangeValue(change.before)}” na „
+                              {formatChangeValue(change.after)}”
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={applyRefetch.isPending}
+                  onClick={handleApply}
+                  size="sm"
+                >
+                  {applyRefetch.isPending ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-3.5 animate-spin"
+                    />
+                  ) : (
+                    <Check aria-hidden="true" className="size-3.5" />
+                  )}
+                  Zastosuj zmiany
+                </Button>
+                <Button
+                  disabled={applyRefetch.isPending}
+                  onClick={() => {
+                    setPreview(null);
+                  }}
+                  size="sm"
+                  variant="ghost"
+                >
+                  Nie teraz
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -19,6 +19,7 @@ it.effect("updates an owned account display name through the store", () => {
         accountId,
         characterCount: 2,
         characterPreviews: [],
+        characters: [],
         displayName,
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
         lastFetchedAt: new Date("2026-07-14T12:00:00.000Z"),

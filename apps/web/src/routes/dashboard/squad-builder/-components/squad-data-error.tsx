@@ -6,7 +6,7 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-} from "@/components/reui/alert";
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 /** Reports a failed squad-data query while keeping retry and unaffected content available. */

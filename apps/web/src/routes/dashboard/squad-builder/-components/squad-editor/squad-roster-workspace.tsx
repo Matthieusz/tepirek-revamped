@@ -6,9 +6,6 @@ import * as Record from "effect/Record";
 import { Plus, X, ChevronDown, Trash2, UserRound } from "lucide-react";
 import { useState } from "react";
 
-import { Badge } from "@/components/reui/badge";
-import { Frame, FramePanel } from "@/components/reui/frame";
-import { IconStack } from "@/components/reui/icon-stack";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type {
@@ -78,7 +77,7 @@ const SquadRosterRow = ({
     return (
       <li
         aria-label={`Wolne miejsce ${position + 1}`}
-        className="border-border/80 text-muted-foreground flex min-h-16 items-center gap-2 rounded-md border border-dashed px-2"
+        className="border-border/60 text-foreground/70 flex min-h-10 items-center gap-2 rounded-md border border-dashed px-2"
       >
         <span
           aria-hidden="true"
@@ -156,7 +155,7 @@ const SquadRosterRow = ({
               {profession.label}
             </span>
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground break-words">
+            <span className="text-foreground/70 break-words">
               {character.accountDisplayName}
             </span>
           </p>
@@ -237,14 +236,14 @@ const formatSquadLevelRange = (
   levelRange: SquadLevelRange | undefined
 ): string => {
   if (levelRange === undefined) {
-    return "Brak poziomów";
+    return "Poziomy postaci niedostępne";
   }
 
   if (levelRange.min === levelRange.max) {
-    return `Poziom ${levelRange.min}`;
+    return `Poziomy postaci: ${levelRange.min}`;
   }
 
-  return `Poziomy ${levelRange.min}–${levelRange.max}`;
+  return `Poziomy postaci: ${levelRange.min}–${levelRange.max}`;
 };
 
 const SquadPanel = ({
@@ -274,8 +273,8 @@ const SquadPanel = ({
 
   return (
     <>
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="p-0 shadow-none">
+      <div className="space-y-3">
+        <Card className="gap-0 p-0 py-0 shadow-none">
           <header className="border-border flex items-start gap-2 border-b px-4 py-3">
             <div className="min-w-0 flex-1">
               {isOwner ? (
@@ -302,11 +301,15 @@ const SquadPanel = ({
                   {squad.name}
                 </h3>
               )}
-              <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <div className="text-foreground/70 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 <span className="font-mono tabular-nums">
-                  {formatSquadLevelRange(levelRange)}
+                  {squad.characters.length === 0
+                    ? "Pusty skład"
+                    : formatSquadLevelRange(levelRange)}
                 </span>
-                <span aria-hidden="true">·</span>
+                {professionCounts.length > 0 && (
+                  <span aria-hidden="true">·</span>
+                )}
                 {professionCounts.length > 0 ? (
                   <ul
                     aria-label={`Profesje w składzie ${squad.name}`}
@@ -334,16 +337,14 @@ const SquadPanel = ({
                       );
                     })}
                   </ul>
-                ) : (
-                  <span>Brak profesji</span>
-                )}
+                ) : null}
               </div>
             </div>
             <Badge
               className="mt-1 shrink-0 font-mono tabular-nums"
               variant={
                 squad.characters.length === MAX_SQUAD_CHARACTERS
-                  ? "warning-light"
+                  ? "outline"
                   : "secondary"
               }
             >
@@ -408,8 +409,8 @@ const SquadPanel = ({
               })}
             </ul>
           </div>
-        </FramePanel>
-      </Frame>
+        </Card>
+      </div>
       <AlertDialog
         onOpenChange={setIsDeleteDialogOpen}
         open={isDeleteDialogOpen}
@@ -466,8 +467,10 @@ export const SquadRosterWorkspace = ({
           <h2 className="text-base font-semibold" id="squad-roster-heading">
             Składy w grupie
           </h2>
-          <p className="text-muted-foreground text-sm">
-            Przydziel każdą postać do maksymalnie jednego składu.
+          <p className="text-foreground/70 text-sm">
+            {canEditPlacements
+              ? "Kliknij postać w puli i wybierz skład. Każda postać może należeć tylko do jednego składu."
+              : "Każda postać może należeć tylko do jednego składu."}
           </p>
         </div>
         {isOwner && (
@@ -485,11 +488,14 @@ export const SquadRosterWorkspace = ({
       </div>
 
       {draft.squads.length === 0 && (
-        <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-          <FramePanel className="flex flex-col items-center gap-3 py-10 text-center shadow-none">
-            <IconStack aria-hidden="true">
+        <div className="space-y-3">
+          <Card className="flex flex-col items-center gap-0 gap-3 py-0 py-10 text-center shadow-none">
+            <div
+              aria-hidden="true"
+              className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-lg"
+            >
               <UserRound aria-hidden="true" className="size-5" />
-            </IconStack>
+            </div>
             <p className="text-muted-foreground max-w-sm text-sm">
               {isOwner
                 ? "Dodaj pierwszy skład, a potem wybierz postacie z puli obok."
@@ -507,8 +513,8 @@ export const SquadRosterWorkspace = ({
                 Dodaj pierwszy skład
               </Button>
             )}
-          </FramePanel>
-        </Frame>
+          </Card>
+        </div>
       )}
 
       {draft.squads.length > 0 && (

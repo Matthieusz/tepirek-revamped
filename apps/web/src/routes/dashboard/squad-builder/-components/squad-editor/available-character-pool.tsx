@@ -8,10 +8,9 @@ import * as Predicate from "effect/Predicate";
 import { ChevronDown, Search, UserPlus } from "lucide-react";
 import { useMemo, useReducer } from "react";
 
-import { Frame, FramePanel } from "@/components/reui/frame";
-import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -195,39 +194,57 @@ const characterPoolReducer = (
   }
 };
 
-const CharacterImageTrigger = ({
+const CharacterRowTrigger = ({
   character,
 }: {
   readonly character: SquadCharacterMetadata;
-}) => (
-  <DropdownMenuTrigger
-    render={
-      <button
-        aria-label={`Dodaj postać ${character.name} do składu`}
-        className="group bg-muted/50 focus-visible:ring-ring focus-visible:ring-offset-background relative block aspect-[4/5] h-8 w-[1.6rem] shrink-0 overflow-hidden rounded-md focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-        type="button"
-      >
-        <Avatar
-          aria-hidden="true"
-          className="absolute inset-0 size-full overflow-hidden rounded-md after:hidden"
+}) => {
+  const profession = getProfessionPresentation(character.profession);
+
+  return (
+    <DropdownMenuTrigger
+      render={
+        <button
+          aria-label={`Dodaj postać ${character.name} do składu`}
+          title="Kliknij, aby wybrać skład"
+          className="border-border bg-card/40 hover:border-primary/40 hover:bg-muted/50 focus-visible:ring-ring flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md border p-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none"
+          type="button"
         >
-          {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
-            <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
-          ) : null}
-          <AvatarFallback className="rounded-md">
-            {character.name.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <span
-          aria-hidden="true"
-          className="bg-background/75 text-foreground pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(pointer:coarse)]:opacity-100"
-        >
-          <UserPlus aria-hidden="true" className="size-3.5" />
-        </span>
-      </button>
-    }
-  />
-);
+          <Avatar
+            aria-hidden="true"
+            className="h-8 w-[1.6rem] shrink-0 overflow-hidden rounded-md after:hidden"
+          >
+            {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
+              <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
+            ) : null}
+            <AvatarFallback className="rounded-md">
+              {character.name.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="min-w-0 flex-1 truncate text-sm leading-snug font-medium">
+            {character.name}
+          </span>
+          <span
+            aria-label={`Poziom ${character.level}`}
+            className="text-foreground/70 shrink-0 font-mono text-xs tabular-nums"
+          >
+            {character.level}
+          </span>
+          <span
+            className={`flex max-w-24 shrink-0 items-center gap-1 truncate text-xs ${profession.colorClass}`}
+          >
+            <profession.icon aria-hidden="true" className="size-3 shrink-0" />
+            <span className="truncate">{profession.label}</span>
+          </span>
+          <UserPlus
+            aria-hidden="true"
+            className="text-foreground/70 size-3.5 shrink-0"
+          />
+        </button>
+      }
+    />
+  );
+};
 
 const DestinationMenu = ({
   accountInfoByCharacterId,
@@ -249,7 +266,7 @@ const DestinationMenu = ({
 
   return (
     <DropdownMenu>
-      <CharacterImageTrigger character={character} />
+      <CharacterRowTrigger character={character} />
       <DropdownMenuContent align="start" className="min-w-64">
         <DropdownMenuLabel>
           Wybierz miejsce dla {character.name}
@@ -329,39 +346,16 @@ const CharacterPoolTile = ({
   readonly character: SquadCharacterMetadata;
   readonly draft: SquadGroupDraft;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
-}) => {
-  const profession = getProfessionPresentation(character.profession);
-
-  return (
-    <li className="min-w-0">
-      <article className="border-border bg-card/40 hover:border-primary/40 flex min-w-0 items-center gap-2 rounded-md border p-1.5 transition-colors motion-reduce:transition-none">
-        <DestinationMenu
-          accountInfoByCharacterId={accountInfoByCharacterId}
-          character={character}
-          draft={draft}
-          onDraftChange={onDraftChange}
-        />
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <h3 className="min-w-0 flex-1 truncate text-sm leading-snug font-medium">
-            {character.name}
-          </h3>
-          <span
-            aria-label={`Poziom ${character.level}`}
-            className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
-          >
-            {character.level}
-          </span>
-          <span
-            className={`flex max-w-24 shrink-0 items-center gap-1 truncate text-xs ${profession.colorClass}`}
-          >
-            <profession.icon aria-hidden="true" className="size-3 shrink-0" />
-            <span className="truncate">{profession.label}</span>
-          </span>
-        </div>
-      </article>
-    </li>
-  );
-};
+}) => (
+  <li className="min-w-0">
+    <DestinationMenu
+      accountInfoByCharacterId={accountInfoByCharacterId}
+      character={character}
+      draft={draft}
+      onDraftChange={onDraftChange}
+    />
+  </li>
+);
 
 const useCharacterPoolModel = ({
   characterById,
@@ -576,11 +570,8 @@ export const AvailableCharacterPool = ({
         className="contents"
         disabled={isSaving}
       >
-        <Frame
-          className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:sticky xl:top-4 xl:max-h-[calc(100dvh-10rem)]"
-          spacing="sm"
-        >
-          <FramePanel className="flex min-h-0 flex-1 flex-col p-0 shadow-none">
+        <div className="flex min-h-0 flex-1 flex-col space-y-3 xl:sticky xl:top-4 xl:max-h-[calc(100dvh-10rem)]">
+          <Card className="flex min-h-0 flex-1 flex-col gap-0 p-0 py-0 shadow-none">
             <AvailableCharacterPoolHeader
               characterCount={characters.length}
               characterNameQuery={characterNameQuery}
@@ -621,9 +612,12 @@ export const AvailableCharacterPool = ({
             )}
             {result.data !== undefined && characters.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
-                <IconStack aria-hidden="true">
+                <div
+                  aria-hidden="true"
+                  className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-lg"
+                >
                   <UserPlus aria-hidden="true" className="size-5" />
-                </IconStack>
+                </div>
                 <p className="text-muted-foreground max-w-sm text-sm">
                   Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić
                   pulę.
@@ -640,9 +634,12 @@ export const AvailableCharacterPool = ({
               characters.length > 0 &&
               unassignedCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
-                  <IconStack aria-hidden="true">
+                  <div
+                    aria-hidden="true"
+                    className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-lg"
+                  >
                     <UserPlus aria-hidden="true" className="size-5" />
-                  </IconStack>
+                  </div>
                   <p className="text-muted-foreground max-w-sm text-sm">
                     Wszystkie dostępne postacie są już przypisane do składów.
                   </p>
@@ -683,13 +680,13 @@ export const AvailableCharacterPool = ({
                     return (
                       <li key={accountGroup.accountId}>
                         <div className="mb-2 flex min-w-0 items-center gap-2">
-                          <h3 className="text-muted-foreground min-w-0 font-mono text-xs break-words">
+                          <h3 className="text-foreground/80 min-w-0 text-xs font-medium break-words">
                             {accountGroup.accountDisplayName}
                           </h3>
                           {accountGroup.accountOwnerUserName.length > 0 &&
                             accountGroup.accountOwnerUserName !==
                               accountGroup.accountDisplayName && (
-                              <span className="text-muted-foreground min-w-0 text-xs break-words">
+                              <span className="text-foreground/70 min-w-0 text-xs break-words">
                                 ({accountGroup.accountOwnerUserName})
                               </span>
                             )}
@@ -735,8 +732,8 @@ export const AvailableCharacterPool = ({
                 </ul>
               </ScrollArea>
             )}
-          </FramePanel>
-        </Frame>
+          </Card>
+        </div>
       </fieldset>
     </aside>
   );

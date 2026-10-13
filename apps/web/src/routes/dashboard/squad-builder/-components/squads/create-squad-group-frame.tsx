@@ -9,8 +9,8 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
-import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { createSquadGroupMutationOptions } from "@/features/squad-builder/squad-group-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -86,8 +86,8 @@ export const CreateSquadGroupFrame = ({
   const name = useSelector(form.store, (state) => state.values.name);
 
   return (
-    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-      <FramePanel className="p-0 shadow-none">
+    <div className="space-y-3">
+      <Card className="gap-0 p-0 py-0 shadow-none">
         <form.AppForm>
           <Form className="space-y-2 p-4" form={form}>
             <form.AppField name="name">
@@ -142,7 +142,7 @@ export const CreateSquadGroupFrame = ({
             </p>
           </Form>
         </form.AppForm>
-      </FramePanel>
-    </Frame>
+      </Card>
+    </div>
   );
 };
