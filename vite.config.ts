@@ -8,6 +8,7 @@ export default defineConfig({
     ...ultraciteFmt,
     ignorePatterns: [
       ...(ultraciteFmt.ignorePatterns ?? []),
+      ".infisical.yaml",
       "tools/oxlint/anti-slop/**",
     ],
   },
