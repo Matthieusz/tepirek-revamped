@@ -118,3 +118,38 @@ jobs:
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: test "$RESULTS" = "success success success"
+
+  deploy:
+    name: Deploy production (${{ matrix.app }})
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, web]
+
+    steps:
+      - name: Trigger Dokploy deployment
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          APPLICATION_ID: ${{ matrix.app == 'api' && secrets.DOKPLOY_API_APP_ID || secrets.DOKPLOY_WEB_APP_ID }}
+        run: |
+          test -n "$DOKPLOY_URL"
+          test -n "$DOKPLOY_API_KEY"
+          test -n "$APPLICATION_ID"
+
+          jq -n --arg id "$APPLICATION_ID" \
+            '{applicationId: $id}' |
+            curl --fail --silent --show-error \
+              --connect-timeout 10 \
+              --max-time 60 \
+              --request POST \
+              --header 'accept: application/json' \
+              --header 'Content-Type: application/json' \
+              --header "x-api-key: $DOKPLOY_API_KEY" \
+              --data-binary @- \
+              "$DOKPLOY_URL/api/application.deploy"
