@@ -92,6 +92,7 @@ export interface AvailableSquadCharacterSchema extends Schema.Schema.Type<
 export const SquadGroupDetailCharacterSchema = Schema.Struct({
   accountDisplayName: Schema.String,
   accountId: MargonemAccountId,
+  accountOwnerUserId: AppUserId,
   accountOwnerUserImage: Schema.NullOr(Schema.String),
   accountOwnerUserName: Schema.String,
   avatarUrl: Schema.NullOr(Schema.String),

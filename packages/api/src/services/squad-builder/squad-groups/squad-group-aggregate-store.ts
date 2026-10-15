@@ -39,6 +39,7 @@ export interface SquadGroupCharacter {
   readonly margonemCharacterId: number;
   readonly accountId: MargonemAccountId;
   readonly accountDisplayName: AccountDisplayName;
+  readonly accountOwnerUserId: AppUserId;
   readonly accountOwnerUserName: string;
   readonly accountOwnerUserImage: string | null;
   readonly name: string;

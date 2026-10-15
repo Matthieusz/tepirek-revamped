@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,6 +33,7 @@ import { getProfessionPresentation } from "../profession-presenters";
 export interface SquadCharacterMetadata {
   readonly accountDisplayName: string;
   readonly accountId: string | number;
+  readonly accountOwnerUserId: string;
   readonly accountOwnerUserImage: string | null;
   readonly accountOwnerUserName: string;
   readonly avatarUrl: string | null;
@@ -55,6 +56,21 @@ interface SquadRosterWorkspaceProps {
 }
 
 const avatarFallback = (name: string): string => name.slice(0, 2).toUpperCase();
+
+const ownerColor = (ownerUserId: string): string => {
+  let hash = 0;
+
+  for (const character of ownerUserId) {
+    hash = (hash * 31 + (character.codePointAt(0) ?? 0)) % 1_000_000_007;
+  }
+
+  return `oklch(65% 0.16 ${(hash * 137.508) % 360})`;
+};
+
+const ownerTintStyle = (ownerUserId: string) => ({
+  backgroundColor: `color-mix(in oklch, ${ownerColor(ownerUserId)} 14%, var(--card))`,
+  borderColor: `color-mix(in oklch, ${ownerColor(ownerUserId)} 45%, var(--border))`,
+});
 
 const SquadRosterRow = ({
   canEditPlacements,
@@ -127,7 +143,10 @@ const SquadRosterRow = ({
   const profession = getProfessionPresentation(character.profession);
 
   return (
-    <li className="border-border bg-card/40 flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
+    <li
+      className="flex min-h-16 items-center justify-between gap-2 rounded-md border px-2"
+      style={ownerTintStyle(character.accountOwnerUserId)}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
           {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
@@ -453,6 +472,20 @@ export const SquadRosterWorkspace = ({
   onRemoveCharacter,
   onRemoveSquad,
 }: SquadRosterWorkspaceProps) => {
+  const assignedIds = new Set(
+    draft.squads.flatMap((squad) =>
+      squad.characters.map((character) => character.characterId)
+    )
+  );
+
+  const owners = new Map<string, SquadCharacterMetadata>();
+
+  for (const [characterId, character] of characterById) {
+    if (assignedIds.has(characterId)) {
+      owners.set(character.accountOwnerUserId, character);
+    }
+  }
+
   const allSquadsEmpty =
     draft.squads.length === 0 ||
     draft.squads.every((squad) => squad.characters.length === 0);
@@ -463,7 +496,7 @@ export const SquadRosterWorkspace = ({
       className="min-w-0 space-y-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1 basis-48">
           <h2 className="text-base font-semibold" id="squad-roster-heading">
             Składy w grupie
           </h2>
@@ -473,6 +506,48 @@ export const SquadRosterWorkspace = ({
               : "Każda postać może należeć tylko do jednego składu."}
           </p>
         </div>
+        {owners.size > 0 && (
+          <div className="ms-auto min-w-0">
+            <p className="sr-only" id="squad-owners-heading">
+              Kolory oznaczają właścicieli kont
+            </p>
+            <ul
+              aria-labelledby="squad-owners-heading"
+              className="flex flex-wrap gap-2"
+            >
+              {[...owners.entries()]
+                .toSorted(([left], [right]) => left.localeCompare(right))
+                .map(([ownerId, owner]) => (
+                  <li
+                    className="flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
+                    key={ownerId}
+                    style={ownerTintStyle(ownerId)}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: ownerColor(ownerId) }}
+                    />
+                    <Avatar size="sm" aria-hidden="true">
+                      {owner.accountOwnerUserImage !== null &&
+                        owner.accountOwnerUserImage.length > 0 && (
+                          <AvatarImage
+                            alt=""
+                            src={owner.accountOwnerUserImage}
+                          />
+                        )}
+                      <AvatarFallback>
+                        {avatarFallback(owner.accountOwnerUserName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="min-w-0 break-words">
+                      {owner.accountOwnerUserName}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
         {isOwner && (
           <Button
             disabled={isSaving}

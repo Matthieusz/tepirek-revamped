@@ -296,6 +296,7 @@ export const loadSquadGroupDetailWithDatabase = (
       .select({
         accountDisplayName: margonemAccount.displayName,
         accountId: margonemAccount.id,
+        accountOwnerUserId: user.id,
         accountOwnerUserImage: user.image,
         accountOwnerUserName: user.name,
         avatarUrl: margonemCharacter.avatarUrl,
@@ -341,6 +342,11 @@ export const loadSquadGroupDetailWithDatabase = (
         Effect.catch((error) => failPersistence(operation, error))
       );
 
+      const accountOwnerUserId = yield* parsePersistedAppUserId(
+        operation,
+        placement.accountOwnerUserId
+      );
+
       const level = yield* parsePositiveLevel(placement.level).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
@@ -361,6 +367,7 @@ export const loadSquadGroupDetailWithDatabase = (
           {
             accountDisplayName,
             accountId,
+            accountOwnerUserId,
             accountOwnerUserImage: placement.accountOwnerUserImage,
             accountOwnerUserName: placement.accountOwnerUserName,
             avatarUrl: placement.avatarUrl,

@@ -57,6 +57,7 @@ const detailCharacters = (
             {
               accountDisplayName: character.accountDisplayName,
               accountId: character.accountId,
+              accountOwnerUserId: character.accountOwnerUserId,
               accountOwnerUserImage: character.accountOwnerUserImage,
               accountOwnerUserName: character.accountOwnerUserName,
               avatarUrl: character.avatarUrl,
@@ -75,6 +76,7 @@ const availableCharacterMetadata = (
 ): SquadCharacterMetadata => ({
   accountDisplayName: character.accountDisplayName,
   accountId: character.accountId,
+  accountOwnerUserId: character.accountOwnerUserId,
   accountOwnerUserImage: character.accountOwnerUserImage,
   accountOwnerUserName: character.accountOwnerUserName,
   avatarUrl: character.avatarUrl,
