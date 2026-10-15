@@ -1,54 +1,61 @@
+/* eslint-disable anti-slop-effect/no-manual-tagged-construction -- Independent expected values verify output shape, not domain construction. */
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vite-plus/test";
 
 import {
-  InvitationAccessTransitionNotAllowed,
-  invitationAccessTransitionTable,
+  canTransitionInvitationAccess,
   transitionInvitationAccess,
 } from "./invitation-access-lifecycle.ts";
 
-describe("invitationAccessTransitionTable", () => {
-  it("contains the complete invitation/access lifecycle", () => {
-    expect(invitationAccessTransitionTable).toEqual({
-      accepted: ["revoked"],
-      declined: ["pending"],
-      pending: ["accepted", "declined", "revoked"],
-      revoked: ["pending"],
-    });
-  });
-});
+const transitions = [
+  ["pending", "pending", false],
+  ["pending", "accepted", true],
+  ["pending", "declined", true],
+  ["pending", "revoked", true],
+  ["accepted", "pending", false],
+  ["accepted", "accepted", false],
+  ["accepted", "declined", false],
+  ["accepted", "revoked", true],
+  ["declined", "pending", true],
+  ["declined", "accepted", false],
+  ["declined", "declined", false],
+  ["declined", "revoked", false],
+  ["revoked", "pending", true],
+  ["revoked", "accepted", false],
+  ["revoked", "declined", false],
+  ["revoked", "revoked", false],
+] as const;
 
-describe("transitionInvitationAccess", () => {
-  it.effect("returns the next status for every legal transition", () =>
-    Effect.gen(function* applyLegalTransitions() {
-      const statuses = ["pending", "accepted", "declined", "revoked"] as const;
+describe("invitation access lifecycle", () => {
+  for (const [currentStatus, nextStatus, allowed] of transitions) {
+    it.effect(
+      `${currentStatus} → ${nextStatus}: ${allowed ? "allowed" : "rejected"}`,
+      () =>
+        Effect.gen(function* checkTransition() {
+          expect(canTransitionInvitationAccess(currentStatus, nextStatus)).toBe(
+            allowed
+          );
 
-      for (const currentStatus of statuses) {
-        for (const nextStatus of invitationAccessTransitionTable[
-          currentStatus
-        ]) {
-          expect(
-            yield* transitionInvitationAccess(currentStatus, nextStatus)
-          ).toBe(nextStatus);
-        }
-      }
-    })
-  );
+          if (allowed) {
+            expect(
+              yield* transitionInvitationAccess(currentStatus, nextStatus)
+            ).toBe(nextStatus);
 
-  it.effect("returns a typed failure for an illegal transition", () =>
-    Effect.gen(function* rejectIllegalTransition() {
-      const failure = yield* transitionInvitationAccess(
-        "accepted",
-        "pending"
-      ).pipe(Effect.flip);
+            return;
+          }
 
-      expect(failure).toMatchObject(
-        new InvitationAccessTransitionNotAllowed({
-          attempted: "pending",
-          currentStatus: "accepted",
+          const failure = yield* transitionInvitationAccess(
+            currentStatus,
+            nextStatus
+          ).pipe(Effect.flip);
+
+          expect(failure).toMatchObject({
+            _tag: "InvitationAccessTransitionNotAllowed",
+            attempted: nextStatus,
+            currentStatus,
+          });
         })
-      );
-    })
-  );
+    );
+  }
 });

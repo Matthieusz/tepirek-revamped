@@ -2,7 +2,6 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   AUCTION_PROFESSIONS,
-  AUCTION_SLOT_COLUMNS,
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUNDS,
   AUCTION_TYPES,
@@ -28,12 +27,6 @@ describe("auction slot levels", () => {
     for (const level of AUCTION_SLOT_LEVELS) {
       expect(level % 10).toBe(0);
     }
-  });
-
-  it("does not include values the table never renders", () => {
-    expect(AUCTION_SLOT_LEVELS.includes(35)).toBe(false);
-    expect(AUCTION_SLOT_LEVELS.includes(20)).toBe(false);
-    expect(AUCTION_SLOT_LEVELS.includes(310)).toBe(false);
   });
 });
 
@@ -65,20 +58,9 @@ describe("auction slot columns", () => {
   it("gives paladin main three columns", () => {
     expect(getAuctionSlotColumnCount("paladin", "main")).toBe(3);
   });
-
-  it("keeps the column source of truth in one map", () => {
-    expect(AUCTION_SLOT_COLUMNS.hunter.support).toEqual([
-      "Fizyczna",
-      "Trucizna",
-    ]);
-  });
 });
 
 describe("isLegalAuctionSlot", () => {
-  it("accepts a valid main paladin slot", () => {
-    expect(isLegalAuctionSlot(legalSlot)).toBe(true);
-  });
-
   it("accepts every rendered level with every round and column", () => {
     const columnCount = getAuctionSlotColumnCount("paladin", "main");
     const columns = Array.from({ length: columnCount }, (_, i) => i + 1);

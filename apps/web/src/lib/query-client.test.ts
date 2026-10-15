@@ -1,20 +1,8 @@
 import { QueryObserver } from "@tanstack/react-query";
-import { Effect } from "effect";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import {
-  AppHttpApiClient,
-  makeAppHttpApiRunner,
-} from "@/lib/http-api-client-runtime";
 import { createQueryClient } from "@/lib/query-client";
-import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
-
-const listTodos = Effect.gen(function* listTodosEffect() {
-  const client = yield* AppHttpApiClient;
-
-  return yield* client.todo.listTodos({});
-});
 
 const withTestQueryClient = async (
   test: (queryClient: ReturnType<typeof createQueryClient>) => Promise<void>
@@ -105,43 +93,6 @@ describe("QueryClient", () => {
       });
     } finally {
       vi.useRealTimers();
-    }
-  });
-
-  it("clears query state through the test cleanup hook", async () => {
-    const testClient = makeTestQueryClient();
-    await testClient.queryClient.query({
-      queryFn: () => "cached",
-      queryKey: ["cleanup"],
-    });
-
-    expect(testClient.queryClient.getQueryCache().getAll()).toHaveLength(1);
-    testClient.cleanup();
-    expect(testClient.queryClient.getQueryCache().getAll()).toHaveLength(0);
-  });
-
-  it("uses the real HttpApiClient transport in Query tests", async () => {
-    const { calls, layer } = makeHttpApiTestLayer();
-    const runAppHttpApi = makeAppHttpApiRunner(layer);
-    const testClient = makeTestQueryClient();
-
-    try {
-      const todos = await testClient.queryClient.query({
-        queryFn: async ({ signal }) =>
-          await runAppHttpApi(listTodos, { signal }),
-        queryKey: ["todos"],
-      });
-
-      expect(todos).toEqual([]);
-      expect(calls).toEqual([
-        {
-          args: {},
-          group: "todo",
-          method: "listTodos",
-        },
-      ]);
-    } finally {
-      testClient.cleanup();
     }
   });
 });

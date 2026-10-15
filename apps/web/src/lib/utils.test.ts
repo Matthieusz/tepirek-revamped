@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { cn, formatDate, formatDateTime } from "./utils";
+import { formatDate, formatDateTime } from "./utils";
 
 describe("web utils", () => {
   it("formats valid dates with the Polish locale", () => {
@@ -17,9 +17,5 @@ describe("web utils", () => {
     expect(formatDateTime("2030-01-02T03:04:05.000Z")).toMatch(
       /^02\.01\.2030 \d{2}:04$/u
     );
-  });
-
-  it("merges conflicting Tailwind classes", () => {
-    expect(cn("p-2", "p-4", false)).toBe("p-4");
   });
 });

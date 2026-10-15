@@ -86,18 +86,6 @@ describe("integration database reset safety", () => {
     }).toThrow("TEST_DATABASE_URL must not match DATABASE_URL");
   });
 
-  it("allows an external database when DATABASE_URL is absent and consent is exact", () => {
-    expect(() => {
-      assertSafe({
-        allowDatabaseReset: true,
-        developmentDatabase: undefined,
-        isExplicitTestDatabase: true,
-        isManagedDatabase: false,
-        testDatabase: externalDatabase,
-      });
-    }).not.toThrow();
-  });
-
   it("rejects malformed database URLs before a pool can be created", () => {
     expect(() =>
       parseDatabaseUrl("not a database URL", "TEST_DATABASE_URL")

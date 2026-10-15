@@ -1,6 +1,6 @@
+/* eslint-disable anti-slop-effect/no-manual-tagged-construction -- Independent expected values verify output shape, not domain construction. */
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Predicate from "effect/Predicate";
 import { describe } from "vite-plus/test";
 
 import {
@@ -25,12 +25,6 @@ describe("parseSquadGroupListFilters", () => {
       const result = yield* parseSquadGroupListFilters({
         nameQuery: "  Smoki   jaruna ",
       });
-
-      expect(result.nameQuery).toBeDefined();
-
-      if (result.nameQuery === undefined) {
-        return;
-      }
 
       expect(result.nameQuery).toBe("Smoki jaruna");
     })
@@ -63,31 +57,27 @@ describe("parseSquadGroupListFilters", () => {
         minLevel: 120,
       });
 
-      expect(result.levelRange._tag).toBe("BoundedLevelRange");
-
-      if (!Predicate.isTagged("BoundedLevelRange")(result.levelRange)) {
-        return;
-      }
-
-      if (
-        result.levelRange.minLevel === undefined ||
-        result.levelRange.maxLevel === undefined
-      ) {
-        return;
-      }
-
-      expect(result.levelRange.minLevel).toBe(120);
-      expect(result.levelRange.maxLevel).toBe(180);
+      expect(result.levelRange).toEqual({
+        _tag: "BoundedLevelRange",
+        maxLevel: 180,
+        minLevel: 120,
+      });
     })
   );
 
   it.effect("parses one-sided level ranges", () =>
     Effect.gen(function* filtersOneSidedRange() {
       const minResult = yield* parseSquadGroupListFilters({ minLevel: 120 });
-      expect(minResult.levelRange._tag).toBe("BoundedLevelRange");
+      expect(minResult.levelRange).toEqual({
+        _tag: "BoundedLevelRange",
+        minLevel: 120,
+      });
 
       const maxResult = yield* parseSquadGroupListFilters({ maxLevel: 180 });
-      expect(maxResult.levelRange._tag).toBe("BoundedLevelRange");
+      expect(maxResult.levelRange).toEqual({
+        _tag: "BoundedLevelRange",
+        maxLevel: 180,
+      });
     })
   );
 

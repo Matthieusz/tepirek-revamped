@@ -9,7 +9,7 @@ import type { SelectableUser } from "@/features/events/bets/user-select-list";
  * Deep Hero bet member picker model.
  *
  * Pure selection logic shared by the add-bet and edit-bet flows. Owns
- * search filtering, available/selected user derivation, toggle/clear/
+ * search filtering, available/selected user derivation, toggle/remove/
  * restore/copy actions, empty-state decisions, and the points preview.
  * React rendering lives in the picker component; this module only deals
  * with selection shape and rules.
@@ -108,11 +108,6 @@ export const removeUser = (
   userId: string,
   selectedUserIds: readonly string[]
 ): string[] => Arr.filter<string>((id) => id !== userId)(selectedUserIds);
-
-/**
- * Clear the entire selection.
- */
-export const clearSelection = (): string[] => [];
 
 /**
  * Restore the initial member IDs (edit flow).

@@ -1,6 +1,5 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 import { describe } from "vite-plus/test";
 
 import { AccountDisplayName } from "./account-display-name.ts";
@@ -21,7 +20,6 @@ import {
   InvalidSquadSnapshot,
   SquadCharacterNotAccessible,
   SquadCharacterNotJaruna,
-  SquadGroupValidationErrorSchema,
   TooManyCharactersInSquad,
 } from "./squad-group-validation-errors.ts";
 
@@ -83,20 +81,6 @@ describe("validateSquadGroupSnapshot", () => {
       expect(result.squads[0]?.characters).toEqual([
         { characterId: 1, position: 0 },
       ]);
-    })
-  );
-
-  it.effect("encodes schema-tagged validation failures", () =>
-    Effect.gen(function* encodeValidationError() {
-      const encoded = yield* Schema.encodeEffect(
-        SquadGroupValidationErrorSchema
-      )(new InvalidSquadSnapshot({ message: "invalid" }));
-
-      const expected = yield* Schema.encodeEffect(
-        SquadGroupValidationErrorSchema
-      )(new InvalidSquadSnapshot({ message: "invalid" }));
-
-      expect(encoded).toEqual(expected);
     })
   );
 

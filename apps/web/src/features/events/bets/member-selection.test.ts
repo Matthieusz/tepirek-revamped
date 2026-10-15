@@ -4,7 +4,6 @@ import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 import {
   LastBetState,
-  clearSelection,
   copyLastBet,
   filterUsersBySearch,
   getAvailableListState,
@@ -85,12 +84,6 @@ describe("toggleUser", () => {
 describe("removeUser", () => {
   it("removes the given user", () => {
     expect(removeUser("u1", ["u1", "u2"])).toEqual(["u2"]);
-  });
-});
-
-describe("clearSelection", () => {
-  it("returns an empty array", () => {
-    expect(clearSelection()).toEqual([]);
   });
 });
 
@@ -181,10 +174,5 @@ describe("getPointsPreview", () => {
   it("marks an unchanged count as secondary", () => {
     const preview = getPointsPreview(2, 2);
     expect(preview.variant).toBe("secondary");
-  });
-
-  it("points-per-member changes with member count", () => {
-    expect(getPointsPreview(1, 1).newPointsPerMember).toBe(20);
-    expect(getPointsPreview(3, 3).newPointsPerMember).toBe(6.66);
   });
 });

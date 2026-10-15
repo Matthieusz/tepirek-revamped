@@ -1,3 +1,4 @@
+/* eslint-disable anti-slop-effect/no-manual-tagged-construction -- Independent expected values verify output shape, not domain construction. */
 import { describe, expect, it } from "vite-plus/test";
 
 import { MargonemAccountId } from "./margonem-account-id.ts";
@@ -115,12 +116,38 @@ describe("computeMargonemAccountRefetchDiff", () => {
     });
 
     expect(diff.unchangedCount).toBe(1);
-    expect(diff.changed).toHaveLength(1);
-    expect(diff.changed[0]?.changes.map((change) => change.field)).toEqual([
-      "name",
-      "level",
-      "profession",
-      "avatarUrl",
+    expect(diff.added).toEqual([]);
+    expect(diff.removed).toEqual([]);
+    expect(diff.changed).toEqual([
+      {
+        _tag: "ChangedCharacter",
+        changes: [
+          { after: "New", before: "Old", field: "name" },
+          { after: 101, before: 100, field: "level" },
+          { after: "hunter", before: "tracker", field: "profession" },
+          { after: "new.gif", before: "old.gif", field: "avatarUrl" },
+        ],
+        current: {
+          affectedSquadCount: 0,
+          avatarUrl: "old.gif",
+          databaseCharacterId: 10,
+          level: 100,
+          margonemCharacterId: 1000,
+          name: "Old",
+          profession: "tracker",
+          world: "jaruna",
+        },
+        databaseCharacterId: 10,
+        latest: {
+          avatarUrl: "new.gif",
+          characterId: 1000,
+          level: 101,
+          name: "New",
+          profession: "hunter",
+          world: "jaruna",
+        },
+        margonemCharacterId: 1000,
+      },
     ]);
   });
 });

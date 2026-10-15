@@ -73,28 +73,6 @@ describe("Better Auth service", () => {
 });
 
 describe("Better Auth config", () => {
-  it.effect("constructs auth through the pure construction seam", () =>
-    Effect.gen(function* constructAuth() {
-      const database = yield* makeTestBetterAuthDatabase(
-        "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
-      );
-
-      const auth = createAuth(
-        {
-          betterAuthSecret: Redacted.make("test-secret"),
-          betterAuthUrl: new URL("http://localhost:3000"),
-          corsOrigin: new URL("http://localhost:3001"),
-          discordClientId: "test-discord-client-id",
-          discordClientSecret: Redacted.make("test-discord-client-secret"),
-          isProduction: false,
-        },
-        database
-      );
-
-      expect(auth.handler).toBeTypeOf("function");
-    })
-  );
-
   for (const [variable, value] of [
     ["BETTER_AUTH_SECRET", ""],
     ["BETTER_AUTH_SECRET", "short-secret-sentinel"],

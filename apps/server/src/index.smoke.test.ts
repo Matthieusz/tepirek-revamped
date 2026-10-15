@@ -18,7 +18,8 @@ const serverApplicationLayer = makeServerApplicationLayer({
   },
   corsOrigin: "http://localhost:3001",
   databaseUrl: Redacted.make(
-    "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
+    process.env.TEST_DATABASE_URL ??
+      "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
   ),
   discordGuildId: "test-discord-server-id",
   firecrawl: {

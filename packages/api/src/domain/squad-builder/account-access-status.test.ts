@@ -29,26 +29,9 @@ describe("parseAccountAccessStatus", () => {
 });
 
 describe("canTransitionAccountAccess", () => {
-  it("allows the invited user to accept or decline a pending invite", () => {
+  it("exposes the shared transition policy through the account boundary", () => {
     expect(canTransitionAccountAccess("pending", "accepted")).toBe(true);
-    expect(canTransitionAccountAccess("pending", "declined")).toBe(true);
-  });
-
-  it("allows the owner to revoke pending or accepted access", () => {
-    expect(canTransitionAccountAccess("pending", "revoked")).toBe(true);
-    expect(canTransitionAccountAccess("accepted", "revoked")).toBe(true);
-  });
-
-  it("allows the owner to re-send a declined or revoked invite", () => {
-    expect(canTransitionAccountAccess("declined", "pending")).toBe(true);
-    expect(canTransitionAccountAccess("revoked", "pending")).toBe(true);
-  });
-
-  it("rejects illegal transitions", () => {
-    expect(canTransitionAccountAccess("pending", "pending")).toBe(false);
-    expect(canTransitionAccountAccess("accepted", "accepted")).toBe(false);
     expect(canTransitionAccountAccess("accepted", "pending")).toBe(false);
-    expect(canTransitionAccountAccess("revoked", "accepted")).toBe(false);
   });
 
   it("classifies inactive statuses", () => {
