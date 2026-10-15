@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Supersede PR runs, but never cancel or group production runs together.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   VP_GIT_HOOKS: "0"
 
@@ -31,6 +36,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Cache build tasks
+        uses: actions/cache@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
 
       - name: Check formatting and lint
         run: pnpm check
@@ -63,26 +76,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache unit-test tasks
+        uses: actions/cache@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
+
       - name: Test
-        run: pnpm test
+        run: pnpm exec vp run --cache test
 
   integration:
     name: Smoke and API integration tests
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: tepirek_revamped_test
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: postgres
-        options: >-
-          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
+      # Pull and start PostgreSQL while checkout and dependency installation run.
+      - name: Start integration PostgreSQL in background
+        run: |
+          nohup docker run --detach --name ci-postgres \
+            --env POSTGRES_DB=tepirek_revamped_test \
+            --env POSTGRES_PASSWORD=password \
+            --env POSTGRES_USER=postgres \
+            --publish 127.0.0.1:5432:5432 \
+            postgres:16 > "$RUNNER_TEMP/postgres-start.log" 2>&1 < /dev/null &
+          echo "$!" > "$RUNNER_TEMP/postgres-start.pid"
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -97,15 +117,47 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Smoke tests manage their own isolated container and reuse the pulled image.
-      - name: Smoke tests
-        run: pnpm test:smoke
+      - name: Wait for integration PostgreSQL
+        timeout-minutes: 2
+        run: |
+          for attempt in {1..60}; do
+            if docker exec ci-postgres pg_isready \
+              --host 127.0.0.1 --username postgres --dbname tepirek_revamped_test; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
 
-      - name: API integration tests
-        run: pnpm test:integration
-        env:
-          API_INTEGRATION_ALLOW_DATABASE_RESET: "1"
-          TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
+      # Smoke uses its own Compose database on 5433; integration uses 5432.
+      # Both reuse postgres:16, but never share schemas or database lifecycle.
+      - name: Run smoke and API integration tests concurrently
+        run: |
+          pnpm test:smoke &
+          smoke_pid=$!
+
+          API_INTEGRATION_ALLOW_DATABASE_RESET=1 \
+            TEST_DATABASE_URL=postgresql://postgres:password@localhost:5432/tepirek_revamped_test \
+            pnpm test:integration &
+          integration_pid=$!
+
+          status=0
+          wait "$smoke_pid" || status=1
+          wait "$integration_pid" || status=1
+          exit "$status"
+
+      - name: Clean up integration PostgreSQL
+        if: ${{ always() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/postgres-start.pid" ]; then
+            kill "$(< "$RUNNER_TEMP/postgres-start.pid")" 2>/dev/null || true
+          fi
+          if [ -f "$RUNNER_TEMP/postgres-start.log" ]; then
+            printf '%s\n' 'PostgreSQL startup log:'
+            cat "$RUNNER_TEMP/postgres-start.log"
+          fi
+          docker logs ci-postgres 2>&1 || true
+          docker rm --force --volumes ci-postgres 2>/dev/null || true
 
   verify:
     name: Verify
