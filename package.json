@@ -33,6 +33,7 @@
     "@oxlint/plugins": "1.87.0",
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "5.0.4",
     "knip": "^6.41.0",
     "typescript": "catalog:",
     "ultracite": "8.0.0",

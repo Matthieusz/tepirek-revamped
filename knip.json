@@ -3,7 +3,11 @@
   "drizzle": false,
   "exclude": ["duplicates"],
   "ignore": ["apps/web/src/components/ui/**", "packages/db/drizzle.config.ts"],
-  "ignoreDependencies": ["@effect/language-service", "dotenv"],
+  "ignoreDependencies": [
+    "@effect/language-service",
+    "@vitest/coverage-v8",
+    "dotenv"
+  ],
   "ignoreBinaries": ["infisical"],
   "workspaces": {
     "packages/api": {
