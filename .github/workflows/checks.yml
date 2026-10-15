@@ -1,0 +1,40 @@
+name: Checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  VP_GIT_HOOKS: "0"
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - parallel:
+          - name: Check formatting and lint
+            run: pnpm check
+
+          - name: Unused-code check
+            run: pnpm check:unused
+
+          - name: Typecheck
+            run: pnpm check-types

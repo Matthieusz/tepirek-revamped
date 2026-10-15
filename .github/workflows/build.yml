@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  VP_GIT_HOOKS: "0"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache build tasks
+        uses: actions/cache@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
+
+      - name: Build
+        run: pnpm build

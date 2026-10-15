@@ -1,0 +1,105 @@
+name: Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  VP_GIT_HOOKS: "0"
+
+jobs:
+  tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache unit-test tasks
+        uses: actions/cache@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
+
+      - name: Test
+        run: pnpm exec vp run --cache test
+
+  integration:
+    name: Smoke and API integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pull and start PostgreSQL while checkout and dependency installation run.
+      - name: Start integration PostgreSQL
+        id: postgres
+        background: true
+        run: |
+          docker run --detach --name ci-postgres \
+            --env POSTGRES_DB=tepirek_revamped_test \
+            --env POSTGRES_PASSWORD=password \
+            --env POSTGRES_USER=postgres \
+            --publish 127.0.0.1:5432:5432 \
+            postgres:16
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          # Keep aligned with mise.toml; pnpm comes from packageManager.
+          runtime: node@26.10.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for PostgreSQL startup
+        wait: postgres
+
+      - name: Wait for integration PostgreSQL
+        timeout-minutes: 2
+        run: |
+          for attempt in {1..60}; do
+            if docker exec ci-postgres pg_isready \
+              --host 127.0.0.1 --username postgres --dbname tepirek_revamped_test; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
+      # Smoke uses its own Compose database on 5433; integration uses 5432.
+      # Both reuse postgres:16, but never share schemas or database lifecycle.
+      - parallel:
+          - name: Smoke tests
+            run: pnpm test:smoke
+
+          - name: API integration tests
+            env:
+              API_INTEGRATION_ALLOW_DATABASE_RESET: "1"
+              TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
+            run: pnpm test:integration
+
+      - name: Clean up integration PostgreSQL
+        if: ${{ always() }}
+        run: |
+          docker logs ci-postgres 2>&1 || true
+          docker rm --force --volumes ci-postgres 2>/dev/null || true

@@ -14,155 +14,20 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  VP_GIT_HOOKS: "0"
-
 jobs:
   checks:
-    name: Checks and build
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/checks.yml
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup pnpm and Node.js
-        uses: pnpm/setup@v3
-        with:
-          # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache build tasks
-        uses: actions/cache@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
-
-      - name: Check formatting and lint
-        run: pnpm check
-
-      - name: Unused-code check
-        run: pnpm check:unused
-
-      - name: Typecheck
-        run: pnpm check-types
-
-      - name: Build
-        run: pnpm build
+  build:
+    uses: ./.github/workflows/build.yml
 
   tests:
-    name: Unit tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup pnpm and Node.js
-        uses: pnpm/setup@v3
-        with:
-          # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache unit-test tasks
-        uses: actions/cache@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
-
-      - name: Test
-        run: pnpm exec vp run --cache test
-
-  integration:
-    name: Smoke and API integration tests
-    runs-on: ubuntu-latest
-
-    steps:
-      # Pull and start PostgreSQL while checkout and dependency installation run.
-      - name: Start integration PostgreSQL in background
-        run: |
-          nohup docker run --detach --name ci-postgres \
-            --env POSTGRES_DB=tepirek_revamped_test \
-            --env POSTGRES_PASSWORD=password \
-            --env POSTGRES_USER=postgres \
-            --publish 127.0.0.1:5432:5432 \
-            postgres:16 > "$RUNNER_TEMP/postgres-start.log" 2>&1 < /dev/null &
-          echo "$!" > "$RUNNER_TEMP/postgres-start.pid"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup pnpm and Node.js
-        uses: pnpm/setup@v3
-        with:
-          # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
-          cache: true
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Wait for integration PostgreSQL
-        timeout-minutes: 2
-        run: |
-          for attempt in {1..60}; do
-            if docker exec ci-postgres pg_isready \
-              --host 127.0.0.1 --username postgres --dbname tepirek_revamped_test; then
-              exit 0
-            fi
-            sleep 1
-          done
-          exit 1
-
-      # Smoke uses its own Compose database on 5433; integration uses 5432.
-      # Both reuse postgres:16, but never share schemas or database lifecycle.
-      - name: Run smoke and API integration tests concurrently
-        run: |
-          pnpm test:smoke &
-          smoke_pid=$!
-
-          API_INTEGRATION_ALLOW_DATABASE_RESET=1 \
-            TEST_DATABASE_URL=postgresql://postgres:password@localhost:5432/tepirek_revamped_test \
-            pnpm test:integration &
-          integration_pid=$!
-
-          status=0
-          wait "$smoke_pid" || status=1
-          wait "$integration_pid" || status=1
-          exit "$status"
-
-      - name: Clean up integration PostgreSQL
-        if: ${{ always() }}
-        run: |
-          if [ -f "$RUNNER_TEMP/postgres-start.pid" ]; then
-            kill "$(< "$RUNNER_TEMP/postgres-start.pid")" 2>/dev/null || true
-          fi
-          if [ -f "$RUNNER_TEMP/postgres-start.log" ]; then
-            printf '%s\n' 'PostgreSQL startup log:'
-            cat "$RUNNER_TEMP/postgres-start.log"
-          fi
-          docker logs ci-postgres 2>&1 || true
-          docker rm --force --volumes ci-postgres 2>/dev/null || true
+    uses: ./.github/workflows/tests.yml
 
   verify:
     name: Verify
     if: ${{ always() }}
-    needs: [checks, tests, integration]
+    needs: [checks, build, tests]
     runs-on: ubuntu-latest
 
     steps:
@@ -172,36 +37,11 @@ jobs:
         run: test "$RESULTS" = "success success success"
 
   deploy:
-    name: Deploy production (${{ matrix.app }})
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    strategy:
-      fail-fast: false
-      matrix:
-        app: [api, web]
-
-    steps:
-      - name: Trigger Dokploy deployment
-        env:
-          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
-          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
-          APPLICATION_ID: ${{ matrix.app == 'api' && secrets.DOKPLOY_API_APP_ID || secrets.DOKPLOY_WEB_APP_ID }}
-        run: |
-          test -n "$DOKPLOY_URL"
-          test -n "$DOKPLOY_API_KEY"
-          test -n "$APPLICATION_ID"
-
-          jq -n --arg id "$APPLICATION_ID" \
-            '{applicationId: $id}' |
-            curl --fail --silent --show-error \
-              --connect-timeout 10 \
-              --max-time 60 \
-              --request POST \
-              --header 'accept: application/json' \
-              --header 'Content-Type: application/json' \
-              --header "x-api-key: $DOKPLOY_API_KEY" \
-              --data-binary @- \
-              "$DOKPLOY_URL/api/application.deploy"
+    uses: ./.github/workflows/deploy.yml
+    secrets:
+      DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+      DOKPLOY_API_APP_ID: ${{ secrets.DOKPLOY_API_APP_ID }}
+      DOKPLOY_WEB_APP_ID: ${{ secrets.DOKPLOY_WEB_APP_ID }}
