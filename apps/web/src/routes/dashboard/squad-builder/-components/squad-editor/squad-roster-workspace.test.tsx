@@ -119,6 +119,23 @@ describe("SquadRosterWorkspace owner highlighting", () => {
     ).toBe(false);
   });
 
+  it("spaces three owners evenly around the color wheel regardless of input order", () => {
+    const characters = [
+      character(1, "owner-a"),
+      character(2, "owner-b"),
+      character(3, "owner-c"),
+    ];
+
+    const container = renderRoster(characters, [1, 2, 3]);
+    const reordered = renderRoster(characters.toReversed(), [3, 2, 1]);
+
+    for (const [index, hue] of [250, 10, 130].entries()) {
+      const name = `Postać ${index + 1}`;
+      expect(rowStyle(container, name)).toContain(`oklch(65% 0.2 ${hue})`);
+      expect(rowStyle(container, name)).toBe(rowStyle(reordered, name));
+    }
+  });
+
   it("omits the legend for empty squads", () => {
     const container = renderRoster([character(1, "owner-a")], []);
     expect(

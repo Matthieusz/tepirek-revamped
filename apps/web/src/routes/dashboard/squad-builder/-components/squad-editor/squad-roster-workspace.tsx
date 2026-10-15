@@ -57,20 +57,13 @@ interface SquadRosterWorkspaceProps {
 
 const avatarFallback = (name: string): string => name.slice(0, 2).toUpperCase();
 
-const ownerColor = (ownerUserId: string): string => {
-  let hash = 0;
-
-  for (const character of ownerUserId) {
-    hash = (hash * 31 + (character.codePointAt(0) ?? 0)) % 1_000_000_007;
-  }
-
-  return `oklch(65% 0.16 ${(hash * 137.508) % 360})`;
-};
-
-const ownerTintStyle = (ownerUserId: string) => ({
-  backgroundColor: `color-mix(in oklch, ${ownerColor(ownerUserId)} 14%, var(--card))`,
-  borderColor: `color-mix(in oklch, ${ownerColor(ownerUserId)} 45%, var(--border))`,
-});
+const ownerTintStyle = (color: string | undefined) =>
+  color === undefined
+    ? undefined
+    : {
+        backgroundColor: `color-mix(in oklch, ${color} 26%, var(--card))`,
+        borderColor: `color-mix(in oklch, ${color} 70%, var(--border))`,
+      };
 
 const SquadRosterRow = ({
   canEditPlacements,
@@ -79,6 +72,7 @@ const SquadRosterRow = ({
   isSaving,
   onRemove,
   position,
+  ownerColors,
   squadName,
 }: {
   readonly characterId: number | undefined;
@@ -87,6 +81,7 @@ const SquadRosterRow = ({
   readonly onRemove: () => void;
   readonly canEditPlacements: boolean;
   readonly position: number;
+  readonly ownerColors: ReadonlyMap<string, string>;
   readonly squadName: string;
 }) => {
   if (characterId === undefined) {
@@ -145,7 +140,7 @@ const SquadRosterRow = ({
   return (
     <li
       className="flex min-h-16 items-center justify-between gap-2 rounded-md border px-2"
-      style={ownerTintStyle(character.accountOwnerUserId)}
+      style={ownerTintStyle(ownerColors.get(character.accountOwnerUserId))}
     >
       <div className="flex min-w-0 items-center gap-2">
         <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
@@ -273,6 +268,7 @@ const SquadPanel = ({
   onNameChange,
   onRemoveCharacter,
   onRemoveSquad,
+  ownerColors,
   squad,
 }: {
   readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
@@ -283,6 +279,7 @@ const SquadPanel = ({
   readonly onRemoveCharacter: (characterId: number) => void;
   readonly onRemoveSquad: () => void;
   readonly squad: DraftSquad;
+  readonly ownerColors: ReadonlyMap<string, string>;
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -421,6 +418,7 @@ const SquadPanel = ({
                         onRemoveCharacter(character.characterId);
                       }
                     }}
+                    ownerColors={ownerColors}
                     position={position}
                     squadName={squad.name}
                   />
@@ -486,6 +484,20 @@ export const SquadRosterWorkspace = ({
     }
   }
 
+  // Include the pool so removing a placement does not recolor remaining owners.
+  const ownerIds = [
+    ...new Set(
+      [...characterById].map(([, character]) => character.accountOwnerUserId)
+    ),
+  ].toSorted();
+
+  const ownerColors = new Map(
+    ownerIds.map((ownerId, index) => [
+      ownerId,
+      `oklch(65% 0.2 ${(250 + (index * 360) / ownerIds.length) % 360})`,
+    ])
+  );
+
   const allSquadsEmpty =
     draft.squads.length === 0 ||
     draft.squads.every((squad) => squad.characters.length === 0);
@@ -521,12 +533,12 @@ export const SquadRosterWorkspace = ({
                   <li
                     className="flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
                     key={ownerId}
-                    style={ownerTintStyle(ownerId)}
+                    style={ownerTintStyle(ownerColors.get(ownerId))}
                   >
                     <span
                       aria-hidden="true"
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: ownerColor(ownerId) }}
+                      style={{ backgroundColor: ownerColors.get(ownerId) }}
                     />
                     <Avatar size="sm" aria-hidden="true">
                       {owner.accountOwnerUserImage !== null &&
@@ -615,6 +627,7 @@ export const SquadRosterWorkspace = ({
                 onRemoveSquad={() => {
                   onRemoveSquad(squad.clientKey);
                 }}
+                ownerColors={ownerColors}
                 squad={squad}
               />
             ))}
