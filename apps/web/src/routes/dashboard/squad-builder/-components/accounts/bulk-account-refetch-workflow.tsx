@@ -64,9 +64,14 @@ export const BulkAccountRefetchWorkflow = ({
     mutationFn: async (snapshot: readonly Account[]) => {
       const collected: PreviewResult[] = [];
 
-      for (const account of snapshot) {
+      const previewNext = async (index: number): Promise<void> => {
+        const account = snapshot[index];
+
+        if (account === undefined) {
+          return;
+        }
+
         try {
-          // eslint-disable-next-line no-await-in-loop -- Sequential fetching bounds upstream usage.
           const preview = await runner(
             previewAccountRefetch({ accountId: account.accountId })
           );
@@ -84,7 +89,10 @@ export const BulkAccountRefetchWorkflow = ({
         }
 
         setCompleted(collected.length);
-      }
+        await previewNext(index + 1);
+      };
+
+      await previewNext(0);
 
       return collected;
     },
@@ -96,34 +104,44 @@ export const BulkAccountRefetchWorkflow = ({
     mutationFn: async (snapshot: readonly PreviewResult[]) => {
       const collected: ApplyResult[] = [];
 
-      for (const entry of snapshot) {
-        if (entry.status !== "ready") {
-          continue;
+      const applyNext = async (index: number): Promise<void> => {
+        const entry = snapshot[index];
+
+        if (entry === undefined) {
+          return;
         }
 
-        try {
-          // eslint-disable-next-line no-await-in-loop -- Apply accounts sequentially to avoid concurrent writes.
-          const response = await runner(
-            applyAccountRefetch({
-              refetchPreviewId: entry.preview.refetchPreviewId,
-            })
-          );
+        if (entry.status === "ready") {
+          try {
+            const response = await runner(
+              applyAccountRefetch({
+                refetchPreviewId: entry.preview.refetchPreviewId,
+              })
+            );
 
-          collected.push({
-            account: entry.account,
-            message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
-            status: "success",
-          });
-        } catch (error) {
-          collected.push({
-            account: entry.account,
-            message: getErrorMessage(error, "Nie udało się zastosować zmian."),
-            status: "failed",
-          });
+            collected.push({
+              account: entry.account,
+              message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
+              status: "success",
+            });
+          } catch (error) {
+            collected.push({
+              account: entry.account,
+              message: getErrorMessage(
+                error,
+                "Nie udało się zastosować zmian."
+              ),
+              status: "failed",
+            });
+          }
+
+          setCompleted(collected.length);
         }
 
-        setCompleted(collected.length);
-      }
+        await applyNext(index + 1);
+      };
+
+      await applyNext(0);
 
       return collected;
     },

@@ -153,7 +153,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
     setRevokingInvitationId(null);
   };
 
-  return (
+  const renderContent = () => (
     <Card className="gap-0 p-0 py-0 shadow-none">
       <div className="space-y-4 px-4 py-4">
         <div>
@@ -371,6 +371,8 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
       </div>
     </Card>
   );
+
+  return renderContent();
 };
 
 /** Renders editor access management and separately confirmed group deletion. */
