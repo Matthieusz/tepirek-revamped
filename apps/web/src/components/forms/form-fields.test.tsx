@@ -50,6 +50,7 @@ describe("TanStack form fields", () => {
   it("renders controlled text, number, textarea, checkbox, and select fields", () => {
     const markup = renderToStaticMarkup(<FieldForm />);
 
+    expect(markup).toContain("noValidate");
     expect(markup).toContain('name="name"');
     expect(markup).toContain('value="Ala"');
     expect(markup).toContain('aria-required="true"');

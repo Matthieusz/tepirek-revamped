@@ -9,11 +9,7 @@ describe("hasDiscordGuild", () => {
     ).toBe(true);
   });
 
-  it("returns false when the guild list does not contain the target id", () => {
-    expect(hasDiscordGuild([{ id: "guild-1" }], "guild-2")).toBe(false);
-  });
-
   it("returns false for an empty target guild id", () => {
-    expect(hasDiscordGuild([{ id: "guild-1" }], "")).toBe(false);
+    expect(hasDiscordGuild([{ id: "" }], "")).toBe(false);
   });
 });

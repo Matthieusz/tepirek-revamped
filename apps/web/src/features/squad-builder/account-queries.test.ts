@@ -150,13 +150,14 @@ describe("account queries", () => {
     }
   });
 
-  it("does not retry refetches and invalidates every affected account view", async () => {
+  it("does not retry refetches and invalidates account views after observer removal", async () => {
     const { layer } = makeHttpApiTestLayer();
     const runner = makeAppHttpApiRunner(layer);
     const testClient = makeTestQueryClient();
     const { queryClient } = testClient;
     const ownedGroups = ownedSquadGroupsQueryOptions(runner);
     const globalGroups = globalSquadGroupsQueryOptions({}, runner);
+    let callbackCalled = false;
 
     const affectedQueryKeys = [
       ownedAccountsQueryKey,
@@ -183,30 +184,6 @@ describe("account queries", () => {
         applyAccountRefetchMutationOptions(queryClient, runner)
       );
 
-      await apply.mutate({ refetchPreviewId: 7 });
-
-      for (const queryKey of affectedQueryKeys) {
-        expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
-      }
-    } finally {
-      testClient.cleanup();
-    }
-  });
-
-  it("does not deliver refetch callbacks after its observer is removed", async () => {
-    const { layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
-    const testClient = makeTestQueryClient();
-    const { queryClient } = testClient;
-    let callbackCalled = false;
-    queryClient.setQueryData(ownedAccountsQueryKey, []);
-
-    try {
-      const apply = new MutationObserver(
-        queryClient,
-        applyAccountRefetchMutationOptions(queryClient, runner)
-      );
-
       const unsubscribe = apply.subscribe(() => {});
 
       const request = apply.mutate(
@@ -219,13 +196,13 @@ describe("account queries", () => {
       );
 
       unsubscribe();
-
       await request;
 
       expect(callbackCalled).toBe(false);
-      expect(
-        queryClient.getQueryState(ownedAccountsQueryKey)?.isInvalidated
-      ).toBe(true);
+
+      for (const queryKey of affectedQueryKeys) {
+        expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
+      }
     } finally {
       testClient.cleanup();
     }

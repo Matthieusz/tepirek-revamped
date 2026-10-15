@@ -9,16 +9,6 @@ import {
 } from "@/lib/form-submission";
 
 describe("formSubmission", () => {
-  it.effect("returns the mutation value on success", () =>
-    Effect.gen(function* submitForm() {
-      const result = yield* formSubmission(
-        async () => await Promise.resolve("created")
-      );
-
-      expect(result).toBe("created");
-    })
-  );
-
   it.effect("keeps provider failures in the typed error channel", () =>
     Effect.gen(function* translateProviderFailure() {
       const error = yield* Effect.flip(

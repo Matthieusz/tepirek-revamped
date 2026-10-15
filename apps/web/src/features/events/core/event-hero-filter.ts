@@ -62,8 +62,7 @@ export interface EventHeroFilterState {
 
 type EventHeroFilterUpdate = EventHeroFilterSearch;
 
-export const isAllFilter = (value: FilterSelection): boolean =>
-  value === ALL_FILTER;
+const isAllFilter = (value: FilterSelection): boolean => value === ALL_FILTER;
 
 /**
  * Normalize validated URL search into an Event/Hero filter state. Missing

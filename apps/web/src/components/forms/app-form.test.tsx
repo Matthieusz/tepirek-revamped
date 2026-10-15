@@ -117,15 +117,6 @@ const renderTestForm = async (element: React.ReactNode) => {
 };
 
 describe("TanStack app form", () => {
-  it("renders a shared bound field with its initial value", () => {
-    const markup = renderToStaticMarkup(<TestForm />);
-
-    expect(markup).toContain("noValidate");
-    expect(markup).toContain('name="name"');
-    expect(markup).toContain('value="Ala"');
-    expect(markup).toContain('for="field-name"');
-  });
-
   it("preserves an empty number draft instead of coercing it to zero", async () => {
     let form: AnyFormApi | undefined;
     const { container, root } = await renderTestForm(

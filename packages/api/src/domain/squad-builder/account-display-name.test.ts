@@ -12,18 +12,13 @@ describe("parseAccountDisplayName", () => {
     })
   );
 
-  it.effect("rejects empty account display name", () =>
-    Effect.gen(function* displayNameRejectEmpty() {
-      const result = yield* parseAccountDisplayName("   ").pipe(Effect.flip);
-      expect(result._tag).toBe("InvalidAccountDisplayName");
-    })
-  );
-
-  it.effect("rejects empty string", () =>
-    Effect.gen(function* displayNameRejectBlank() {
-      const result = yield* parseAccountDisplayName("").pipe(Effect.flip);
-      expect(result._tag).toBe("InvalidAccountDisplayName");
-    })
+  it.effect.each(["", "   "])(
+    "rejects empty account display name %j",
+    (value) =>
+      Effect.gen(function* displayNameRejectEmpty() {
+        const result = yield* parseAccountDisplayName(value).pipe(Effect.flip);
+        expect(result._tag).toBe("InvalidAccountDisplayName");
+      })
   );
 
   it.effect("rejects overlong account display name", () =>

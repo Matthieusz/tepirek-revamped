@@ -54,12 +54,6 @@ const decodeLineError = (value: string) =>
 const fallback = "Wystąpił błąd. Spróbuj ponownie później.";
 
 describe("getErrorMessage", () => {
-  it("uses the fallback for ordinary Error objects", () => {
-    expect(getErrorMessage(new Error("internal database details"))).toBe(
-      fallback
-    );
-  });
-
   it("maps typed authorization failures to safe UI copy", () => {
     expect(
       getErrorMessage(new UserForbidden({ message: "raw server copy" }))
@@ -149,7 +143,13 @@ describe("getErrorMessage", () => {
   });
 
   it("does not expose unknown values", () => {
-    for (const value of [null, undefined, "błąd", { message: "błąd" }]) {
+    for (const value of [
+      null,
+      undefined,
+      "błąd",
+      { message: "błąd" },
+      new Error("internal database details"),
+    ]) {
       expect(getErrorMessage(value)).toBe(fallback);
     }
   });

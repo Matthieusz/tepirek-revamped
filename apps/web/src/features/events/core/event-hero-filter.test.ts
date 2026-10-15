@@ -2,7 +2,6 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   ALL_FILTER,
-  isAllFilter,
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
   selectEventUpdate,
@@ -79,7 +78,7 @@ describe("selectEventUpdate", () => {
   });
 
   it("clears Hero when choosing all Events", () => {
-    expect(selectEventUpdate(ALL_FILTER)).toEqual({
+    expect(selectEventUpdate("all")).toEqual({
       eventId: undefined,
       heroId: undefined,
     });
@@ -163,16 +162,5 @@ describe("sortHeroesByLevel", () => {
 
   it("handles undefined input", () => {
     expect(sortHeroesByLevel()).toEqual([]);
-  });
-});
-
-describe("isAllFilter", () => {
-  it("recognizes the all sentinel", () => {
-    expect(isAllFilter(ALL_FILTER)).toBe(true);
-    expect(isAllFilter("all")).toBe(true);
-  });
-
-  it("rejects other values", () => {
-    expect(isAllFilter("1")).toBe(false);
   });
 });

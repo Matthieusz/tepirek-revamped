@@ -73,13 +73,16 @@ describe("buildDirectPersistenceQuery", () => {
         (input) => new ApplicationDependencyUnavailable(input)
       );
 
-      const domainError = { _tag: "DomainError" as const };
+      for (const domainError of [
+        { _tag: "DomainError" as const },
+        { _tag: "EffectDrizzleQueryError" as const },
+      ]) {
+        const error = yield* Effect.flip(
+          persistenceQuery("transaction", Effect.fail(domainError))
+        );
 
-      const error = yield* Effect.flip(
-        persistenceQuery("transaction", Effect.fail(domainError))
-      );
-
-      expect(error).toBe(domainError);
+        expect(error).toBe(domainError);
+      }
     })
   );
 });

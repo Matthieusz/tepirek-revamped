@@ -13,7 +13,7 @@ import type {
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Cache key for the active legendary item price catalogue. */
-export const legendPricesQueryKey = ["legend-pricing", "list"] as const;
+const legendPricesQueryKey = ["legend-pricing", "list"] as const;
 
 interface LegendPricingMutationCallbacks {
   readonly onRefreshError?: (error: Error) => void;

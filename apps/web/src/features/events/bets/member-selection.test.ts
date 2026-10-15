@@ -88,13 +88,12 @@ describe("removeUser", () => {
 });
 
 describe("restoreSelection", () => {
-  it("resets to the initial member IDs", () => {
-    expect(restoreSelection(["u1", "u2"])).toEqual(["u1", "u2"]);
-  });
-
-  it("returns a new array, not the input reference", () => {
+  it("resets to a copy of the initial member IDs", () => {
     const initial = ["u1", "u2"];
-    expect(restoreSelection(initial)).not.toBe(initial);
+    const restored = restoreSelection(initial);
+
+    expect(restored).toEqual(["u1", "u2"]);
+    expect(restored).not.toBe(initial);
   });
 });
 

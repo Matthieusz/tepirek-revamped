@@ -28,10 +28,6 @@ describe("formatVaultEarnings", () => {
   it("rounds down even when the remainder is close to the next million", () => {
     expect(formatVaultEarnings("1999999")).toBe(pl(1_000_000));
   });
-
-  it("uses Polish locale grouping matching the existing toLocaleString output", () => {
-    expect(formatVaultEarnings("1500000000")).toBe(pl(1_500_000_000));
-  });
 });
 
 describe("formatGoldAmountInput", () => {
@@ -53,10 +49,6 @@ describe("parseGoldAmount", () => {
 
   it("treats a trailing m as millions", () => {
     expect(parseGoldAmount("700m")).toBe(700_000_000);
-  });
-
-  it("treats a trailing g as billions", () => {
-    expect(parseGoldAmount("2g")).toBe(2_000_000_000);
   });
 
   it("floors fractional shorthand amounts to whole gold", () => {

@@ -10,17 +10,6 @@ import { OwnedAccountsGrid } from "./owned-accounts-grid";
 const noop = () => {};
 
 describe("OwnedAccountsGrid", () => {
-  it("renders an accessible empty table and an add-account action", () => {
-    const markup = renderToStaticMarkup(
-      <OwnedAccountsGrid accounts={[]} isLoading={false} onAddAccount={noop} />
-    );
-
-    expect(markup).toContain('aria-label="Twoje konta Margonem"');
-    expect(markup).toContain('colSpan="5"');
-    expect(markup).toContain("Nie masz jeszcze zapisanych kont.");
-    expect(markup).toContain("Dodaj konto");
-  });
-
   it("does not show an empty-state message while accounts are loading", () => {
     const markup = renderToStaticMarkup(
       <OwnedAccountsGrid accounts={[]} isLoading onAddAccount={noop} />
@@ -48,6 +37,13 @@ describe("OwnedAccountsGrid", () => {
           />
         );
       });
+      expect(container.querySelector("table")?.getAttribute("aria-label")).toBe(
+        "Twoje konta Margonem"
+      );
+      expect(container.querySelector("td")?.colSpan).toBe(5);
+      expect(container.textContent).toContain(
+        "Nie masz jeszcze zapisanych kont."
+      );
       const button = container.querySelector("button");
       expect(button?.textContent).toContain("Dodaj konto");
       act(() => {
