@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { MargonemAccountId } from "./margonem-account-id.ts";
 import { computeMargonemAccountRefetchDiff } from "./margonem-account-refetch-diff.ts";

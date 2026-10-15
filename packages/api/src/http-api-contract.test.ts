@@ -1,7 +1,7 @@
 import { OpenApi } from "effect/http-api";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";
 import { HeroSummary } from "./protocol/heroes/http-api-contract.ts";

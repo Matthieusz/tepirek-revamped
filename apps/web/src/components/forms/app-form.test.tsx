@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";

@@ -5,7 +5,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 
 import {
   BetterAuthDatabaseService,

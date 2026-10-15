@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { isRedirect } from "@tanstack/react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { CaughtError } from "@/lib/errors";
 import type { RouterAppContext } from "@/routes/__root";

@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import {
   FirecrawlClientService,

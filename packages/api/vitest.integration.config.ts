@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   test: {
@@ -11,6 +11,8 @@ export default defineConfig({
       "../db/src/**/*.integration.test.ts",
     ],
     pool: "threads",
+    // Effect helpers must share the active runner, including in this standalone config.
+    server: { deps: { inline: ["@effect/vitest"] } },
     setupFiles: ["./src/test/integration/setup.ts"],
   },
 });

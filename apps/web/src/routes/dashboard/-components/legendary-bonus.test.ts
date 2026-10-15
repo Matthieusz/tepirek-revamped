@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { formatLegendaryBonus } from "@/routes/dashboard/-components/legendary-bonus";
 

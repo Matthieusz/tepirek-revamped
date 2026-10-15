@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import { MargonemForumClientService } from "../../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
 import type {

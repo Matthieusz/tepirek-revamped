@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import { AccountDisplayName } from "./account-display-name.ts";
 import { AppUserId } from "./app-user-id.ts";

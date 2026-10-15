@@ -1,7 +1,7 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { SkillSummary } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import * as Schema from "effect/Schema";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { Skill, SkillApiRunner } from "@/features/skills/skill-api";
 import {

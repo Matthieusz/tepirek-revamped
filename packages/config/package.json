@@ -15,8 +15,5 @@
   },
   "dependencies": {
     "effect": "catalog:"
-  },
-  "devDependencies": {
-    "vitest": "catalog:"
   }
 }

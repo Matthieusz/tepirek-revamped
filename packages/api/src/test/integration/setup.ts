@@ -1,4 +1,4 @@
-import { beforeEach } from "vitest";
+import { beforeEach } from "vite-plus/test";
 
 import { truncateApplicationTables } from "./database.ts";
 

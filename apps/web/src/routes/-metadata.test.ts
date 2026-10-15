@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { invokeRouteHook } from "@/lib/test-utils/route-option-test-utils";
 import { Route as RootRoute } from "@/routes/__root";

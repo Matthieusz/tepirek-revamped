@@ -1,7 +1,7 @@
 import { EVENT_ICON_IDS } from "@tepirek-revamped/config";
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   CalculatorItemLevelFromStringSchema,

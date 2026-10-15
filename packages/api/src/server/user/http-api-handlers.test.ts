@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { RequestSession } from "../../protocol/auth/current-session.ts";

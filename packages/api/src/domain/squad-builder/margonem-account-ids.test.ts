@@ -1,6 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import { parseMargonemAccountAccessId } from "./margonem-account-access-id.ts";
 import { parseMargonemAccountId } from "./margonem-account-id.ts";

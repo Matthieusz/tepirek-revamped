@@ -3,7 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { ownedAccountsQueryKey } from "@/features/squad-builder/account-queries";
 import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";

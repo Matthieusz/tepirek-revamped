@@ -1,6 +1,6 @@
 import { LegendPriceSummary } from "@tepirek-revamped/api/protocol/legend-pricing/http-api-contract";
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 import { groupLegendPricesByEnemy } from "@/routes/dashboard/-components/cennik-groups";

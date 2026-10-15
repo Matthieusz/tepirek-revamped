@@ -1,6 +1,6 @@
 import * as HashMap from "effect/HashMap";
 import * as Predicate from "effect/Predicate";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   PlacementError,

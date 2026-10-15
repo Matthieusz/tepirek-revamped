@@ -1,5 +1,5 @@
 import type { Effect } from "effect/Effect";
-import { expectTypeOf, it } from "vitest";
+import { expectTypeOf, it } from "vite-plus/test";
 
 import type {
   LatestBetForCopy,

@@ -1,5 +1,5 @@
 import * as HashSet from "effect/HashSet";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   filterAvailableCharacters,

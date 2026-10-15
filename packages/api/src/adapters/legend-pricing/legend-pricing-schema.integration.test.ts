@@ -4,7 +4,7 @@ import {
   legendaryItemCost,
   legendaryItemDrop,
 } from "@tepirek-revamped/db/schema/legend-pricing";
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 
 import { createVerifiedMember } from "../../test/integration/builders.ts";
 import { testDb } from "../../test/integration/database.ts";

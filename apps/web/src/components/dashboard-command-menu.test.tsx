@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { DashboardCommandMenu } from "@/components/dashboard-command-menu";
 import { isCommandMenuHotkey } from "@/components/dashboard-command-menu-hotkey";

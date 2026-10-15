@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { AUCTION_PROFESSION_META, AUCTION_PROFESSIONS } from "./config";
 

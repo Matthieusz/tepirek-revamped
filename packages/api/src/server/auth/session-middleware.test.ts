@@ -10,7 +10,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { Pool } from "pg";
-import { afterAll } from "vitest";
+import { afterAll } from "vite-plus/test";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {

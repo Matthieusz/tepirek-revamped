@@ -13,7 +13,14 @@ import { LegendPriceSummary } from "@tepirek-revamped/api/protocol/legend-pricin
 import * as Schema from "effect/Schema";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vite-plus/test";
 
 import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";

@@ -1,5 +1,5 @@
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { AnnouncementPersistenceUnavailable } from "./announcement/http-api-contract.ts";
 import { AuctionPersistenceUnavailable } from "./auction/http-api-contract.ts";

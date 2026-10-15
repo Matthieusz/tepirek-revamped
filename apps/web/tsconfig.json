@@ -5,7 +5,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite-plus/client"],
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {

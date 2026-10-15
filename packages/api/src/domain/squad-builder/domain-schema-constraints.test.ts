@@ -1,6 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Schema from "effect/Schema";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import { AccountDisplayName } from "./account-display-name.ts";
 import { FirecrawlYearMonth } from "./firecrawl-year-month.ts";

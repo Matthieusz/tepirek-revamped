@@ -1,7 +1,7 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import * as Schema from "effect/Schema";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type {
   Announcement,

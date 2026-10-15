@@ -11,4 +11,5 @@
 - Oxlint loads the generic and Effect plugins directly from the installed TypeScript entry points.
 - `@oxlint/plugins` is pinned to the installed Oxlint version (`1.82.0`).
 - All generic and Effect rules from this snapshot are enabled at error severity. `no-runtime-typeof` preserves Ultracite's prior `allowInTypeGuards` option.
-- The source assets are unchanged from the recorded snapshot. Local configuration additionally ignores repository agent metadata and the vendored plugin path.
+- Local deviation: `no-module-mocking` recognizes `vi` imported from `vite-plus/test` as well as `vitest`, preserving enforcement after the Vite+ import migration.
+- Other source assets are unchanged from the recorded snapshot. Local configuration additionally ignores repository agent metadata and the vendored plugin path.

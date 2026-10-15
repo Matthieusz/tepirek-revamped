@@ -1,7 +1,7 @@
 import { MutationObserver } from "@tanstack/react-query";
 import { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { EventApiRunner } from "@/features/events/core/event-api";
 import {

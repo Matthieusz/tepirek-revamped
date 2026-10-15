@@ -3,7 +3,7 @@ import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-co
 import { Effect, Layer } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   HealthHttpApiClient,

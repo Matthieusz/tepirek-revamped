@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import * as Layer from "effect/Layer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { getErrorMessage } from "@/lib/errors";
 import {

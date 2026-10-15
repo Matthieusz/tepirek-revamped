@@ -6,7 +6,7 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { Todo, TodoApiRunner } from "@/features/todos/todo-api";
 import {

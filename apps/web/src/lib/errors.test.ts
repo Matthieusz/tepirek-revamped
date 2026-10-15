@@ -27,7 +27,7 @@ import {
   VaultPersistenceUnavailable,
 } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import * as Schema from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   getApiErrorMessage,

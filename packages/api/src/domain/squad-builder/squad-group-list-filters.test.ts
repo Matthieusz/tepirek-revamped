@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
-import { describe } from "vitest";
+import { describe } from "vite-plus/test";
 
 import {
   parseSquadGroupListFilters,
