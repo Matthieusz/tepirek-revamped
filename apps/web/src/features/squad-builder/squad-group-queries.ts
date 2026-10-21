@@ -66,6 +66,7 @@ export const squadGroupDetailQueryOptions = (
 ) =>
   effectQuery.queryOptions({
     enabled: groupId > 0,
+    meta: { operation: "squad-group-detail" },
     queryFn: () => getSquadGroupDetail({ groupId }),
     queryKey: squadGroupDetailQueryKey(groupId),
   });
@@ -76,6 +77,7 @@ export const availableSquadCharactersQueryOptions = (
 ) =>
   effectQuery.queryOptions({
     enabled: groupId > 0,
+    meta: { operation: "squad-group-characters" },
     queryFn: () => listAvailableSquadCharacters({ groupId }),
     queryKey: availableSquadCharactersQueryKey(groupId),
   });
@@ -135,6 +137,7 @@ export const saveSquadGroupMutationOptions = (
   effectQuery: AppEffectQuery = appEffectQuery
 ) =>
   effectQuery.mutationOptions({
+    meta: { operation: "save-squad-group" },
     mutationFn: (payload: Parameters<typeof saveSquadGroup>[0]) =>
       saveSquadGroup(payload),
     onSuccess: async (_, payload) => {
@@ -148,6 +151,7 @@ export const saveSharedSquadGroupCharactersMutationOptions = (
   effectQuery: AppEffectQuery = appEffectQuery
 ) =>
   effectQuery.mutationOptions({
+    meta: { operation: "save-shared-squad-characters" },
     mutationFn: (
       payload: Parameters<typeof saveSharedSquadGroupCharacters>[0]
     ) => saveSharedSquadGroupCharacters(payload),
@@ -162,6 +166,7 @@ export const setSquadGroupVisibilityMutationOptions = (
   effectQuery: AppEffectQuery = appEffectQuery
 ) =>
   effectQuery.mutationOptions({
+    meta: { operation: "set-squad-group-visibility" },
     mutationFn: (payload: Parameters<typeof setSquadGroupVisibility>[0]) =>
       setSquadGroupVisibility(payload),
     onSuccess: async (_, payload) => {

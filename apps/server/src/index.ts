@@ -27,7 +27,6 @@ import {
 } from "effect/http";
 import { OpenApi } from "effect/http-api";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -84,18 +83,22 @@ const handleHttpApiRequest = async <
 ) => {
   const requestLog = context.get("log");
   const headers = new Headers(context.req.raw.headers);
+  const requestId = crypto.randomUUID();
+  headers.set("x-request-id", requestId);
 
   if (requestLog !== undefined) {
-    const { requestId } = requestLog.getContext();
-
-    if (Predicate.isString(requestId) && requestId.length > 0) {
-      headers.set("x-request-id", requestId);
-    }
-
-    requestLog.set({ httpApi: { path: context.req.path } });
+    requestLog.set({ httpApi: { path: context.req.path }, requestId });
   }
 
-  return await handler(new Request(context.req.raw, { headers }));
+  const response = await handler(new Request(context.req.raw, { headers }));
+  const responseHeaders = new Headers(response.headers);
+  responseHeaders.set("x-request-id", requestId);
+
+  return new Response(response.body, {
+    headers: responseHeaders,
+    status: response.status,
+    statusText: response.statusText,
+  });
 };
 
 const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
@@ -176,6 +179,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
           ],
           allowMethods: ["GET", "POST", "OPTIONS"],
           credentials: true,
+          exposeHeaders: ["Retry-After", "x-request-id"],
           origin: startupConfig.corsOrigin,
         })
       );

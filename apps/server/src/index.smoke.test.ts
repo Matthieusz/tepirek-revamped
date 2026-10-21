@@ -7,6 +7,8 @@ import * as Redacted from "effect/Redacted";
 import { makeServerApplicationLayer, ServerApplication } from "./index.js";
 import type { ServerApplicationService } from "./index.js";
 
+const requestIdPattern = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/iu;
+
 const serverApplicationLayer = makeServerApplicationLayer({
   auth: {
     betterAuthSecret: Redacted.make("test-secret-at-least-32-characters"),
@@ -57,6 +59,7 @@ it.effect("responds to the Effect HttpApi health endpoint", () =>
 
       expect(body).toBe("OK");
       expect(response.status).toBe(200);
+      expect(response.headers.get("x-request-id")).toMatch(requestIdPattern);
     })
   )
 );
@@ -65,13 +68,23 @@ it.effect("forwards application API routes to the Effect handler", () =>
   withServerApplication(({ app }) =>
     Effect.gen(function* applicationApiRequest() {
       const response = yield* Effect.promise(
-        async () => await app.request("/announcements")
+        async () =>
+          await app.request("/announcements", {
+            headers: {
+              Origin: "http://localhost:3001",
+              "x-request-id": "private-client-supplied-id",
+            },
+          })
       );
 
       const body = yield* Effect.promise(async () => await response.text());
 
       expect(body).toContain("AnnouncementUnauthorized");
       expect(response.status).not.toBe(404);
+      expect(response.headers.get("x-request-id")).toMatch(requestIdPattern);
+      expect(response.headers.get("access-control-expose-headers")).toBe(
+        "Retry-After,x-request-id"
+      );
     })
   )
 );
