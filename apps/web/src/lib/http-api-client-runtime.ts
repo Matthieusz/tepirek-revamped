@@ -1,8 +1,7 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { HttpApiError } from "@tepirek-revamped/api/protocol/http-api-errors";
-import { Layer, ManagedRuntime, References, Schema } from "effect";
+import { Layer, Schema } from "effect";
 import type { Fiber } from "effect";
-import { createEffectQueryFromManagedRuntime } from "effect-query";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
@@ -11,6 +10,7 @@ import * as HttpClientError from "effect/http/HttpClientError";
 import type * as LayerType from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 
+import { makeEffectQuery } from "@/lib/effect-query";
 import { serverUrl } from "@/lib/env";
 import { rememberFailureResponse } from "@/lib/query-failure-policy";
 
@@ -116,22 +116,17 @@ export class AppHttpApiClient extends Context.Service<
 }
 
 /** Creates Effect Query factories; the caller owns and must dispose the runtime. */
-export const makeAppEffectQuery = (
-  layer: LayerType.Layer<AppHttpApiClient>
-) => {
-  // The published alpha logs full failure causes, which may include private API data.
-  // Keep errors in the Query cache for safe UI projection instead of logging them.
-  const runtime = ManagedRuntime.make(
-    Layer.merge(layer, Layer.succeed(References.MinimumLogLevel, "None"))
-  );
-
-  return { ...createEffectQueryFromManagedRuntime(runtime), runtime };
-};
+export const makeAppEffectQuery = (layer: LayerType.Layer<AppHttpApiClient>) =>
+  makeEffectQuery(layer);
 
 /** Application Effect Query factories and their caller-owned runtime. */
 export type AppEffectQuery = ReturnType<typeof makeAppEffectQuery>;
 
-/** Shared stateless browser API client and Effect Query factories. */
+/**
+ * Module-lived stateless browser transport, not a remote-data cache.
+ * Never capture request-specific auth in this singleton; SSR uses request-owned layers.
+ * See docs/web-remote-state.md for ownership and disposal rules.
+ */
 export const appEffectQuery = makeAppEffectQuery(AppHttpApiClient.layer);
 
 if (import.meta.hot) {

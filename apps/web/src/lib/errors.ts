@@ -12,9 +12,10 @@ import {
 } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { HttpApiError as HttpApiErrorType } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
-import { EffectQueryFailure } from "effect-query";
 import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
+
+import { EffectQueryFailure } from "@/lib/effect-query";
 
 const fallbackErrorMessage = "Wystąpił błąd. Spróbuj ponownie później.";
 

@@ -6,7 +6,6 @@ import {
   LegendPricingConflict,
 } from "@tepirek-revamped/api/protocol/legend-pricing/http-api-contract";
 import { Effect, Layer } from "effect";
-import { EffectQueryFailure } from "effect-query";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { describe, expect, it } from "vite-plus/test";
@@ -15,6 +14,7 @@ import {
   legendPricesQueryOptions,
   updateLegendCostMutationOptions,
 } from "@/features/legend-pricing/legend-pricing-queries";
+import { EffectQueryFailure } from "@/lib/effect-query";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";

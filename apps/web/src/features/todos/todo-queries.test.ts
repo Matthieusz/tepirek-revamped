@@ -211,6 +211,54 @@ describe("todo queries and mutations", () => {
     }
   });
 
+  it("keeps a committed optimistic toggle when refresh fails without reporting mutation failure", async () => {
+    const firstTodo = makeTodo(1);
+    const onError = vi.fn<(error: Error) => void>();
+    const onRefreshError = vi.fn<(error: Error) => void>();
+
+    const transport = makeTodoTransport({
+      list: [jsonResponse([firstTodo]), new Response(null, { status: 503 })],
+      toggle: [voidResponse()],
+    });
+
+    const testClient = makeTestQueryClient();
+
+    const queryObserver = new QueryObserver(testClient.queryClient, {
+      ...todosQueryOptions(transport.effectQuery),
+      retry: false,
+    });
+
+    const unsubscribe = queryObserver.subscribe(() => {});
+
+    const mutation = new MutationObserver(
+      testClient.queryClient,
+      toggleTodoMutationOptions(testClient.queryClient, transport.effectQuery, {
+        onError,
+        onRefreshError,
+      })
+    );
+
+    try {
+      await queryObserver.refetch();
+      await expect(
+        mutation.mutate({ completed: true, id: firstTodo.id })
+      ).resolves.toBeUndefined();
+
+      expect(mutation.getCurrentResult().isSuccess).toBe(true);
+      expect(queryObserver.getCurrentResult().isRefetchError).toBe(true);
+      expect(queryObserver.getCurrentResult().data).toEqual([
+        makeTodo(1, true),
+      ]);
+      expect(onError).not.toHaveBeenCalled();
+      expect(onRefreshError).toHaveBeenCalledTimes(1);
+      expect(transport.calls).toMatchObject({ list: 2, toggle: 1 });
+    } finally {
+      mutation.reset();
+      unsubscribe();
+      testClient.cleanup();
+    }
+  });
+
   it("rolls back failed toggle and delete mutations", async () => {
     const firstTodo = makeTodo(1);
     const secondTodo = makeTodo(2, true);

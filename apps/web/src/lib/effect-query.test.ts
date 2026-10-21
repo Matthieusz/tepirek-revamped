@@ -3,13 +3,13 @@ import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-co
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { TodoForbidden } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Deferred, Effect, Layer } from "effect";
-import { EffectQueryDefect, EffectQueryFailure } from "effect-query";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { healthQueryOptions } from "@/features/health/health-queries";
 import { listTodos } from "@/features/todos/todo-api";
+import { EffectQueryDefect, EffectQueryFailure } from "@/lib/effect-query";
 import { getErrorMessage } from "@/lib/errors";
 import { HealthHttpApiClient } from "@/lib/health-http-api-client-runtime";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
@@ -203,6 +203,54 @@ describe("Effect Query integration", () => {
     }
   });
 
+  it("aborts the live fetch signal when Query cancels a read", async () => {
+    const started = Deferred.makeUnsafe<AbortSignal>();
+
+    const fetch = vi.fn<typeof globalThis.fetch>(async (_input, init) => {
+      const signal = init?.signal;
+
+      if (signal === undefined || signal === null) {
+        throw new Error("Expected an interruptible fetch");
+      }
+
+      Effect.runSync(Deferred.succeed(started, signal));
+
+      return await Effect.runPromise(Effect.never, { signal });
+    });
+
+    const eq = makeTestAppEffectQuery(
+      AppHttpApiClient.layer.pipe(
+        Layer.provide(Layer.succeed(FetchHttpClient.Fetch, fetch))
+      )
+    );
+
+    const client = makeTestQueryClient();
+
+    try {
+      const request = client.queryClient.query(
+        eq.queryOptions({
+          queryFn: listTodos,
+          queryKey: ["fetch-abort"],
+          retry: false,
+        })
+      );
+
+      const cancelled = expect(request).rejects.toBeInstanceOf(CancelledError);
+      const signal = await Effect.runPromise(Deferred.await(started));
+      expect(signal.aborted).toBe(false);
+
+      await client.queryClient.cancelQueries({ queryKey: ["fetch-abort"] });
+      await cancelled;
+      expect(signal.aborted).toBe(true);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(
+        client.queryClient.getQueryState(["fetch-abort"])?.error
+      ).toBeNull();
+    } finally {
+      client.cleanup();
+    }
+  });
+
   it("shares layer acquisition and releases it when its owner disposes the runtime", async () => {
     let acquired = 0;
     let released = 0;
@@ -244,7 +292,70 @@ describe("Effect Query integration", () => {
       expect(acquired).toBe(1);
       expect(released).toBe(0);
       await eq.runtime.dispose();
+      await eq.runtime.dispose();
       expect(released).toBe(1);
+      await expect(
+        client.queryClient.query(
+          eq.queryOptions({
+            queryFn: listTodos,
+            queryKey: ["after-disposal"],
+            retry: false,
+          })
+        )
+      ).rejects.toBeDefined();
+      expect(acquired).toBe(1);
+      expect(released).toBe(1);
+    } finally {
+      client.cleanup();
+    }
+  });
+
+  it("interrupts in-flight reads and awaits their finalizers on runtime disposal", async () => {
+    const started = Deferred.makeUnsafe<boolean>();
+    const finalized = Deferred.makeUnsafe<boolean>();
+
+    const httpClient = HttpClient.make(() =>
+      Deferred.succeed(started, true).pipe(
+        Effect.andThen(Effect.never),
+        Effect.ensuring(Deferred.succeed(finalized, true))
+      )
+    );
+
+    const eq = makeTestAppEffectQuery(
+      Layer.effect(
+        AppHttpApiClient,
+        HttpApiClient.makeWith(AppHttpApi, {
+          baseUrl: "http://localhost",
+          httpClient,
+        })
+      )
+    );
+
+    const client = makeTestQueryClient();
+
+    try {
+      const request = client.queryClient.query(
+        eq.queryOptions({
+          queryFn: listTodos,
+          queryKey: ["dispose-pending"],
+          retry: false,
+        })
+      );
+
+      // Runtime interruption is a bridge defect; only Query cancellation produces CancelledError.
+      const interrupted =
+        expect(request).rejects.toBeInstanceOf(EffectQueryDefect);
+
+      await Effect.runPromise(Deferred.await(started));
+      await eq.runtime.dispose();
+      expect(Effect.runSync(Deferred.isDone(finalized))).toBe(true);
+      await interrupted;
+      expect(
+        client.queryClient.getQueryData(["dispose-pending"])
+      ).toBeUndefined();
+      expect(
+        client.queryClient.getQueryState(["dispose-pending"])?.fetchStatus
+      ).toBe("idle");
     } finally {
       client.cleanup();
     }

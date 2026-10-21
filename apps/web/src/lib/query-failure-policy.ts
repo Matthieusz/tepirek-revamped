@@ -6,8 +6,9 @@ import {
 } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { HttpApiError as HttpApiFailure } from "@tepirek-revamped/api/protocol/http-api-errors";
 import { Match, Schema } from "effect";
-import { EffectQueryFailure } from "effect-query";
 import { isHttpClientError } from "effect/http/HttpClientError";
+
+import { EffectQueryFailure } from "@/lib/effect-query";
 
 import type { CaughtError } from "./errors";
 

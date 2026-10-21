@@ -4,12 +4,12 @@ import {
   SquadBuilderInvalidInput,
 } from "@tepirek-revamped/api/protocol/squad-builder/errors";
 import { Cause } from "effect";
-import { EffectQueryFailure } from "effect-query";
 import { describe, expect, it } from "vite-plus/test";
 
 import { squadEditorReducer } from "@/features/squad-builder/editor/squad-editor-state";
 import type { SquadEditorState } from "@/features/squad-builder/editor/squad-editor-state";
 import { squadSaveFailureEvent } from "@/features/squad-builder/editor/squad-save-recovery";
+import { EffectQueryFailure } from "@/lib/effect-query";
 
 describe("squad save recovery", () => {
   it.each([

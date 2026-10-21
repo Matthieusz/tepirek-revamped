@@ -9,7 +9,6 @@ import {
   SquadBuilderUpstreamUnavailable,
 } from "@tepirek-revamped/api/protocol/squad-builder/errors";
 import { Cause, Effect, Layer } from "effect";
-import { EffectQueryDefect, EffectQueryFailure } from "effect-query";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import {
   HttpClientError,
@@ -21,13 +20,18 @@ import {
 import { describe, expect, it, onTestFinished, vi } from "vite-plus/test";
 
 import { getSquadGroupDetail } from "@/features/squad-builder/squad-group-api";
+import { EffectQueryDefect, EffectQueryFailure } from "@/lib/effect-query";
 import {
   AppHttpApiClient,
   makeAppHttpApiClient,
 } from "@/lib/http-api-client-runtime";
 import { createQueryClient } from "@/lib/query-client";
 import type { QueryDiagnostic } from "@/lib/query-diagnostics";
-import { queryRetryDelay, shouldRetryQuery } from "@/lib/query-failure-policy";
+import {
+  failureCorrelationId,
+  queryRetryDelay,
+  shouldRetryQuery,
+} from "@/lib/query-failure-policy";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 
 const wrapped = <E extends { readonly _tag: string }>(failure: E) =>
@@ -271,6 +275,13 @@ describe("query failure policy", () => {
       )
     );
     expect(transport.attempts()).toBe(3);
+
+    for (const [index, expectedId] of [ids[0], ids[1], undefined].entries()) {
+      const error = transport.client.getQueryState(["private", index])?.error;
+      expect(error).toBeInstanceOf(EffectQueryFailure);
+      expect(failureCorrelationId(error)).toBe(expectedId);
+    }
+
     expect(
       new Set(transport.diagnostics.map((record) => record.correlationId))
     ).toEqual(new Set([ids[0], ids[1], undefined]));

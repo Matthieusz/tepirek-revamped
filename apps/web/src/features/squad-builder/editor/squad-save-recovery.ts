@@ -1,8 +1,8 @@
 import type { Effect } from "effect";
-import type { InferQueryErrorResult } from "effect-query";
 
 import type { SquadEditorEvent } from "@/features/squad-builder/editor/squad-editor-state";
 import type { saveSquadGroup } from "@/features/squad-builder/squad-group-api";
+import type { InferQueryErrorResult } from "@/lib/effect-query";
 import { getErrorMessage } from "@/lib/errors";
 
 type SaveError = InferQueryErrorResult<

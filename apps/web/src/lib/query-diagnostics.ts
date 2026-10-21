@@ -9,8 +9,9 @@ import {
   HttpApiUpstreamUnavailableError,
 } from "@tepirek-revamped/api/protocol/http-api-errors";
 import { Option, Schema } from "effect";
-import { EffectQueryDefect, EffectQueryFailure } from "effect-query";
 import { isHttpClientError } from "effect/http/HttpClientError";
+
+import { EffectQueryDefect, EffectQueryFailure } from "@/lib/effect-query";
 
 import type { CaughtError } from "./errors";
 import { failureCorrelationId } from "./query-failure-policy";
