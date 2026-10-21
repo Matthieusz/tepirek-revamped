@@ -51,13 +51,27 @@ const forbiddenDependency = (
     return "services cannot depend on infrastructure or HTTP implementation";
   }
 
+  const browserContract =
+    origin.startsWith(`${api}protocol/`) ||
+    origin.startsWith(`${api}domain/squad-builder/`);
+
   if (
-    origin.startsWith(`${api}protocol/`) &&
+    browserContract &&
     (serverOnly ||
       target.startsWith(`${api}services/`) ||
       target === `${api}observability.ts`)
   ) {
-    return "browser protocol cannot reach server-only implementation";
+    return "browser contract cannot reach server-only implementation";
+  }
+
+  if (
+    origin.startsWith(web) &&
+    (target.startsWith(`${api}server/`) ||
+      target.startsWith(`${api}adapters/`) ||
+      target.startsWith(`${api}services/`) ||
+      target === `${api}observability.ts`)
+  ) {
+    return "web cannot reach API server implementation";
   }
 
   if (

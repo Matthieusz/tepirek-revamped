@@ -4,6 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
+import { ResolverFactory } from "oxc-resolver";
+
+import apiPackage from "../../packages/api/package.json" with { type: "json" };
 import { checkGraph, repositoryGraph } from "./check.ts";
 
 const api = "packages/api/src/";
@@ -35,12 +38,111 @@ await test("rejects prohibited dependencies directly and through barrels", () =>
   }
 });
 
+await test("web contract imports cannot reach implementation through shared schemas", () => {
+  for (const contract of [
+    `${api}protocol/example.ts`,
+    `${api}domain/squad-builder/example.ts`,
+  ]) {
+    for (const target of [
+      `${api}server/example.ts`,
+      `${api}adapters/example.ts`,
+      `${api}services/example.ts`,
+      `${api}observability.ts`,
+      "packages/db/src/index.ts",
+      "packages/auth/src/index.ts",
+      "@tepirek-revamped/db",
+      "@tepirek-revamped/auth",
+      "drizzle-orm/pg-core",
+    ]) {
+      const origin = `${web}lib/api-client.ts`;
+      const barrel = "shared/barrel.ts";
+
+      const failures = checkGraph(
+        new Map([
+          [origin, [contract]],
+          [contract, [barrel]],
+          [barrel, [target]],
+        ])
+      );
+
+      assert.ok(
+        failures.some((failure) =>
+          failure.endsWith([contract, barrel, target].join(" -> "))
+        ),
+        `${contract} must not expose ${target} to the web`
+      );
+    }
+  }
+});
+
+await test("web imports cannot bypass the browser-safe API surface", () => {
+  for (const target of [
+    `${api}server/example.ts`,
+    `${api}adapters/example.ts`,
+    `${api}services/example.ts`,
+    `${api}observability.ts`,
+  ]) {
+    assert.equal(
+      checkGraph(new Map([[`${web}lib/api-client.ts`, [target]]])).length,
+      1
+    );
+  }
+});
+
+await test("conditional exports retain browser contracts and server-only restrictions", () => {
+  const directory = path.resolve(import.meta.dirname, "../../apps/web");
+
+  const browser = new ResolverFactory({
+    conditionNames: ["browser", "import", "default"],
+  });
+
+  const node = new ResolverFactory({
+    conditionNames: ["node", "import", "default"],
+  });
+
+  for (const [entry, conditions] of Object.entries(apiPackage.exports)) {
+    const specifier = `@tepirek-revamped/api${entry.slice(1)}`
+      .replace("protocol/*", "protocol/http-api-contract")
+      .replace("domain/squad-builder/*", "domain/squad-builder/app-user-id");
+
+    const nodeResult = node.sync(directory, specifier);
+    assert.notEqual(
+      nodeResult.path,
+      undefined,
+      `${specifier} must resolve for Node`
+    );
+
+    const browserSafe =
+      entry === "./protocol/*" || entry === "./domain/squad-builder/*";
+
+    if (!browserSafe) {
+      assert.equal(conditions.browser, null, specifier);
+      continue;
+    }
+
+    assert.equal(conditions.browser, conditions.node, specifier);
+    assert.equal(
+      browser.sync(directory, specifier).path,
+      nodeResult.path,
+      specifier
+    );
+  }
+});
+
 await test("allows test roots, service ports, and protocol schemas", () => {
   assert.deepEqual(
     checkGraph(
       new Map([
         [`${api}services/example.test.ts`, [`${api}adapters/example.ts`]],
         [`${api}services/example.ts`, [`${api}domain/example.ts`]],
+        [
+          `${web}lib/api-client.ts`,
+          [
+            `${api}protocol/example.ts`,
+            `${api}domain/squad-builder/example.ts`,
+          ],
+        ],
+        [`${api}domain/squad-builder/example.ts`, ["effect/Schema"]],
         [
           `${api}protocol/example.ts`,
           ["effect/unstable/httpapi/HttpApiSchema"],
