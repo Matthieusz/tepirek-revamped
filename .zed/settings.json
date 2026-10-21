@@ -1,0 +1,64 @@
+{
+  "languages": {
+    "JavaScript": {
+      "language_servers": [
+        "typescript-ls",
+        "oxlint",
+        "!vtsls",
+        "!typescript-language-server",
+        "!tsgo",
+        "..."
+      ]
+    },
+    "JSX": {
+      "language_servers": [
+        "typescript-ls",
+        "oxlint",
+        "!vtsls",
+        "!typescript-language-server",
+        "!tsgo",
+        "..."
+      ]
+    },
+    "TypeScript": {
+      "language_servers": [
+        "typescript-ls",
+        "oxlint",
+        "!vtsls",
+        "!typescript-language-server",
+        "!tsgo",
+        "..."
+      ]
+    },
+    "TSX": {
+      "language_servers": [
+        "typescript-ls",
+        "oxlint",
+        "!vtsls",
+        "!typescript-language-server",
+        "!tsgo",
+        "..."
+      ]
+    }
+  },
+  "lsp": {
+    "typescript-ls": {
+      "binary": {
+        "path": "pnpm",
+        "arguments": ["exec", "tsrs", "--lsp", "-stdio"]
+      }
+    },
+    "oxlint": {
+      "binary": {
+        "path": "pnpm",
+        "arguments": ["exec", "node", "tools/lint.ts", "lint", "--lsp"]
+      },
+      "initialization_options": {
+        "settings": {
+          "run": "onType",
+          "typeAware": true
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@
     "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "tsrs --noEmit",
     "test": "vp test run"
   },
   "dependencies": {

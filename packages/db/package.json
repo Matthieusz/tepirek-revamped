@@ -38,7 +38,7 @@
     }
   },
   "scripts": {
-    "check-types": "tsc -b",
+    "check-types": "tsrs -b",
     "test": "vp test run",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
