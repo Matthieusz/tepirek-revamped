@@ -1,7 +1,7 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
-import type { EventIconId } from "@tepirek-revamped/config";
+import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config/application/events";
+import type { EventIconId } from "@tepirek-revamped/config/application/events";
 import { format } from "date-fns";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";

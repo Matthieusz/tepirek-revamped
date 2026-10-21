@@ -1,4 +1,4 @@
-import { calculatePointsPerMember } from "@tepirek-revamped/config";
+import { calculatePointsPerMember } from "@tepirek-revamped/config/application/guild-ledger";
 import * as Arr from "effect/Array";
 import * as Data from "effect/Data";
 import * as HashSet from "effect/HashSet";

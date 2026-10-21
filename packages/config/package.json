@@ -7,6 +7,11 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./application/auctions": "./src/application/auctions.ts",
+    "./application/events": "./src/application/events.ts",
+    "./application/guild-ledger": "./src/application/guild-ledger.ts",
+    "./application/skills": "./src/slug.ts",
+    "./application/users": "./src/application/users.ts",
     "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {

@@ -1,4 +1,4 @@
-import type { USER_ROLES } from "@tepirek-revamped/config";
+import type { USER_ROLES } from "@tepirek-revamped/config/application/users";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type * as Redacted from "effect/Redacted";

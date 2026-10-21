@@ -1,5 +1,3 @@
-import { describe, expect, it } from "vite-plus/test";
-
 import {
   AUCTION_PROFESSIONS,
   AUCTION_SLOT_LEVELS,
@@ -8,7 +6,8 @@ import {
   getAuctionSlotColumnCount,
   getAuctionSlotColumns,
   isLegalAuctionSlot,
-} from "./index.ts";
+} from "@tepirek-revamped/config/application/auctions";
+import { describe, expect, it } from "vite-plus/test";
 
 const legalSlot = {
   column: 1,

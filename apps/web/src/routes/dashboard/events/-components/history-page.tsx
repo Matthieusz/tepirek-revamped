@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
-import { calculatePointsPerMember } from "@tepirek-revamped/config";
+import { calculatePointsPerMember } from "@tepirek-revamped/config/application/guild-ledger";
 import { History, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";

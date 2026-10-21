@@ -1,5 +1,8 @@
-import { DEFAULT_EVENT_ICON_ID, isEventIconId } from "@tepirek-revamped/config";
-import type { EventIconId } from "@tepirek-revamped/config";
+import {
+  DEFAULT_EVENT_ICON_ID,
+  isEventIconId,
+} from "@tepirek-revamped/config/application/events";
+import type { EventIconId } from "@tepirek-revamped/config/application/events";
 import { Cake, Calendar, Egg, Ghost, Snowflake, Sun } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 

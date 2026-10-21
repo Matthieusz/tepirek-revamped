@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-import { DEFAULT_EVENT_ICON_ID } from "@tepirek-revamped/config";
+import { DEFAULT_EVENT_ICON_ID } from "@tepirek-revamped/config/application/events";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { event } from "@tepirek-revamped/db/schema/event";
