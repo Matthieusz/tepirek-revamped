@@ -1,6 +1,5 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { createPageTitle } from "@/lib/metadata";
 import DashboardLayout from "@/routes/dashboard/-components/dashboard-layout";
 import { loadDashboardSession } from "@/routes/dashboard/-load-dashboard-session";
@@ -25,7 +24,6 @@ export const Route = createFileRoute("/dashboard")({
       { content: "noindex, nofollow", name: "robots" },
     ],
   }),
-  pendingComponent: () => <LoadingSpinner />,
   staticData: {
     crumb: "Dashboard",
   },
