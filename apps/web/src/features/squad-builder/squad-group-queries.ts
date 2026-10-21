@@ -85,10 +85,19 @@ export const availableSquadCharactersQueryOptions = (
 const invalidateSquadGroupLists = async (
   queryClient: QueryClient
 ): Promise<void> => {
-  await queryClient.invalidateQueries({ queryKey: squadGroupsQueryKey });
+  await Promise.all([
+    queryClient.invalidateQueries({
+      exact: true,
+      queryKey: ownedSquadGroupsQueryKey,
+    }),
+    queryClient.invalidateQueries({ queryKey: globalSquadGroupsQueryPrefix }),
+  ]);
 };
 
-/** Invalidates list and group-specific data after a group change. */
+/**
+ * Invalidates the owned list, all global list filters, and only the changed
+ * group's detail and character pool. Sharing queries have their own policy.
+ */
 export const invalidateSquadGroupResources = async (
   queryClient: QueryClient,
   groupId: number
@@ -96,9 +105,11 @@ export const invalidateSquadGroupResources = async (
   await Promise.all([
     invalidateSquadGroupLists(queryClient),
     queryClient.invalidateQueries({
+      exact: true,
       queryKey: squadGroupDetailQueryKey(groupId),
     }),
     queryClient.invalidateQueries({
+      exact: true,
       queryKey: availableSquadCharactersQueryKey(groupId),
     }),
   ]);
