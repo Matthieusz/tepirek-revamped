@@ -4,7 +4,7 @@ import {
   AUCTION_PROFESSIONS,
   AUCTION_TYPES,
   isLegalAuctionSlot,
-} from "@tepirek-revamped/config";
+} from "@tepirek-revamped/config/application/auctions";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
 

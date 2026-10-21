@@ -8,12 +8,7 @@ import {
   TodoUnauthorized,
 } from "../../protocol/todo/http-api-contract.ts";
 import type { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
-import {
-  createTodo,
-  deleteTodo,
-  listTodos,
-  toggleTodo,
-} from "../../services/todo/todo-service.ts";
+import { TodoStore } from "../../services/todo/todo-store.ts";
 import { buildAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireVerifiedSession } = buildAuthorizationPolicy({
@@ -26,6 +21,7 @@ const { requireVerifiedSession } = buildAuthorizationPolicy({
 const mapTodoError = (error: ApplicationDependencyUnavailable) =>
   new TodoPersistenceUnavailable({ operation: error.operation });
 
+/** Todo transport handlers; operation spans wrap persistence calls after authorization. */
 export const TodoHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "todo",
@@ -34,37 +30,55 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
       .handle("createTodo", ({ payload }) =>
         Effect.gen(function* createTodoHandler() {
           const session = yield* requireVerifiedSession();
-          yield* createTodo({
-            text: payload.text,
-            userId: session.user.id,
-          }).pipe(Effect.mapError(mapTodoError));
+          const store = yield* TodoStore;
+          yield* store
+            .create({
+              text: payload.text,
+              userId: session.user.id,
+            })
+            .pipe(
+              Effect.withSpan("Todo.create"),
+              Effect.mapError(mapTodoError)
+            );
         })
       )
       .handle("deleteTodo", ({ payload }) =>
         Effect.gen(function* deleteTodoHandler() {
           const session = yield* requireVerifiedSession();
-          yield* deleteTodo({ id: payload.id, userId: session.user.id }).pipe(
-            Effect.mapError(mapTodoError)
-          );
+          const store = yield* TodoStore;
+          yield* store
+            .delete({ id: payload.id, userId: session.user.id })
+            .pipe(
+              Effect.withSpan("Todo.delete"),
+              Effect.mapError(mapTodoError)
+            );
         })
       )
       .handle("listTodos", () =>
         Effect.gen(function* listTodosHandler() {
           const session = yield* requireVerifiedSession();
 
-          return yield* listTodos({ userId: session.user.id }).pipe(
-            Effect.mapError(mapTodoError)
-          );
+          const store = yield* TodoStore;
+
+          return yield* store
+            .list({ userId: session.user.id })
+            .pipe(Effect.withSpan("Todo.list"), Effect.mapError(mapTodoError));
         })
       )
       .handle("toggleTodo", ({ payload }) =>
         Effect.gen(function* toggleTodoHandler() {
           const session = yield* requireVerifiedSession();
-          yield* toggleTodo({
-            completed: payload.completed,
-            id: payload.id,
-            userId: session.user.id,
-          }).pipe(Effect.mapError(mapTodoError));
+          const store = yield* TodoStore;
+          yield* store
+            .toggle({
+              completed: payload.completed,
+              id: payload.id,
+              userId: session.user.id,
+            })
+            .pipe(
+              Effect.withSpan("Todo.toggle"),
+              Effect.mapError(mapTodoError)
+            );
         })
       )
 );

@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -9,7 +8,6 @@ import {
   listPaginatedBets,
 } from "@/features/events/bets/bet-api";
 import type {
-  BetApiRunner,
   CreateBetInput,
   DeleteBetInput,
   EditBetInput,
@@ -21,7 +19,8 @@ import {
   rankingQueryKeyPrefix,
 } from "@/features/events/ranking/ranking-queries";
 import { vaultQueryKey } from "@/features/events/vault/vault-queries";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all bet data. */
 const betsQueryKey = ["bets"] as const;
@@ -92,32 +91,30 @@ const invalidateAfterMutation = async (
 /** Returns Query options for one page of bets. */
 export const paginatedBetsQueryOptions = (
   input: PaginatedBetsInput,
-  runner: BetApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listPaginatedBets(input), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listPaginatedBets(input),
     queryKey: paginatedBetsQueryKey(input),
   });
 
 /** Returns Query options for the latest bet used by copy-members flows. */
 export const latestBetForCopyQueryOptions = (
-  runner: BetApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(getLatestBetForCopy(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => getLatestBetForCopy(),
     queryKey: latestBetForCopyQueryKey,
   });
 
 /** Returns mutation options for creating a bet. */
 export const createBetMutationOptions = (
   queryClient: QueryClient,
-  runner: BetApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: BetMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: CreateBetInput) => await runner(createBet(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: CreateBetInput) => createBet(input),
     mutationKey: [...betsQueryKey, "mutation", "create"],
     onSuccess: async () => {
       await invalidateAfterMutation(queryClient, callbacks);
@@ -128,11 +125,11 @@ export const createBetMutationOptions = (
 /** Returns mutation options for deleting a bet. */
 export const deleteBetMutationOptions = (
   queryClient: QueryClient,
-  runner: BetApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: BetMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: DeleteBetInput) => await runner(deleteBet(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: DeleteBetInput) => deleteBet(input),
     mutationKey: [...betsQueryKey, "mutation", "delete"],
     onSuccess: async () => {
       await invalidateAfterMutation(queryClient, callbacks);
@@ -143,11 +140,11 @@ export const deleteBetMutationOptions = (
 /** Returns mutation options for editing a bet's members. */
 export const editBetMutationOptions = (
   queryClient: QueryClient,
-  runner: BetApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: BetMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: EditBetInput) => await runner(editBet(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: EditBetInput) => editBet(input),
     mutationKey: [...betsQueryKey, "mutation", "edit"],
     onSuccess: async () => {
       await invalidateAfterMutation(queryClient, callbacks);

@@ -1,29 +1,34 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
+import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import {
   LegendCostVersion,
   LegendaryItemId,
   LegendPricingConflict,
 } from "@tepirek-revamped/api/protocol/legend-pricing/http-api-contract";
+import { Effect, Layer } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpApiClient } from "effect/http-api";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { LegendPricingApiRunner } from "@/features/legend-pricing/legend-pricing-api";
 import {
   legendPricesQueryOptions,
   updateLegendCostMutationOptions,
 } from "@/features/legend-pricing/legend-pricing-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import { EffectQueryFailure } from "@/lib/effect-query";
+import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 describe("legend pricing queries and mutations", () => {
   it("loads through HttpApiClient and invalidates the catalogue after saving", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     const observer = new QueryObserver(
       testClient.queryClient,
-      legendPricesQueryOptions(runner)
+      legendPricesQueryOptions(effectQuery)
     );
 
     const unsubscribe = observer.subscribe(() => {});
@@ -33,7 +38,7 @@ describe("legend pricing queries and mutations", () => {
 
       const mutation = new MutationObserver(
         testClient.queryClient,
-        updateLegendCostMutationOptions(testClient.queryClient, runner)
+        updateLegendCostMutationOptions(testClient.queryClient, effectQuery)
       );
 
       await expect(
@@ -62,12 +67,12 @@ describe("legend pricing queries and mutations", () => {
 
   it("rejects invalid amounts before sending an HTTP request", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     const mutation = new MutationObserver(
       testClient.queryClient,
-      updateLegendCostMutationOptions(testClient.queryClient, runner)
+      updateLegendCostMutationOptions(testClient.queryClient, effectQuery)
     );
 
     try {
@@ -89,17 +94,32 @@ describe("legend pricing queries and mutations", () => {
     const conflict = new LegendPricingConflict({ message: "stale version" });
     let attempts = 0;
 
-    const runner: LegendPricingApiRunner = async () => {
+    const httpClient = HttpClient.make((request) => {
       attempts += 1;
-      await Promise.resolve();
-      throw conflict;
-    };
+
+      return Effect.succeed(
+        HttpClientResponse.fromWeb(
+          request,
+          Response.json(conflict, { status: 409 })
+        )
+      );
+    });
+
+    const effectQuery = makeTestAppEffectQuery(
+      Layer.effect(
+        AppHttpApiClient,
+        HttpApiClient.makeWith(AppHttpApi, {
+          baseUrl: "http://localhost",
+          httpClient,
+        })
+      )
+    );
 
     const testClient = makeTestQueryClient();
 
     const options = updateLegendCostMutationOptions(
       testClient.queryClient,
-      runner
+      effectQuery
     );
 
     const mutation = new MutationObserver(testClient.queryClient, options);
@@ -112,9 +132,7 @@ describe("legend pricing queries and mutations", () => {
           itemId: LegendaryItemId.make(1),
           priceGold: 100,
         })
-      ).rejects.toMatchObject(
-        new LegendPricingConflict({ message: "stale version" })
-      );
+      ).rejects.toBeInstanceOf(EffectQueryFailure);
       expect(attempts).toBe(1);
       mutation.reset();
     } finally {

@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import type {
+  AuctionProfession,
+  AuctionType,
+} from "@tepirek-revamped/config/application/auctions";
 import { Trash2, Users } from "lucide-react";
 import type { ReactElement } from "react";
 import type React from "react";

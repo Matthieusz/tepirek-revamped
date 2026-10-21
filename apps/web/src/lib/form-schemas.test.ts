@@ -1,4 +1,4 @@
-import { EVENT_ICON_IDS } from "@tepirek-revamped/config";
+import { EVENT_ICON_IDS } from "@tepirek-revamped/config/application/events";
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";

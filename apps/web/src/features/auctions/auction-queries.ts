@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -9,13 +8,13 @@ import {
   toggleAuctionSignup,
 } from "@/features/auctions/auction-api";
 import type {
-  AuctionApiRunner,
   AuctionGroupInput,
   AuctionSignup,
   RemoveAuctionSignupInput,
   ToggleAuctionSignupInput,
 } from "@/features/auctions/auction-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key for signups in one auction group. */
 export const auctionSignupsQueryKey = (group: AuctionGroupInput) =>
@@ -100,22 +99,20 @@ const invalidateAuctionGroupAfterMutation = async (
 /** Returns Query options for signups in one auction group. */
 export const auctionSignupsQueryOptions = (
   group: AuctionGroupInput,
-  runner: AuctionApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listAuctionSignups(group), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listAuctionSignups(group),
     queryKey: auctionSignupsQueryKey(group),
   });
 
 /** Returns Query options for signup statistics in one auction group. */
 export const auctionStatsQueryOptions = (
   group: AuctionGroupInput,
-  runner: AuctionApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(getAuctionStats(group), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => getAuctionStats(group),
     queryKey: auctionStatsQueryKey(group),
   });
 
@@ -123,15 +120,13 @@ export const auctionStatsQueryOptions = (
 export const clearAuctionSignupsMutationOptions = (
   queryClient: QueryClient,
   group: AuctionGroupInput,
-  runner: AuctionApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: AuctionMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async () => await runner(clearAuctionSignups(group)),
+  effectQuery.mutationOptions({
+    mutationFn: () => clearAuctionSignups(group),
     mutationKey: auctionMutationKey(group),
-    onError: (error: AuctionMutationError) => {
-      callbacks.onError?.(error);
-    },
+    onError: (error: AuctionMutationError) => callbacks.onError?.(error),
     onSettled: async () => {
       await invalidateAuctionGroupAfterMutation(queryClient, group, callbacks);
     },
@@ -142,16 +137,13 @@ export const clearAuctionSignupsMutationOptions = (
 export const toggleAuctionSignupMutationOptions = (
   queryClient: QueryClient,
   group: AuctionGroupInput,
-  runner: AuctionApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: AuctionMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: ToggleAuctionSignupInput) =>
-      await runner(toggleAuctionSignup(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: ToggleAuctionSignupInput) => toggleAuctionSignup(input),
     mutationKey: auctionMutationKey(group),
-    onError: (error: AuctionMutationError) => {
-      callbacks.onError?.(error);
-    },
+    onError: (error: AuctionMutationError) => callbacks.onError?.(error),
     onSettled: async () => {
       await invalidateAuctionGroupAfterMutation(queryClient, group, callbacks);
     },
@@ -162,12 +154,11 @@ export const toggleAuctionSignupMutationOptions = (
 export const removeAuctionSignupMutationOptions = (
   queryClient: QueryClient,
   group: AuctionGroupInput,
-  runner: AuctionApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: AuctionMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: RemoveAuctionSignupInput) =>
-      await runner(removeAuctionSignup(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: RemoveAuctionSignupInput) => removeAuctionSignup(input),
     mutationKey: auctionMutationKey(group),
     onError: (
       error: AuctionMutationError,

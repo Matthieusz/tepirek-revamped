@@ -6,11 +6,11 @@ import {
   getAssignedCharacterIds,
   groupCharactersByAccount,
   parseCharacterPoolFilters,
-} from "./character-pool-filters";
+} from "@/features/squad-builder/editor/character-pool-filters";
 import type {
   CharacterPoolCharacter,
   CharacterPoolFilter,
-} from "./character-pool-filters";
+} from "@/features/squad-builder/editor/character-pool-filters";
 
 const characters: readonly CharacterPoolCharacter[] = [
   {

@@ -30,7 +30,7 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import type { AuthSession } from "@/types/route";
 
 interface TasksPageProps {
@@ -214,7 +214,7 @@ const TasksContent = ({
   const queryClient = useQueryClient();
 
   const createTodoMutation = useMutation(
-    createTodoMutationOptions(queryClient, runAppHttpApi, {
+    createTodoMutationOptions(queryClient, appEffectQuery, {
       onRefreshError: () => {
         toast.error(
           "Zadanie zostało dodane, ale nie udało się odświeżyć listy."
@@ -224,7 +224,7 @@ const TasksContent = ({
   );
 
   const toggleTodoMutation = useMutation(
-    toggleTodoMutationOptions(queryClient, runAppHttpApi, {
+    toggleTodoMutationOptions(queryClient, appEffectQuery, {
       onError: (error) => {
         toast.error(
           getErrorMessage(
@@ -240,7 +240,7 @@ const TasksContent = ({
   );
 
   const deleteTodoMutation = useMutation(
-    deleteTodoMutationOptions(queryClient, runAppHttpApi, {
+    deleteTodoMutationOptions(queryClient, appEffectQuery, {
       onError: (error) => {
         toast.error(
           getErrorMessage(

@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-import { MIN_EARNINGS } from "@tepirek-revamped/config";
+import { MIN_EARNINGS } from "@tepirek-revamped/config/application/guild-ledger";
 import type {
   EffectPgDatabase,
   TransactionDatabase,

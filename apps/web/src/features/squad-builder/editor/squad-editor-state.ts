@@ -1,7 +1,10 @@
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 
-import { hydrateDraft, isDraftEqual } from "./squad-group-draft";
-import type { SquadGroupDraft } from "./squad-group-draft";
+import {
+  hydrateDraft,
+  isDraftEqual,
+} from "@/features/squad-builder/editor/squad-group-draft";
+import type { SquadGroupDraft } from "@/features/squad-builder/editor/squad-group-draft";
 
 type SquadGroupDetail = SquadGroupDetailSchema;
 

@@ -15,6 +15,8 @@ import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/pr
 import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 
+import { EffectQueryFailure } from "@/lib/effect-query";
+
 const fallbackErrorMessage = "Wystąpił błąd. Spróbuj ponownie później.";
 
 const forbiddenMessage = "Nie masz uprawnień do wykonania tej akcji.";
@@ -170,8 +172,11 @@ export const getErrorMessage = (
   error: CaughtError,
   fallback = fallbackErrorMessage
 ): string => {
-  if (isApiError(error)) {
-    return getApiErrorMessage(error);
+  const failure: unknown =
+    error instanceof EffectQueryFailure ? error.failure : error;
+
+  if (isApiError(failure)) {
+    return getApiErrorMessage(failure);
   }
 
   return fallback;

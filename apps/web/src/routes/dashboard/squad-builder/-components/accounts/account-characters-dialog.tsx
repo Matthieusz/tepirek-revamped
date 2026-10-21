@@ -11,8 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MargonemCharacterAvatarImage } from "@/routes/dashboard/squad-builder/-components/margonem-character-avatar-image";
-import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
+import { MargonemCharacterAvatarImage } from "@/features/squad-builder/shared/margonem-character-avatar-image";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
 
 /** Opens the complete saved Jaruna roster without fetching or modifying the account. */
 export const AccountCharactersDialog = ({

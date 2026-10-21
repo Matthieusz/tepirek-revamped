@@ -22,7 +22,7 @@ import {
 import { createHeroMutationOptions } from "@/features/events/heroes/hero-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 interface AddHeroModalProps {
   readonly trigger: React.ReactNode;
@@ -46,7 +46,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const queryClient = useQueryClient();
 
   const createHero = useMutation(
-    createHeroMutationOptions(queryClient, runAppHttpApi)
+    createHeroMutationOptions(queryClient, appEffectQuery)
   );
 
   const eventsQuery = useQuery(eventsQueryOptions());

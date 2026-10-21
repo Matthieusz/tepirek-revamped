@@ -1,4 +1,7 @@
-import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import type {
+  AuctionProfession,
+  AuctionType,
+} from "@tepirek-revamped/config/application/auctions";
 import {
   Axe,
   Crosshair,
@@ -13,9 +16,12 @@ export {
   AUCTION_PROFESSIONS,
   isAuctionProfession,
   isAuctionType,
-} from "@tepirek-revamped/config";
+} from "@tepirek-revamped/config/application/auctions";
 
-export type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+export type {
+  AuctionProfession,
+  AuctionType,
+} from "@tepirek-revamped/config/application/auctions";
 
 interface AuctionTypeMeta {
   crumb: string;

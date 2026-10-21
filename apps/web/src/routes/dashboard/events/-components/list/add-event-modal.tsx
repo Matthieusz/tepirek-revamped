@@ -1,7 +1,7 @@
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
-import type { EventIconId } from "@tepirek-revamped/config";
+import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config/application/events";
+import type { EventIconId } from "@tepirek-revamped/config/application/events";
 import { format } from "date-fns";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
@@ -46,7 +46,7 @@ import type { EventColor } from "@/features/events/core/form-schemas";
 import { EVENT_ICON_MAP } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { cn } from "@/lib/utils";
 
 interface AddEventModalProps {
@@ -85,7 +85,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const queryClient = useQueryClient();
 
   const createEvent = useMutation(
-    createEventMutationOptions(queryClient, runAppHttpApi)
+    createEventMutationOptions(queryClient, appEffectQuery)
   );
 
   const form = useAppForm({

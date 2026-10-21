@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
+import { Cause, Effect } from "effect";
 import { CheckCircle2, CircleAlert, Loader2, RotateCw } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -17,7 +18,7 @@ import {
   applyAccountRefetch,
 } from "@/features/squad-builder/account-refetch-api";
 import { getErrorMessage } from "@/lib/errors";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 import { changeFieldLabel, formatChangeValue } from "./account-presenters";
 
@@ -47,10 +48,10 @@ interface ApplyResult {
 /** Previews all owned accounts sequentially and applies only explicitly confirmed previews. */
 export const BulkAccountRefetchWorkflow = ({
   accounts,
-  runner = runAppHttpApi,
+  effectQuery = appEffectQuery,
 }: {
   readonly accounts: readonly Account[];
-  readonly runner?: typeof runAppHttpApi;
+  readonly effectQuery?: typeof appEffectQuery;
 }) => {
   const queryClient = useQueryClient();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -60,97 +61,80 @@ export const BulkAccountRefetchWorkflow = ({
   const [completed, setCompleted] = useState(0);
   const [total, setTotal] = useState(0);
 
-  const previewMutation = useMutation({
-    mutationFn: async (snapshot: readonly Account[]) => {
-      const collected: PreviewResult[] = [];
-
-      const previewNext = async (index: number): Promise<void> => {
-        const account = snapshot[index];
-
-        if (account === undefined) {
-          return;
-        }
-
-        try {
-          const preview = await runner(
-            previewAccountRefetch({ accountId: account.accountId })
-          );
-
-          collected.push({ account, preview, status: "ready" });
-        } catch (error) {
-          collected.push({
-            account,
-            message: getErrorMessage(
-              error,
-              "Nie udało się przygotować odświeżenia."
+  const previewMutation = useMutation(
+    effectQuery.mutationOptions({
+      mutationFn: (snapshot: readonly Account[]) =>
+        Effect.forEach(
+          snapshot,
+          (account, index) =>
+            previewAccountRefetch({ accountId: account.accountId }).pipe(
+              Effect.matchCause({
+                onFailure: (cause): PreviewResult => ({
+                  account,
+                  message: getErrorMessage(
+                    Cause.squash(cause),
+                    "Nie udało się przygotować odświeżenia."
+                  ),
+                  status: "failed",
+                }),
+                onSuccess: (preview): PreviewResult => ({
+                  account,
+                  preview,
+                  status: "ready",
+                }),
+              }),
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  setCompleted(index + 1);
+                })
+              )
             ),
-            status: "failed",
-          });
-        }
+          { concurrency: 1 }
+        ),
+      onSuccess: setPreviews,
+      retry: false,
+    })
+  );
 
-        setCompleted(collected.length);
-        await previewNext(index + 1);
-      };
-
-      await previewNext(0);
-
-      return collected;
-    },
-    onSuccess: setPreviews,
-    retry: false,
-  });
-
-  const applyMutation = useMutation({
-    mutationFn: async (snapshot: readonly PreviewResult[]) => {
-      const collected: ApplyResult[] = [];
-
-      const applyNext = async (index: number): Promise<void> => {
-        const entry = snapshot[index];
-
-        if (entry === undefined) {
-          return;
-        }
-
-        if (entry.status === "ready") {
-          try {
-            const response = await runner(
-              applyAccountRefetch({
-                refetchPreviewId: entry.preview.refetchPreviewId,
-              })
-            );
-
-            collected.push({
-              account: entry.account,
-              message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
-              status: "success",
-            });
-          } catch (error) {
-            collected.push({
-              account: entry.account,
-              message: getErrorMessage(
-                error,
-                "Nie udało się zastosować zmian."
-              ),
-              status: "failed",
-            });
-          }
-
-          setCompleted(collected.length);
-        }
-
-        await applyNext(index + 1);
-      };
-
-      await applyNext(0);
-
-      return collected;
-    },
-    onSettled: async () => {
-      await invalidateAccountResources(queryClient);
-    },
-    onSuccess: setResults,
-    retry: false,
-  });
+  const applyMutation = useMutation(
+    effectQuery.mutationOptions({
+      mutationFn: (snapshot: readonly PreviewResult[]) =>
+        Effect.forEach(
+          snapshot.filter((entry) => entry.status === "ready"),
+          (entry, index) =>
+            applyAccountRefetch({
+              refetchPreviewId: entry.preview.refetchPreviewId,
+            }).pipe(
+              Effect.matchCause({
+                onFailure: (cause): ApplyResult => ({
+                  account: entry.account,
+                  message: getErrorMessage(
+                    Cause.squash(cause),
+                    "Nie udało się zastosować zmian."
+                  ),
+                  status: "failed",
+                }),
+                onSuccess: (response): ApplyResult => ({
+                  account: entry.account,
+                  message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
+                  status: "success",
+                }),
+              }),
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  setCompleted(index + 1);
+                })
+              )
+            ),
+          { concurrency: 1 }
+        ),
+      onSettled: async () => {
+        await invalidateAccountResources(queryClient);
+      },
+      onSuccess: setResults,
+      retry: false,
+    })
+  );
 
   const busy = previewMutation.isPending || applyMutation.isPending;
 

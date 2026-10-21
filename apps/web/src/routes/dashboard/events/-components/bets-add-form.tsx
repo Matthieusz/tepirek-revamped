@@ -38,7 +38,7 @@ import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { getEventIcon } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 interface EventOption {
   readonly color: string;
@@ -198,7 +198,7 @@ export const BetsAddForm = ({
   const queryClient = useQueryClient();
 
   const createBet = useMutation(
-    createBetMutationOptions(queryClient, runAppHttpApi)
+    createBetMutationOptions(queryClient, appEffectQuery)
   );
 
   const form = useAppForm({

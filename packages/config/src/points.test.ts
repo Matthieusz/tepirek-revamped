@@ -1,6 +1,5 @@
+import { calculatePointsPerMember } from "@tepirek-revamped/config/application/guild-ledger";
 import { describe, expect, it } from "vite-plus/test";
-
-import { calculatePointsPerMember } from "./index.ts";
 
 describe("calculatePointsPerMember", () => {
   it("calculates points for a single member", () => {

@@ -21,31 +21,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { availableSquadCharactersQueryOptions } from "@/features/squad-builder/squad-group-queries";
-import { cn } from "@/lib/utils";
+import { AvailableCharacterPoolHeader } from "@/features/squad-builder/editor/available-character-pool-header";
 import {
   filterAvailableCharacters,
   getAssignedCharacterIds,
   groupCharactersByAccount,
   parseCharacterPoolFilters,
-} from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
-import type { CharacterPoolFilter } from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
+} from "@/features/squad-builder/editor/character-pool-filters";
+import type { CharacterPoolFilter } from "@/features/squad-builder/editor/character-pool-filters";
 import {
   PlacementError,
   applyPlacement,
   getPlacementError,
-} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+} from "@/features/squad-builder/editor/squad-group-draft";
 import type {
   AvailableCharacter,
   CharacterAccountInfo,
   SquadGroupDraft,
-} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
-
-import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
-import { getProfessionPresentation } from "../profession-presenters";
-import { SquadDataError } from "../squad-data-error";
-import { AvailableCharacterPoolHeader } from "./available-character-pool-header";
-import type { SquadCharacterMetadata } from "./squad-roster-workspace";
+} from "@/features/squad-builder/editor/squad-group-draft";
+import type { SquadCharacterMetadata } from "@/features/squad-builder/editor/squad-roster-workspace";
+import { MargonemCharacterAvatarImage } from "@/features/squad-builder/shared/margonem-character-avatar-image";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
+import { SquadDataError } from "@/features/squad-builder/shared/squad-data-error";
+import { availableSquadCharactersQueryOptions } from "@/features/squad-builder/squad-group-queries";
+import { cn } from "@/lib/utils";
 
 interface AvailableCharacterPoolProps {
   readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
@@ -599,7 +598,7 @@ export const AvailableCharacterPool = ({
               unassignedCount={unassignedCharacters.length}
             />
 
-            {result.isError && (
+            {result.isError && result.data === undefined && (
               <SquadDataError
                 onRetry={refresh}
                 title="Nie udało się wczytać puli postaci"
@@ -608,9 +607,7 @@ export const AvailableCharacterPool = ({
                 przydzielać postacie.
               </SquadDataError>
             )}
-            {(result.isPending || result.data === undefined) && (
-              <LoadingSpinner />
-            )}
+            {result.isPending && <LoadingSpinner />}
             {result.data !== undefined && characters.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
                 <div

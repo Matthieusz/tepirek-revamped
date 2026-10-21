@@ -29,7 +29,7 @@ import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 interface EditBetModalProps {
   readonly betId: number;
@@ -68,7 +68,7 @@ const EditBetModalContent = ({
   const queryClient = useQueryClient();
 
   const editBet = useMutation(
-    editBetMutationOptions(queryClient, runAppHttpApi)
+    editBetMutationOptions(queryClient, appEffectQuery)
   );
 
   const currentMemberIds: readonly string[] = useMemo(

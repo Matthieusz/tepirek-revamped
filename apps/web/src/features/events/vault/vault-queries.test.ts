@@ -8,7 +8,6 @@ import {
   oldestUnpaidEventQueryKey,
   rankingQueryKeyPrefix,
 } from "@/features/events/ranking/ranking-queries";
-import type { VaultApiRunner } from "@/features/events/vault/vault-api";
 import {
   allVaultQueryKey,
   distributeGoldMutationOptions,
@@ -16,7 +15,10 @@ import {
   vaultByEventQueryKey,
   vaultQueryOptions,
 } from "@/features/events/vault/vault-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import {
+  makeTestAppEffectQuery,
+  makeFailingAppEffectQuery,
+} from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
@@ -29,21 +31,19 @@ const makeRow = (paidOut: boolean) =>
     userName: "Test user",
   });
 
-const failingRunner: VaultApiRunner = async () => {
-  await Promise.resolve();
-  throw new Error("Vault request failed");
-};
+const failingEffectQuery = () =>
+  makeFailingAppEffectQuery("Vault request failed");
 
 describe("vault queries", () => {
   it("keeps all-event and selected-event vault data separate", async () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
 
     try {
-      await testClient.queryClient.query(vaultQueryOptions({}, runner));
+      await testClient.queryClient.query(vaultQueryOptions({}, effectQuery));
       await testClient.queryClient.query(
-        vaultQueryOptions({ eventId: 5 }, runner)
+        vaultQueryOptions({ eventId: 5 }, effectQuery)
       );
 
       expect(
@@ -66,7 +66,11 @@ describe("vault queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        togglePaidOutMutationOptions(testClient.queryClient, 5, failingRunner)
+        togglePaidOutMutationOptions(
+          testClient.queryClient,
+          5,
+          failingEffectQuery()
+        )
       );
 
       await expect(
@@ -84,7 +88,7 @@ describe("vault queries", () => {
   it("invalidates ranking, hero stats, oldest unpaid, and vault data after distribution", async () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
 
     const keys = [
       allVaultQueryKey,
@@ -100,7 +104,7 @@ describe("vault queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        distributeGoldMutationOptions(testClient.queryClient, runner)
+        distributeGoldMutationOptions(testClient.queryClient, effectQuery)
       );
 
       await mutation.mutate({ eventId: 5, goldAmount: 1, heroId: 2 });

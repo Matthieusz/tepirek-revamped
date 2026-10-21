@@ -1,16 +1,12 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
   listLegendPrices,
   updateLegendCost,
 } from "@/features/legend-pricing/legend-pricing-api";
-import type {
-  LegendPrice,
-  LegendPricingApiRunner,
-  UpdateLegendCostInput,
-} from "@/features/legend-pricing/legend-pricing-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { UpdateLegendCostInput } from "@/features/legend-pricing/legend-pricing-api";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key for the active legendary item price catalogue. */
 const legendPricesQueryKey = ["legend-pricing", "list"] as const;
@@ -39,23 +35,21 @@ const invalidateLegendPrices = async (
 
 /** Returns shared Query options for the active legendary price catalogue. */
 export const legendPricesQueryOptions = (
-  runner: LegendPricingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }): Promise<readonly LegendPrice[]> =>
-      await runner(listLegendPrices(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listLegendPrices(),
     queryKey: legendPricesQueryKey,
   });
 
 /** Returns a non-retrying mutation that invalidates the catalogue after saving. */
 export const updateLegendCostMutationOptions = (
   queryClient: QueryClient,
-  runner: LegendPricingApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: LegendPricingMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: UpdateLegendCostInput) =>
-      await runner(updateLegendCost(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: UpdateLegendCostInput) => updateLegendCost(input),
     mutationKey: legendPricesQueryKey,
     onSuccess: async () => {
       await invalidateLegendPrices(queryClient, callbacks);

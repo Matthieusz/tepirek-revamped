@@ -6,7 +6,6 @@ import {
 } from "@/features/squad-builder/branded-ids";
 import { asAppUserId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 export interface SearchAccountInviteTargetsInput {
   readonly accountId: number;
@@ -118,6 +117,3 @@ export const revokeAccountAccess = Effect.fn(
     },
   });
 });
-
-/** Runs account-sharing API effects through the application HTTP client. */
-export type AccountSharingApiRunner = typeof runAppHttpApi;

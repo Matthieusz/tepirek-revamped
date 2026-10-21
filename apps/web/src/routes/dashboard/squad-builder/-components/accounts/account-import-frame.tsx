@@ -31,10 +31,10 @@ import {
   confirmOwnedAccountImportMutationOptions,
   previewOwnedAccountImportsMutationOptions,
 } from "@/features/squad-builder/account-queries";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 const AccountPreviewFormSchema = Schema.Struct({
   profileUrls: ProfileUrlsSchema,

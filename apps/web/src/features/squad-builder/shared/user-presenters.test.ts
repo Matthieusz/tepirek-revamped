@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 
-import { userInitials } from "./user-presenters";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 
 it("builds avatar initials from the first two words", () => {
   expect(userInitials("  Jan   Kowalski Nowak ")).toBe("JK");

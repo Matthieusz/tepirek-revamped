@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 import { deleteSquadGroupMutationOptions } from "@/features/squad-builder/squad-group-queries";
 import type {
   SquadEditorInviteTarget,
@@ -42,8 +43,6 @@ import {
   squadGroupEditorGrantsQueryOptions,
 } from "@/features/squad-builder/squad-group-sharing-queries";
 import { getErrorMessage } from "@/lib/errors";
-
-import { userInitials } from "../user-presenters";
 
 type InviteTarget = SquadEditorInviteTarget;
 

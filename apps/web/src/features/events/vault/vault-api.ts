@@ -6,7 +6,6 @@ import { Effect } from "effect";
 
 import { asAppUserId, asEventId, asHeroId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Browser input for selecting all vault rows or one event's rows. */
 export interface VaultInput {
@@ -71,6 +70,3 @@ export const togglePaidOut = Effect.fn("Web.Vault.togglePaidOut")(
     return yield* client.vault.togglePaidOut({ payload });
   }
 );
-
-/** Promise runner type used by vault query and mutation adapters. */
-export type VaultApiRunner = typeof runAppHttpApi;

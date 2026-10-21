@@ -10,7 +10,7 @@ import { getUser } from "./functions/get-user";
 import { createQueryClient } from "./lib/query-client";
 import { routeTree } from "./routeTree.gen";
 
-/** Creates an isolated router and QueryClient. */
+/** Creates an isolated router and QueryClient for each browser app or SSR request. */
 export const getRouter = () => {
   const queryClient = createQueryClient();
 

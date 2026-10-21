@@ -2,6 +2,7 @@ import { QueryObserver } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { createQueryClient } from "@/lib/query-client";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/query-failure-policy";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 const withTestQueryClient = async (
@@ -27,7 +28,8 @@ describe("QueryClient", () => {
       refetchOnMount: true,
       refetchOnReconnect: true,
       refetchOnWindowFocus: true,
-      retry: 1,
+      retry: shouldRetryQuery,
+      retryDelay: queryRetryDelay,
       staleTime: 30_000,
     });
 

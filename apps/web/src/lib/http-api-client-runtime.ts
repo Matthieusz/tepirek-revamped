@@ -1,16 +1,18 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { HttpApiError } from "@tepirek-revamped/api/protocol/http-api-errors";
-import { Layer } from "effect";
+import { Layer, Schema } from "effect";
+import type { Fiber } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient, HttpClientResponse } from "effect/http";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import * as HttpClientError from "effect/http/HttpClientError";
 import type * as LayerType from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 
-import { makeEffectPromiseRunner } from "@/lib/effect-promise";
+import { makeEffectQuery } from "@/lib/effect-query";
 import { serverUrl } from "@/lib/env";
+import { rememberFailureResponse } from "@/lib/query-failure-policy";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
   credentials: "include",
@@ -47,6 +49,60 @@ const decodeUnexpectedApiError = (
     )
   );
 
+/** Builds the protocol client on the supplied HTTP transport, preserving safe failure guidance. */
+export const makeAppHttpApiClient = Effect.gen(
+  function* makeClientWithFailureGuidance() {
+    // HttpApiClient gives transformResponse the decoded effect, not the response.
+    // Pair allowlisted headers with its executing fiber until decoding finishes;
+    // this also keeps simultaneous requests from sharing correlation IDs.
+    const headersByFiber = new WeakMap<
+      Fiber.Fiber<unknown, unknown>,
+      Readonly<Record<string, string>>
+    >();
+
+    const httpClient = yield* HttpClient.HttpClient;
+
+    return yield* HttpApiClient.makeWith(AppHttpApi, {
+      baseUrl: serverUrl,
+      httpClient: httpClient.pipe(
+        HttpClient.transformResponse((response) =>
+          Effect.tap(response, (value) =>
+            Effect.withFiber((fiber) =>
+              Effect.sync(() => {
+                if (value.status >= 400) {
+                  headersByFiber.set(fiber, {
+                    "retry-after": value.headers["retry-after"] ?? "",
+                    "x-request-id": value.headers["x-request-id"] ?? "",
+                  });
+                }
+              })
+            )
+          )
+        )
+      ),
+      transformResponse: (response) =>
+        Effect.withFiber((fiber) =>
+          decodeUnexpectedApiError(response).pipe(
+            Effect.tapError((failure) =>
+              Effect.sync(() => {
+                const headers = headersByFiber.get(fiber);
+
+                if (headers !== undefined && Schema.is(HttpApiError)(failure)) {
+                  rememberFailureResponse(failure, headers);
+                }
+              })
+            ),
+            Effect.ensuring(
+              Effect.sync(() => {
+                headersByFiber.delete(fiber);
+              })
+            )
+          )
+        ),
+    });
+  }
+);
+
 /** Effect HttpApi client service for the shared application API contract. */
 export class AppHttpApiClient extends Context.Service<
   AppHttpApiClient,
@@ -55,20 +111,26 @@ export class AppHttpApiClient extends Context.Service<
   /** Live browser client layer that preserves better-auth cookies. */
   static readonly layer = Layer.effect(
     AppHttpApiClient,
-    HttpApiClient.make(AppHttpApi, {
-      baseUrl: serverUrl,
-      transformResponse: decodeUnexpectedApiError,
-    })
+    makeAppHttpApiClient
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/**
- * Runs application API effects as Promises while preserving typed protocol
- * failures for framework-level error handling.
- */
-export const runAppHttpApi = makeEffectPromiseRunner(AppHttpApiClient.layer);
+/** Creates Effect Query factories; the caller owns and must dispose the runtime. */
+export const makeAppEffectQuery = (layer: LayerType.Layer<AppHttpApiClient>) =>
+  makeEffectQuery(layer);
 
-/** Creates an application API Promise runner backed by a supplied layer. */
-export const makeAppHttpApiRunner = (
-  layer: LayerType.Layer<AppHttpApiClient>
-) => makeEffectPromiseRunner(layer);
+/** Application Effect Query factories and their caller-owned runtime. */
+export type AppEffectQuery = ReturnType<typeof makeAppEffectQuery>;
+
+/**
+ * Module-lived stateless browser transport, not a remote-data cache.
+ * Never capture request-specific auth in this singleton; SSR uses request-owned layers.
+ * See docs/web-remote-state.md for ownership and disposal rules.
+ */
+export const appEffectQuery = makeAppEffectQuery(AppHttpApiClient.layer);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    void appEffectQuery.runtime.dispose();
+  });
+}

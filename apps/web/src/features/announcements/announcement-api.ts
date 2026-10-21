@@ -6,7 +6,6 @@ import { Effect } from "effect";
 
 import { asAnnouncementId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Input for deleting one announcement. */
 export interface DeleteAnnouncementInput {
@@ -44,6 +43,3 @@ export const deleteAnnouncement = Effect.fn("Web.Announcement.delete")(
     });
   }
 );
-
-/** Promise runner type used by announcement query and mutation adapters. */
-export type AnnouncementApiRunner = typeof runAppHttpApi;

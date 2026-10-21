@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -8,10 +7,10 @@ import {
 } from "@/features/announcements/announcement-api";
 import type {
   Announcement,
-  AnnouncementApiRunner,
   DeleteAnnouncementInput,
 } from "@/features/announcements/announcement-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Shared cache key for announcements visible to the current user. */
 export const announcementsQueryKey = ["announcements"] as const;
@@ -67,24 +66,22 @@ const invalidateAnnouncementsAfterMutation = async (
 
 /** Returns Query options for announcements visible to the current user. */
 export const announcementsQueryOptions = (
-  runner: AnnouncementApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listAnnouncements(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listAnnouncements(),
     queryKey: announcementsQueryKey,
   });
 
 /** Returns mutation options for creating an announcement. */
 export const createAnnouncementMutationOptions = (
   queryClient: QueryClient,
-  runner: AnnouncementApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: AnnouncementMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createAnnouncement>[0]) => {
-      await runner(createAnnouncement(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createAnnouncement>[0]) =>
+      createAnnouncement(payload),
     mutationKey: announcementsQueryKey,
     onError: (error: AnnouncementMutationError) => {
       callbacks.onError?.(error);
@@ -98,13 +95,11 @@ export const createAnnouncementMutationOptions = (
 /** Returns optimistic mutation options for deleting an announcement. */
 export const deleteAnnouncementMutationOptions = (
   queryClient: QueryClient,
-  runner: AnnouncementApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: AnnouncementMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: DeleteAnnouncementInput) => {
-      await runner(deleteAnnouncement(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: DeleteAnnouncementInput) => deleteAnnouncement(input),
     mutationKey: announcementsQueryKey,
     onError: (
       error: AnnouncementMutationError,

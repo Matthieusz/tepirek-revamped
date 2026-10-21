@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
-import { calculatePointsPerMember } from "@tepirek-revamped/config";
+import { calculatePointsPerMember } from "@tepirek-revamped/config/application/guild-ledger";
 import { History, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -40,7 +40,7 @@ import {
 } from "@/features/events/core/select-utils";
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
 import { getErrorMessage } from "@/lib/errors";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import { BetCard } from "@/routes/dashboard/events/-components/history/bet-card";
@@ -124,7 +124,7 @@ const HistoryContent = ({
   const queryClient = useQueryClient();
 
   const deleteBet = useMutation(
-    deleteBetMutationOptions(queryClient, runAppHttpApi)
+    deleteBetMutationOptions(queryClient, appEffectQuery)
   );
 
   const betsData = betsQuery.data;

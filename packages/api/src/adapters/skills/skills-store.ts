@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-import { slugifySkillRangeName } from "@tepirek-revamped/config";
+import { slugifySkillRangeName } from "@tepirek-revamped/config/application/skills";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";

@@ -1,6 +1,6 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
-import { EVENT_ICON_IDS } from "@tepirek-revamped/config";
+import { EVENT_ICON_IDS } from "@tepirek-revamped/config/application/events";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as Schema from "effect/Schema";
 
@@ -8,7 +8,7 @@ import { EventId } from "../../domain/core-identifiers.ts";
 
 export { EventId } from "../../domain/core-identifiers.ts";
 
-export { DEFAULT_EVENT_ICON_ID as defaultEventIcon } from "@tepirek-revamped/config";
+export { DEFAULT_EVENT_ICON_ID as defaultEventIcon } from "@tepirek-revamped/config/application/events";
 
 const EventIcon = Schema.Literals(EVENT_ICON_IDS);
 

@@ -5,7 +5,7 @@ import { FetchHttpClient } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import type * as LayerType from "effect/Layer";
 
-import { makeEffectPromiseRunner } from "@/lib/effect-promise";
+import { makeEffectQuery } from "@/lib/effect-query";
 import { serverUrl } from "@/lib/env";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
@@ -28,15 +28,18 @@ export class HealthHttpApiClient extends Context.Service<
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/**
- * Runs health API effects as Promises without depending on the application
- * client or its authentication groups.
- */
-export const runHealthHttpApi = makeEffectPromiseRunner(
+/** Creates health-only Effect Query factories; the caller must dispose the runtime. */
+export const makeHealthEffectQuery = (
+  layer: LayerType.Layer<HealthHttpApiClient>
+) => makeEffectQuery(layer);
+
+/** Module-lived stateless health transport; Query caches remain router-owned. */
+export const healthEffectQuery = makeHealthEffectQuery(
   HealthHttpApiClient.layer
 );
 
-/** Creates a health API Promise runner backed by a supplied layer. */
-export const makeHealthHttpApiRunner = (
-  layer: LayerType.Layer<HealthHttpApiClient>
-) => makeEffectPromiseRunner(layer);
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    void healthEffectQuery.runtime.dispose();
+  });
+}

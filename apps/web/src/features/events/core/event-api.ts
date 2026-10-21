@@ -6,7 +6,6 @@ import { Effect } from "effect";
 
 import { asEventId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Event data returned by the application API. */
 export type Event = EventSummary;
@@ -64,6 +63,3 @@ export const toggleEventActive = Effect.fn("Web.Event.toggleActive")(
     });
   }
 );
-
-/** Promise runner type used by event query and mutation adapters. */
-export type EventApiRunner = typeof runAppHttpApi;

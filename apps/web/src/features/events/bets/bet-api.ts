@@ -7,7 +7,6 @@ import { Effect } from "effect";
 
 import { asAppUserId, asBetId, asEventId, asHeroId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 interface PaginatedBetsRequestPayload {
   eventId?: EventId;
@@ -141,6 +140,3 @@ export const editBet = Effect.fn("Web.Bet.edit")(function* editBetEffect(
     },
   });
 });
-
-/** Promise runner type used by bet query and mutation adapters. */
-export type BetApiRunner = typeof runAppHttpApi;

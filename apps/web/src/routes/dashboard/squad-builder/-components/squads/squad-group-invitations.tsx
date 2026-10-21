@@ -14,14 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 import {
   incomingSquadGroupInvitesQueryOptions,
   respondToSquadGroupInviteMutationOptions,
 } from "@/features/squad-builder/squad-group-sharing-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
-
-import { userInitials } from "../user-presenters";
 
 export const SquadGroupInvitations = () => {
   const queryClient = useQueryClient();

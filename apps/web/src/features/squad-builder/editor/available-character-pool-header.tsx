@@ -5,9 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
 import { cn } from "@/lib/utils";
-
-import { getProfessionPresentation } from "../profession-presenters";
 
 interface AvailableCharacterPoolHeaderProps {
   readonly characterNameQuery: string;

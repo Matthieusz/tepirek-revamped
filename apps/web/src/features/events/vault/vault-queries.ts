@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 
@@ -15,10 +14,10 @@ import {
 import type {
   DistributeGoldInput,
   TogglePaidOutInput,
-  VaultApiRunner,
   VaultInput,
 } from "@/features/events/vault/vault-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all vault data. */
 export const vaultQueryKey = ["vault"] as const;
@@ -73,10 +72,10 @@ const invalidateVaultRelatedData = async (
 /** Returns Query options for all vault rows or one event's rows. */
 export const vaultQueryOptions = (
   input: VaultInput,
-  runner: VaultApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(listVault(input), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listVault(input),
     queryKey:
       input.eventId === undefined
         ? allVaultQueryKey
@@ -86,12 +85,11 @@ export const vaultQueryOptions = (
 /** Returns mutation options for distributing gold to one hero. */
 export const distributeGoldMutationOptions = (
   queryClient: QueryClient,
-  runner: VaultApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: VaultMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: DistributeGoldInput) =>
-      await runner(distributeGold(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: DistributeGoldInput) => distributeGold(input),
     mutationKey: [...vaultQueryKey, "mutation", "distribute"],
     onSuccess: async () => {
       await invalidateVaultRelatedData(queryClient, callbacks);
@@ -103,12 +101,11 @@ export const distributeGoldMutationOptions = (
 export const togglePaidOutMutationOptions = (
   queryClient: QueryClient,
   eventId: number,
-  runner: VaultApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: VaultMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: TogglePaidOutInput) =>
-      await runner(togglePaidOut(input)),
+  effectQuery.mutationOptions({
+    mutationFn: (input: TogglePaidOutInput) => togglePaidOut(input),
     mutationKey: [...vaultQueryKey, "mutation", "toggle-paid-out", eventId],
     onError: (
       error: Error,

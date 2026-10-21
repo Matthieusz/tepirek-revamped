@@ -34,7 +34,7 @@ import {
 } from "@/features/events/vault/vault-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatVaultEarnings } from "@/lib/gold";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { VaultUserCard } from "@/routes/dashboard/events/-components/vault/vault-user-card";
 import type { AuthSession } from "@/types/route";
@@ -319,7 +319,7 @@ const VaultContent = ({
   const vaultQuery = useQuery(vaultQueryOptions(vaultInput));
 
   const togglePaidOut = useMutation(
-    togglePaidOutMutationOptions(queryClient, vaultEventId ?? 0, runAppHttpApi)
+    togglePaidOutMutationOptions(queryClient, vaultEventId ?? 0, appEffectQuery)
   );
 
   const vault = vaultQuery.data ?? [];

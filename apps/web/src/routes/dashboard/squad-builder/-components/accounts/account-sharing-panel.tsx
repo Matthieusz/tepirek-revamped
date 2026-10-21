@@ -20,10 +20,10 @@ import {
   revokeAccountAccessMutationOptions,
   sendAccountAccessInviteMutationOptions,
 } from "@/features/squad-builder/account-queries";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 import { sessionQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
-import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
 

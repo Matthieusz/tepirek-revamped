@@ -8,7 +8,7 @@ import {
   rankingQueryKey,
   rankingQueryOptions,
 } from "@/features/events/ranking/ranking-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
@@ -16,15 +16,17 @@ describe("ranking queries", () => {
   it("keeps ranking filters in separate cache entries", async () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
     const allEvents = {};
     const event = { eventId: 5 };
 
     try {
       await testClient.queryClient.query(
-        rankingQueryOptions(allEvents, runner)
+        rankingQueryOptions(allEvents, effectQuery)
       );
-      await testClient.queryClient.query(rankingQueryOptions(event, runner));
+      await testClient.queryClient.query(
+        rankingQueryOptions(event, effectQuery)
+      );
 
       expect(rankingQueryKey(allEvents)).toEqual([
         "ranking",
@@ -44,10 +46,10 @@ describe("ranking queries", () => {
   it("does not request hero statistics without a selected hero", () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
 
     try {
-      const options = heroStatsQueryOptions(null, runner);
+      const options = heroStatsQueryOptions(null, effectQuery);
       expect(options.enabled).toBe(false);
       expect(options.queryKey).toEqual(["hero-stats", "disabled"]);
       expect(
@@ -61,10 +63,12 @@ describe("ranking queries", () => {
   it("loads the oldest unpaid event through its stable key", async () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
 
     try {
-      await testClient.queryClient.query(oldestUnpaidEventQueryOptions(runner));
+      await testClient.queryClient.query(
+        oldestUnpaidEventQueryOptions(effectQuery)
+      );
       expect(
         testClient.queryClient.getQueryData(oldestUnpaidEventQueryKey)
       ).toBeNull();
@@ -79,10 +83,10 @@ describe("ranking queries", () => {
   it("loads statistics under the selected hero key", async () => {
     const testClient = makeTestQueryClient();
     const fixture = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(fixture.layer);
+    const effectQuery = makeTestAppEffectQuery(fixture.layer);
 
     try {
-      await testClient.queryClient.query(heroStatsQueryOptions(7, runner));
+      await testClient.queryClient.query(heroStatsQueryOptions(7, effectQuery));
       expect(
         testClient.queryClient.getQueryData(heroStatsQueryKey(7))
       ).toMatchObject({ heroId: 1 });

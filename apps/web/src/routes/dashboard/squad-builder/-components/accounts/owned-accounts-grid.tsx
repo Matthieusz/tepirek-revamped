@@ -15,11 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MargonemCharacterAvatarImage } from "@/features/squad-builder/shared/margonem-character-avatar-image";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
 import { formatDateTime } from "@/lib/utils";
 import { AccountCharactersDialog } from "@/routes/dashboard/squad-builder/-components/accounts/account-characters-dialog";
 import { OwnedAccountManagementRow } from "@/routes/dashboard/squad-builder/-components/accounts/owned-account-management-row";
-import { MargonemCharacterAvatarImage } from "@/routes/dashboard/squad-builder/-components/margonem-character-avatar-image";
-import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 type OwnedAccount = OwnedMargonemAccountSummarySchema;
 

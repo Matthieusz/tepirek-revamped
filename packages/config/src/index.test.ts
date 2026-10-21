@@ -1,13 +1,12 @@
-import { describe, expect, it } from "vite-plus/test";
-
 import {
   isAuctionProfession,
   isAuctionType,
-  isEventIconId,
-  slugifySkillRangeName,
-} from "./index.ts";
+} from "@tepirek-revamped/config/application/auctions";
+import { isEventIconId } from "@tepirek-revamped/config/application/events";
+import { slugifySkillRangeName } from "@tepirek-revamped/config/application/skills";
+import { describe, expect, it } from "vite-plus/test";
 
-describe("config type guards", () => {
+describe("shared application rules", () => {
   it("rejects invalid event icon ids", () => {
     for (const value of ["", "dragon", "Egg"]) {
       expect(isEventIconId(value)).toBe(false);

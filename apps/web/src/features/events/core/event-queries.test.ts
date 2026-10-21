@@ -3,11 +3,11 @@ import { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-cont
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { EventApiRunner } from "@/features/events/core/event-api";
 import {
   eventsQueryKey,
   toggleEventActiveMutationOptions,
 } from "@/features/events/core/event-queries";
+import { makeFailingAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 const makeEvent = (id: number, active = true) =>
@@ -20,10 +20,8 @@ const makeEvent = (id: number, active = true) =>
     name: `Event ${id}`,
   });
 
-const failingRunner: EventApiRunner = async () => {
-  await Promise.resolve();
-  throw new Error("Event request failed");
-};
+const failingEffectQuery = () =>
+  makeFailingAppEffectQuery("Event request failed");
 
 describe("event queries", () => {
   it("rolls back an optimistic active-state change after failure", async () => {
@@ -34,7 +32,10 @@ describe("event queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        toggleEventActiveMutationOptions(testClient.queryClient, failingRunner)
+        toggleEventActiveMutationOptions(
+          testClient.queryClient,
+          failingEffectQuery()
+        )
       );
 
       await expect(

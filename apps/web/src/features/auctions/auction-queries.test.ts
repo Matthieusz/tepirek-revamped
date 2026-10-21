@@ -13,7 +13,6 @@ import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import type {
-  AuctionApiRunner,
   AuctionGroupInput,
   AuctionSignup,
 } from "@/features/auctions/auction-api";
@@ -25,10 +24,9 @@ import {
   removeAuctionSignupMutationOptions,
   toggleAuctionSignupMutationOptions,
 } from "@/features/auctions/auction-queries";
-import {
-  AppHttpApiClient,
-  makeAppHttpApiRunner,
-} from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 interface Deferred<A> {
@@ -63,7 +61,7 @@ interface AuctionTransport {
     readonly stats: ReadonlyMap<string, number>;
     readonly toggle: number;
   };
-  readonly runner: AuctionApiRunner;
+  readonly effectQuery: AppEffectQuery;
 }
 
 const groupKey = (group: AuctionGroupInput): string =>
@@ -196,7 +194,7 @@ const makeAuctionTransport = (plans: {
 
   return {
     calls,
-    runner: makeAppHttpApiRunner(Layer.effect(AppHttpApiClient, client)),
+    effectQuery: makeTestAppEffectQuery(Layer.effect(AppHttpApiClient, client)),
   };
 };
 
@@ -255,20 +253,20 @@ describe("auction queries and mutations", () => {
     try {
       await Promise.all([
         testClient.queryClient.query(
-          auctionSignupsQueryOptions(groupA, transport.runner)
+          auctionSignupsQueryOptions(groupA, transport.effectQuery)
         ),
         testClient.queryClient.query(
-          auctionStatsQueryOptions(groupA, transport.runner)
+          auctionStatsQueryOptions(groupA, transport.effectQuery)
         ),
         testClient.queryClient.query(
-          auctionSignupsQueryOptions(groupB, transport.runner)
+          auctionSignupsQueryOptions(groupB, transport.effectQuery)
         ),
         testClient.queryClient.query(
-          auctionStatsQueryOptions(groupB, transport.runner)
+          auctionStatsQueryOptions(groupB, transport.effectQuery)
         ),
       ]);
       await testClient.queryClient.query(
-        auctionSignupsQueryOptions(groupA, transport.runner)
+        auctionSignupsQueryOptions(groupA, transport.effectQuery)
       );
 
       expect(auctionSignupsQueryKey(groupA)).toEqual([
@@ -326,19 +324,19 @@ describe("auction queries and mutations", () => {
     const observers = [
       new QueryObserver(
         testClient.queryClient,
-        auctionSignupsQueryOptions(groupA, transport.runner)
+        auctionSignupsQueryOptions(groupA, transport.effectQuery)
       ),
       new QueryObserver(
         testClient.queryClient,
-        auctionStatsQueryOptions(groupA, transport.runner)
+        auctionStatsQueryOptions(groupA, transport.effectQuery)
       ),
       new QueryObserver(
         testClient.queryClient,
-        auctionSignupsQueryOptions(groupB, transport.runner)
+        auctionSignupsQueryOptions(groupB, transport.effectQuery)
       ),
       new QueryObserver(
         testClient.queryClient,
-        auctionStatsQueryOptions(groupB, transport.runner)
+        auctionStatsQueryOptions(groupB, transport.effectQuery)
       ),
     ];
 
@@ -356,7 +354,7 @@ describe("auction queries and mutations", () => {
         toggleAuctionSignupMutationOptions(
           testClient.queryClient,
           groupA,
-          transport.runner
+          transport.effectQuery
         )
       );
 
@@ -373,7 +371,7 @@ describe("auction queries and mutations", () => {
         removeAuctionSignupMutationOptions(
           testClient.queryClient,
           groupB,
-          transport.runner
+          transport.effectQuery
         )
       );
 
@@ -420,7 +418,7 @@ describe("auction queries and mutations", () => {
         removeAuctionSignupMutationOptions(
           testClient.queryClient,
           groupA,
-          transport.runner,
+          transport.effectQuery,
           {
             onError: (error) => {
               errors.push(error);
@@ -472,7 +470,7 @@ describe("auction queries and mutations", () => {
       removeAuctionSignupMutationOptions(
         testClient.queryClient,
         groupA,
-        transport.runner
+        transport.effectQuery
       )
     );
 
@@ -535,7 +533,7 @@ describe("auction queries and mutations", () => {
         removeAuctionSignupMutationOptions(
           testClient.queryClient,
           groupA,
-          transport.runner
+          transport.effectQuery
         )
       );
 

@@ -10,7 +10,6 @@ import {
 } from "@/features/squad-builder/branded-ids";
 import { asAppUserId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 export interface SearchSquadEditorInviteTargetsInput {
   readonly groupId: number;
@@ -36,9 +35,6 @@ export type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;
 
 /** A verified user who can receive a squad-group editor invitation. */
 export type SquadEditorInviteTarget = SquadEditorInviteTargetSchema;
-
-/** Runs a squad-group sharing API effect through the application HTTP client. */
-export type SquadGroupSharingApiRunner = typeof runAppHttpApi;
 
 /** Lists pending squad-group invitations for the authenticated user. */
 export const listIncomingSquadGroupInvites = Effect.fn(

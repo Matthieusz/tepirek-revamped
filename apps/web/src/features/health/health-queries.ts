@@ -1,9 +1,8 @@
-import { queryOptions } from "@tanstack/react-query";
 import { Effect } from "effect";
 
 import {
   HealthHttpApiClient,
-  runHealthHttpApi,
+  healthEffectQuery,
 } from "@/lib/health-http-api-client-runtime";
 
 const healthCheck = Effect.gen(function* healthCheckEffect() {
@@ -14,9 +13,9 @@ const healthCheck = Effect.gen(function* healthCheckEffect() {
 
 /** Returns the query options for the public health check. */
 export const healthQueryOptions = (
-  runner: typeof runHealthHttpApi = runHealthHttpApi
+  effectQuery: typeof healthEffectQuery = healthEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(healthCheck, { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => healthCheck,
     queryKey: ["health"],
   });

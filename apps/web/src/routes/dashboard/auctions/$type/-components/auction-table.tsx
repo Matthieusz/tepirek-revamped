@@ -4,8 +4,11 @@ import {
   AUCTION_SLOT_ROUND_LABELS,
   AUCTION_SLOT_ROUNDS,
   getAuctionSlotColumns,
-} from "@tepirek-revamped/config";
-import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+} from "@tepirek-revamped/config/application/auctions";
+import type {
+  AuctionProfession,
+  AuctionType,
+} from "@tepirek-revamped/config/application/auctions";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import { Trash2, Loader2 } from "lucide-react";

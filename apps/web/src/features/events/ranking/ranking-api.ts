@@ -1,14 +1,12 @@
 import type {
   EventId,
   HeroId,
-  HeroStats,
   RankingPayload,
 } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { Effect } from "effect";
 
 import { asEventId, asHeroId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Browser input for ranking filters. */
 export interface RankingInput {
@@ -60,9 +58,3 @@ export const getOldestUnpaidEvent = Effect.fn(
 
   return yield* client.ranking.getOldestUnpaidEvent({});
 });
-
-/** API result returned for hero statistics. */
-export type HeroStatsData = HeroStats;
-
-/** Promise runner type used by ranking query adapters. */
-export type RankingApiRunner = typeof runAppHttpApi;

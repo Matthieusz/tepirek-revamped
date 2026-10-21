@@ -37,7 +37,7 @@ import {
 } from "@/features/legend-pricing/legend-pricing-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatGoldAmountInput, tryParseGoldAmount } from "@/lib/gold";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { groupLegendPricesByEnemy } from "@/routes/dashboard/-components/cennik-groups";
 import type { LegendPriceGroup } from "@/routes/dashboard/-components/cennik-groups";
 import { formatLegendaryBonus } from "@/routes/dashboard/-components/legendary-bonus";
@@ -338,7 +338,7 @@ export const CennikContent = ({
   const queryClient = useQueryClient();
 
   const updateCostMutation = useMutation(
-    updateLegendCostMutationOptions(queryClient, runAppHttpApi, {
+    updateLegendCostMutationOptions(queryClient, appEffectQuery, {
       onRefreshError: () => {
         toast.error(
           "Cena została zapisana, ale nie udało się odświeżyć cennika."

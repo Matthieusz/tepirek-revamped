@@ -13,10 +13,10 @@ import {
   respondToAccountAccessInviteMutationOptions,
   sharedAccountsQueryOptions,
 } from "@/features/squad-builder/account-queries";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
-import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 const InviteInboxPanel = () => {
   const queryClient = useQueryClient();

@@ -10,7 +10,6 @@ import { Effect } from "effect";
 
 import { asProfessionId, asSkillId, asSkillRangeId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** A skill range returned by the API. */
 export type SkillRange = RangeSummary;
@@ -122,6 +121,3 @@ export const deleteSkill = Effect.fn("Web.Skill.delete")(
     });
   }
 );
-
-/** Promise runner type used by skill query and mutation adapters. */
-export type SkillApiRunner = typeof runAppHttpApi;

@@ -1,7 +1,7 @@
 import {
   DEFAULT_EVENT_ICON_ID,
   EVENT_ICON_IDS,
-} from "@tepirek-revamped/config";
+} from "@tepirek-revamped/config/application/events";
 import * as Schema from "effect/Schema";
 
 export const EventColors = [

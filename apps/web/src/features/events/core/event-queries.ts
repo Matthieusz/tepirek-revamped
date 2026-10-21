@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -10,10 +9,10 @@ import {
 import type {
   DeleteEventInput,
   Event,
-  EventApiRunner,
   ToggleEventActiveInput,
 } from "@/features/events/core/event-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key for the authenticated user's event list. */
 export const eventsQueryKey = ["events"] as const;
@@ -68,22 +67,23 @@ const invalidateEventsAfterMutation = async (
 };
 
 /** Returns Query options for the authenticated user's events. */
-export const eventsQueryOptions = (runner: EventApiRunner = runAppHttpApi) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(listEvents(), { signal }),
+export const eventsQueryOptions = (
+  effectQuery: AppEffectQuery = appEffectQuery
+) =>
+  effectQuery.queryOptions({
+    queryFn: () => listEvents(),
     queryKey: eventsQueryKey,
   });
 
 /** Returns mutation options for creating an event. */
 export const createEventMutationOptions = (
   queryClient: QueryClient,
-  runner: EventApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: EventMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createEvent>[0]) => {
-      await runner(createEvent(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createEvent>[0]) =>
+      createEvent(payload),
     mutationKey: [...eventsQueryKey, "mutation", "create"],
     onError: (error: Error) => {
       callbacks.onError?.(error);
@@ -97,13 +97,11 @@ export const createEventMutationOptions = (
 /** Returns optimistic mutation options for deleting an event. */
 export const deleteEventMutationOptions = (
   queryClient: QueryClient,
-  runner: EventApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: EventMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: DeleteEventInput) => {
-      await runner(deleteEvent(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: DeleteEventInput) => deleteEvent(input),
     mutationKey: [...eventsQueryKey, "mutation", "delete"],
     onError: (
       error: Error,
@@ -163,13 +161,11 @@ export const deleteEventMutationOptions = (
 /** Returns optimistic mutation options for changing an event's active state. */
 export const toggleEventActiveMutationOptions = (
   queryClient: QueryClient,
-  runner: EventApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: EventMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: ToggleEventActiveInput) => {
-      await runner(toggleEventActive(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: ToggleEventActiveInput) => toggleEventActive(input),
     mutationKey: [...eventsQueryKey, "mutation", "toggle-active"],
     onError: (
       error: Error,

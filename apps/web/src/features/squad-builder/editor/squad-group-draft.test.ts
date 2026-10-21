@@ -10,11 +10,11 @@ import {
   projectEditorPayload,
   projectOwnerPayload,
   removeCharacter,
-} from "./squad-group-draft";
+} from "@/features/squad-builder/editor/squad-group-draft";
 import type {
   CharacterAccountInfo,
   SquadGroupDraft,
-} from "./squad-group-draft";
+} from "@/features/squad-builder/editor/squad-group-draft";
 
 const draft: SquadGroupDraft = {
   groupId: 7,

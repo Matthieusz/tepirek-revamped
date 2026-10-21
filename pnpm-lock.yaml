@@ -236,6 +236,12 @@ importers:
       knip:
         specifier: ^6.41.0
         version: 6.41.0
+      oxc-parser:
+        specifier: 0.153.0
+        version: 0.153.0
+      oxc-resolver:
+        specifier: 11.24.2
+        version: 11.24.2
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -357,6 +363,9 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.3
+      effect-query:
+        specifier: 2.0.0-alpha.1
+        version: 2.0.0-alpha.1(@tanstack/react-query@5.104.2(react@19.3.0))(effect@4.0.3)(react@19.3.0)
       evlog:
         specifier: ^2.32.0
         version: 2.32.0(@tanstack/start-client-core@1.170.38)(@types/node@26.6.5)(esbuild@0.28.2)(hono@4.13.13)(jiti@2.7.0)(nitro@3.0.260903-beta)(ofetch@1.5.1)(react@19.3.0)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
@@ -3342,6 +3351,36 @@ packages:
       valibot:
         optional: true
       zod:
+        optional: true
+
+  effect-query@2.0.0-alpha.1:
+    resolution: {integrity: sha512-veNnTgIzkEhJkoZswXQJa/6QD+Th5BDYZClTKYmZECzwDZnwJ5/kFT+uOH5UtwEE+M4WJecJjRxEWQcx2DLcHQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.104.0
+      '@tanstack/solid-query': ^5.104.0
+      '@tanstack/svelte-query': ^6.3.0
+      '@tanstack/vue-query': ^5.104.0
+      effect: ^4.0.0
+      react: '>=18.2.0'
+      solid-js: ^1.6.0
+      svelte: ^5.25.0
+      vue: '>=3.3.0'
+    peerDependenciesMeta:
+      '@tanstack/react-query':
+        optional: true
+      '@tanstack/solid-query':
+        optional: true
+      '@tanstack/svelte-query':
+        optional: true
+      '@tanstack/vue-query':
+        optional: true
+      react:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
         optional: true
 
   effect@4.0.3:
@@ -6648,6 +6687,13 @@ snapshots:
       effect: 4.0.3
       pg: 8.23.1
       zod: 4.6.7
+
+  effect-query@2.0.0-alpha.1(@tanstack/react-query@5.104.2(react@19.3.0))(effect@4.0.3)(react@19.3.0):
+    dependencies:
+      effect: 4.0.3
+    optionalDependencies:
+      '@tanstack/react-query': 5.104.2(react@19.3.0)
+      react: 19.3.0
 
   effect@4.0.3: {}
 
