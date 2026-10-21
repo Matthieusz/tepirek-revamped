@@ -5,10 +5,7 @@ import { EventHeroFilterSearchSchema } from "@/features/events/core/event-hero-f
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { RankingSortSchema } from "@/features/events/ranking/ranking-sort";
 import { RankingPage } from "@/routes/dashboard/events/-components/ranking-page";
-import {
-  EventsRouteError,
-  EventsRoutePending,
-} from "@/routes/dashboard/events/-components/route-states";
+import { EventsRouteError } from "@/routes/dashboard/events/-components/route-states";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
 
@@ -31,7 +28,6 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   loader: async ({ context }) => {
     await context.queryClient.query(eventsQueryOptions());
   },
-  pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Ranking",
   },

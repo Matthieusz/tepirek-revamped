@@ -4,10 +4,7 @@ import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
 import { verifiedUsersQueryOptions } from "@/features/users/user-queries";
 import { BetsAddPage } from "@/routes/dashboard/events/-components/bets-add-page";
-import {
-  EventsRouteError,
-  EventsRoutePending,
-} from "@/routes/dashboard/events/-components/route-states";
+import { EventsRouteError } from "@/routes/dashboard/events/-components/route-states";
 
 const routeApi = getRouteApi("/dashboard/events/bets/add");
 
@@ -27,7 +24,6 @@ export const Route = createFileRoute("/dashboard/events/bets/add")({
       context.queryClient.query(verifiedUsersQueryOptions()),
     ]);
   },
-  pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Dodaj obstawienie",
   },

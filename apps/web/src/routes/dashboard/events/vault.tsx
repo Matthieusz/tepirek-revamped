@@ -4,10 +4,7 @@ import * as Schema from "effect/Schema";
 import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { oldestUnpaidEventQueryOptions } from "@/features/events/ranking/ranking-queries";
-import {
-  EventsRouteError,
-  EventsRoutePending,
-} from "@/routes/dashboard/events/-components/route-states";
+import { EventsRouteError } from "@/routes/dashboard/events/-components/route-states";
 import EventsVaultPage from "@/routes/dashboard/events/-components/vault-page";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
@@ -37,7 +34,6 @@ export const Route = createFileRoute("/dashboard/events/vault")({
       context.queryClient.query(oldestUnpaidEventQueryOptions()),
     ]);
   },
-  pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Skarbiec",
   },

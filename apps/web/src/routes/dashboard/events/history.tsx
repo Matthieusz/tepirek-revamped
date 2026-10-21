@@ -4,10 +4,7 @@ import * as Schema from "effect/Schema";
 import { EventHeroFilterSearchSchema } from "@/features/events/core/event-hero-filter";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import HistoryPage from "@/routes/dashboard/events/-components/history-page";
-import {
-  EventsRouteError,
-  EventsRoutePending,
-} from "@/routes/dashboard/events/-components/route-states";
+import { EventsRouteError } from "@/routes/dashboard/events/-components/route-states";
 
 const routeApi = getRouteApi("/dashboard/events/history");
 
@@ -25,7 +22,6 @@ export const Route = createFileRoute("/dashboard/events/history")({
   loader: async ({ context }) => {
     await context.queryClient.query(eventsQueryOptions());
   },
-  pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Historia obstawień",
   },

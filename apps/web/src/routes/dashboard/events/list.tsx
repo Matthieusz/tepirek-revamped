@@ -2,10 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import EventsListPage from "@/routes/dashboard/events/-components/list-page";
-import {
-  EventsRouteError,
-  EventsRoutePending,
-} from "@/routes/dashboard/events/-components/route-states";
+import { EventsRouteError } from "@/routes/dashboard/events/-components/route-states";
 
 const routeApi = getRouteApi("/dashboard/events/list");
 
@@ -21,7 +18,6 @@ export const Route = createFileRoute("/dashboard/events/list")({
   loader: async ({ context }) => {
     await context.queryClient.query(eventsQueryOptions());
   },
-  pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Lista eventów",
   },

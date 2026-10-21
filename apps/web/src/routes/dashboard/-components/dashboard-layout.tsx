@@ -30,7 +30,7 @@ const DashboardLayout = ({ session }: DashboardLayoutProps) => (
         </div>
         <DashboardCommandMenu />
       </header>
-      <div className="flex min-h-0 w-full flex-1 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6">
         <Outlet />
       </div>
     </SidebarInset>
