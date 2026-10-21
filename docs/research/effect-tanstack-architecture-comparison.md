@@ -112,13 +112,13 @@ Allow documented test exceptions and resolve relative imports, not just aliases.
 
 ### 4. Some application modules are shallow; others earn their seams
 
-**Here:** [todo-service.ts](../../packages/api/src/services/todo/todo-service.ts) mostly acquires `TodoStore` and forwards operations. By contrast, [save-squad-group.ts](../../packages/api/src/services/squad-builder/squad-groups/save-squad-group.ts) owns validation and timestamp policy. Browser [todo-api.ts](../../apps/web/src/features/todos/todo-api.ts) also performs identifier decoding for mutations, so it is not uniformly redundant.
+**Here:** the former `todo-service.ts` only acquired `TodoStore` and forwarded operations. It has been collapsed into the [todo HTTP handlers](../../packages/api/src/server/todo/http-api-handlers.ts), which call the [persistence port](../../packages/api/src/services/todo/todo-store.ts) directly. By contrast, [save-squad-group.ts](../../packages/api/src/services/squad-builder/squad-groups/save-squad-group.ts) owns validation and timestamp policy. Browser [todo-api.ts](../../apps/web/src/features/todos/todo-api.ts) also performs identifier decoding for mutations, so it is not uniformly redundant.
 
 **Reference:** T3 Code's [CheckpointDiffQuery][t3-checkpoint] exposes two operations while hiding checkpoint selection, validation, batching, and bounded diff generation. The useful pattern is a small interface hiding meaningful policy, not “put every operation in a service class.”
 
 **Adopt:** apply the deletion test when touching a module. If deleting a wrapper loses no policy, authorization decision, stable caller interface, useful tracing, or test seam, collapse it. Retain wrappers that centralize one of those responsibilities.
 
-**Trade-off:** Todo wrappers currently provide named tracing. Removing them should be a conscious decision about where operation spans belong, not an automatic deduplication exercise. Keep the persistence interface: replacing a forwarding function is not an argument for importing Drizzle into handlers.
+**Trade-off:** the removed Todo wrappers provided named tracing. The handlers retain `Todo.create`, `Todo.delete`, `Todo.list`, and `Todo.toggle` around persistence calls after authorization; adapter-level `TodoStore.*` spans remain unchanged. Span placement is a conscious decision, not an automatic deduplication exercise. Keep the persistence interface: replacing a forwarding function is not an argument for importing Drizzle into handlers.
 
 **Acceptance:** fewer forwarding concepts without moving business policy into HTTP handlers or losing intentional spans. No repository-wide wrapper purge.
 
