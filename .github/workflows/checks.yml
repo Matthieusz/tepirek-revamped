@@ -33,6 +33,9 @@ jobs:
           - name: Check formatting and lint
             run: pnpm check
 
+          - name: Dependency direction and architecture fixtures
+            run: pnpm check:architecture
+
           - name: Unused-code check
             run: pnpm check:unused
 

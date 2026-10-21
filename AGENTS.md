@@ -15,6 +15,10 @@ This repository is indexed by CodeGraph through `.codegraph/`. Use it before gre
 
 Before writing Effect code, run `effect-solutions list`, then read the relevant guides with `effect-solutions show <topic>...`. Consult `~/.local/share/effect-solutions/effect` when the guides are insufficient. Never guess at Effect patterns.
 
+## Dependency direction
+
+Follow `docs/architecture-dependencies.md`. Run `pnpm check:architecture` after changing imports; CI enforces the rules and tests prohibited-import fixtures. Do not expand existing exact-edge exceptions for new code.
+
 ## Repository workflows
 
 - Issue operations: follow `docs/agents/issue-tracker.md`.

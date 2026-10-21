@@ -25,6 +25,7 @@
     "db:down": "infisical run --env=dev --path=/ -- vp run --no-cache --filter @tepirek-revamped/db db:down",
     "check": "vp check",
     "check:unused": "knip",
+    "check:architecture": "node --test tools/architecture/check.test.ts",
     "fix": "vp check --fix",
     "prepare": "effect-tsgo patch && vp config --no-agent"
   },
@@ -35,6 +36,8 @@
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "5.0.5",
     "knip": "^6.41.0",
+    "oxc-parser": "0.153.0",
+    "oxc-resolver": "11.24.2",
     "typescript": "catalog:",
     "ultracite": "8.0.1",
     "vite-plus": "1.3.0"
