@@ -4,7 +4,8 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   formatProfession,
   getProfessionPresentation,
-} from "../profession-presenters";
+} from "@/features/squad-builder/shared/profession-presenters";
+
 import { changeFieldLabel, formatChangeValue } from "./account-presenters";
 
 describe("account presenters", () => {

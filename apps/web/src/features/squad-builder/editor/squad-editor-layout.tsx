@@ -10,12 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AvailableCharacterPool } from "@/routes/dashboard/squad-builder/-components/squad-editor/available-character-pool";
-import { SquadEditorCommandHeader } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-command-header";
-import { SquadGroupSettings } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-group-settings";
-import { SquadRosterWorkspace } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
-import type { SquadCharacterMetadata } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
-import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+import { AvailableCharacterPool } from "@/features/squad-builder/editor/available-character-pool";
+import { SquadEditorCommandHeader } from "@/features/squad-builder/editor/squad-editor-command-header";
+import type { SquadGroupDraft } from "@/features/squad-builder/editor/squad-group-draft";
+import { SquadGroupSettings } from "@/features/squad-builder/editor/squad-group-settings";
+import { SquadRosterWorkspace } from "@/features/squad-builder/editor/squad-roster-workspace";
+import type { SquadCharacterMetadata } from "@/features/squad-builder/editor/squad-roster-workspace";
 
 interface SquadEditorLayoutProps {
   readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;

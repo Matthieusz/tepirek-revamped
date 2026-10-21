@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SquadDataError } from "@/features/squad-builder/shared/squad-data-error";
+import { userInitials } from "@/features/squad-builder/shared/user-presenters";
 import {
   OptionalLevelSchema,
   SquadFilterNameSchema,
@@ -31,8 +33,6 @@ import {
 import { sharedSquadGroupsQueryOptions } from "@/features/squad-builder/squad-group-sharing-queries";
 import { formatDateTime } from "@/lib/utils";
 
-import { SquadDataError } from "../squad-data-error";
-import { userInitials } from "../user-presenters";
 import {
   formatCharacterCount,
   formatSquadCount,

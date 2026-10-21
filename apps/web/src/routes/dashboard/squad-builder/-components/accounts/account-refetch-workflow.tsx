@@ -19,12 +19,12 @@ import {
   applyAccountRefetchMutationOptions,
   previewAccountRefetchMutationOptions,
 } from "@/features/squad-builder/account-queries";
+import { formatProfession } from "@/features/squad-builder/shared/profession-presenters";
 import { getErrorMessage } from "@/lib/errors";
 import {
   changeFieldLabel,
   formatChangeValue,
 } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
-import { formatProfession } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 interface AccountRefetchPreview {
   readonly refetchPreviewId: number;

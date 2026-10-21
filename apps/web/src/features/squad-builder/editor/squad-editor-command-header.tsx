@@ -12,7 +12,7 @@ import { DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+import type { SquadGroupDraft } from "@/features/squad-builder/editor/squad-group-draft";
 
 interface SquadEditorCommandHeaderProps {
   readonly draft: SquadGroupDraft;
@@ -123,6 +123,9 @@ export const SquadEditorCommandHeader = ({
   const { isDirty, isSaving, isVisibilityPending } = state;
   const isViewer = variant === "viewer";
 
+  const nameError =
+    draft.name.trim().length === 0 ? "Podaj nazwę grupy." : null;
+
   return (
     <header className="space-y-3">
       <div className="bg-card rounded-xl border p-4 shadow-sm sm:p-5">
@@ -148,6 +151,10 @@ export const SquadEditorCommandHeader = ({
               ) : (
                 <Input
                   aria-label="Nazwa grupy"
+                  aria-invalid={nameError !== null}
+                  aria-describedby={
+                    nameError === null ? undefined : "group-name-error"
+                  }
                   className="bg-background h-11 w-full max-w-xl px-3 font-sans text-lg font-semibold shadow-none"
                   disabled={isSaving}
                   id="group-name"
@@ -159,6 +166,11 @@ export const SquadEditorCommandHeader = ({
                 />
               )}
             </h1>
+            {!isViewer && nameError !== null && (
+              <p id="group-name-error" role="alert">
+                {nameError}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 sm:self-end">
             <SquadSaveActions

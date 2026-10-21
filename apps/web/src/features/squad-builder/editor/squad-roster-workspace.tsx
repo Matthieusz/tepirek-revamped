@@ -25,10 +25,9 @@ import { Label } from "@/components/ui/label";
 import type {
   DraftSquad,
   SquadGroupDraft,
-} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
-
-import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
-import { getProfessionPresentation } from "../profession-presenters";
+} from "@/features/squad-builder/editor/squad-group-draft";
+import { MargonemCharacterAvatarImage } from "@/features/squad-builder/shared/margonem-character-avatar-image";
+import { getProfessionPresentation } from "@/features/squad-builder/shared/profession-presenters";
 
 export interface SquadCharacterMetadata {
   readonly accountDisplayName: string;
@@ -305,12 +304,23 @@ const SquadPanel = ({
                     className="h-8"
                     disabled={isSaving}
                     id={`squad-name-${squad.clientKey}`}
+                    aria-invalid={squad.name.trim().length === 0}
+                    aria-describedby={
+                      squad.name.trim().length === 0
+                        ? `squad-name-error-${squad.clientKey}`
+                        : undefined
+                    }
                     maxLength={60}
                     onChange={(event) => {
                       onNameChange(event.target.value);
                     }}
                     value={squad.name}
                   />
+                  {squad.name.trim().length === 0 && (
+                    <p id={`squad-name-error-${squad.clientKey}`} role="alert">
+                      Podaj nazwę składu.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <h3 className="text-sm font-semibold break-words">

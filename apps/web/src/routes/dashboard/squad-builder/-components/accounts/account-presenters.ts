@@ -1,6 +1,6 @@
 import * as Predicate from "effect/Predicate";
 
-import { formatProfession } from "../profession-presenters";
+import { formatProfession } from "@/features/squad-builder/shared/profession-presenters";
 
 /** Returns the Polish label used for a changed character field. */
 export const changeFieldLabel = (field: string): string => {

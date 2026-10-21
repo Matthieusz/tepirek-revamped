@@ -4,9 +4,9 @@ import * as HashMap from "effect/HashMap";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { SquadGroupDraft } from "../../-state/squad-group-draft";
-import { SquadRosterWorkspace } from "./squad-roster-workspace";
-import type { SquadCharacterMetadata } from "./squad-roster-workspace";
+import type { SquadGroupDraft } from "@/features/squad-builder/editor/squad-group-draft";
+import { SquadRosterWorkspace } from "@/features/squad-builder/editor/squad-roster-workspace";
+import type { SquadCharacterMetadata } from "@/features/squad-builder/editor/squad-roster-workspace";
 
 const noop = () => {};
 
