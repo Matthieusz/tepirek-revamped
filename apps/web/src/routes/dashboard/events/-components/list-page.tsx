@@ -35,7 +35,7 @@ import {
 } from "@/features/events/core/event-queries";
 import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { AddEventModal } from "@/routes/dashboard/events/-components/list/add-event-modal";
 import type { AuthSession } from "@/types/route";
@@ -102,11 +102,11 @@ const EventsListContent = ({
   const [eventAction, setEventAction] = useState<EventAction>(null);
 
   const deleteEvent = useMutation(
-    deleteEventMutationOptions(queryClient, runAppHttpApi)
+    deleteEventMutationOptions(queryClient, appEffectQuery)
   );
 
   const toggleEventActive = useMutation(
-    toggleEventActiveMutationOptions(queryClient, runAppHttpApi)
+    toggleEventActiveMutationOptions(queryClient, appEffectQuery)
   );
 
   const actionPending = deleteEvent.isPending || toggleEventActive.isPending;

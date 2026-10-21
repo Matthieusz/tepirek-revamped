@@ -3,7 +3,6 @@ import { Effect } from "effect";
 
 import { asEventId, asHeroId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Hero data returned by the application API. */
 export type Hero = HeroSummary;
@@ -65,6 +64,3 @@ export const deleteHero = Effect.fn("Web.Hero.delete")(
     });
   }
 );
-
-/** Promise runner type used by hero query and mutation adapters. */
-export type HeroApiRunner = typeof runAppHttpApi;

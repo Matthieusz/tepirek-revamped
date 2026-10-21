@@ -7,7 +7,6 @@ import { Effect } from "effect";
 
 import { asAuctionSignupId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Input that identifies one auction type and profession group. */
 export type AuctionGroupInput = AuctionGroupPayload;
@@ -69,6 +68,3 @@ export const removeAuctionSignup = Effect.fn("Web.Auction.removeSignup")(
     });
   }
 );
-
-/** Promise runner type used by auction query and mutation adapters. */
-export type AuctionApiRunner = typeof runAppHttpApi;

@@ -18,25 +18,25 @@ import {
   squadGroupEditorGrantsQueryKey,
   squadGroupEditorGrantsQueryOptions,
 } from "@/features/squad-builder/squad-group-sharing-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 describe("squad group sharing queries", () => {
   it("keys search text and skips invalid or incomplete resources", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     try {
       const invalidGrantsObserver = new QueryObserver(
         testClient.queryClient,
-        squadGroupEditorGrantsQueryOptions(0, runner)
+        squadGroupEditorGrantsQueryOptions(0, effectQuery)
       );
 
       const incompleteSearchObserver = new QueryObserver(
         testClient.queryClient,
-        squadEditorInviteTargetsQueryOptions(7, "a", runner)
+        squadEditorInviteTargetsQueryOptions(7, "a", effectQuery)
       );
 
       const invalidGrantsUnsubscribe = invalidGrantsObserver.subscribe(
@@ -48,7 +48,7 @@ describe("squad group sharing queries", () => {
       );
 
       await testClient.queryClient.query(
-        squadEditorInviteTargetsQueryOptions(7, "  al  ", runner)
+        squadEditorInviteTargetsQueryOptions(7, "  al  ", effectQuery)
       );
       invalidGrantsUnsubscribe();
       incompleteSearchUnsubscribe();
@@ -70,17 +70,19 @@ describe("squad group sharing queries", () => {
 
   it("loads shared resources through keyed queries", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     try {
       await Promise.all([
         testClient.queryClient.query(
-          incomingSquadGroupInvitesQueryOptions(runner)
+          incomingSquadGroupInvitesQueryOptions(effectQuery)
         ),
-        testClient.queryClient.query(sharedSquadGroupsQueryOptions(runner)),
         testClient.queryClient.query(
-          squadGroupEditorGrantsQueryOptions(7, runner)
+          sharedSquadGroupsQueryOptions(effectQuery)
+        ),
+        testClient.queryClient.query(
+          squadGroupEditorGrantsQueryOptions(7, effectQuery)
         ),
       ]);
 
@@ -101,7 +103,7 @@ describe("squad group sharing queries", () => {
 
   it("invalidates sharing and affected group resources after mutations", async () => {
     const { layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
     const { queryClient } = testClient;
 
@@ -115,7 +117,7 @@ describe("squad group sharing queries", () => {
     try {
       const send = new MutationObserver(
         queryClient,
-        sendSquadGroupEditorInviteMutationOptions(queryClient, runner)
+        sendSquadGroupEditorInviteMutationOptions(queryClient, effectQuery)
       );
 
       await send.mutate({ groupId: 1, invitedUserId: "user" });
@@ -123,7 +125,7 @@ describe("squad group sharing queries", () => {
 
       const respond = new MutationObserver(
         queryClient,
-        respondToSquadGroupInviteMutationOptions(queryClient, runner)
+        respondToSquadGroupInviteMutationOptions(queryClient, effectQuery)
       );
 
       await respond.mutate({ invitationId: 1, response: "accept" });
@@ -132,7 +134,7 @@ describe("squad group sharing queries", () => {
 
       const revoke = new MutationObserver(
         queryClient,
-        revokeSquadGroupEditorMutationOptions(queryClient, runner)
+        revokeSquadGroupEditorMutationOptions(queryClient, effectQuery)
       );
 
       await revoke.mutate({ invitationId: 1 });

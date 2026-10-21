@@ -41,7 +41,7 @@ import {
   heroesQueryOptions,
 } from "@/features/events/heroes/hero-queries";
 import { getErrorMessage } from "@/lib/errors";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import {
   getEventNamesById,
@@ -126,7 +126,7 @@ const EventsHeroesContent = ({
   const eventNamesById = getEventNamesById(events);
 
   const deleteHero = useMutation(
-    deleteHeroMutationOptions(queryClient, runAppHttpApi)
+    deleteHeroMutationOptions(queryClient, appEffectQuery)
   );
 
   const isAdminUser = isAdmin(session);

@@ -5,10 +5,8 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import {
-  AppHttpApiClient,
-  makeAppHttpApiRunner,
-} from "@/lib/http-api-client-runtime";
+import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 import {
@@ -67,7 +65,7 @@ const sessionBody = (userId: string, name: string) => ({
 
 interface UserTransport {
   readonly calls: Record<string, number>;
-  readonly runner: ReturnType<typeof makeAppHttpApiRunner>;
+  readonly effectQuery: ReturnType<typeof makeTestAppEffectQuery>;
 }
 
 type PlannedResponse = Response | Promise<Response>;
@@ -158,7 +156,7 @@ const makeUserTransport = (plans: {
 
   return {
     calls,
-    runner: makeAppHttpApiRunner(Layer.effect(AppHttpApiClient, client)),
+    effectQuery: makeTestAppEffectQuery(Layer.effect(AppHttpApiClient, client)),
   };
 };
 
@@ -185,7 +183,7 @@ describe("user queries", () => {
 
     try {
       const session = await testClient.queryClient.query(
-        sessionQueryOptions(transport.runner)
+        sessionQueryOptions(transport.effectQuery)
       );
 
       expect(session.user.name).toBe("First user");
@@ -209,12 +207,16 @@ describe("user queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        updateProfileMutationOptions(testClient.queryClient, transport.runner, {
-          onRouteContextRefresh: async () => {
-            routeRefreshes.push("refreshed");
-            await Promise.resolve();
-          },
-        })
+        updateProfileMutationOptions(
+          testClient.queryClient,
+          transport.effectQuery,
+          {
+            onRouteContextRefresh: async () => {
+              routeRefreshes.push("refreshed");
+              await Promise.resolve();
+            },
+          }
+        )
       );
 
       await mutation.mutate({ name: "New name" });
@@ -255,7 +257,7 @@ describe("user queries", () => {
         testClient.queryClient,
         verifyDiscordGuildMembershipMutationOptions(
           testClient.queryClient,
-          transport.runner,
+          transport.effectQuery,
           {
             onRouteContextRefresh: async () => {
               routeRefreshes.push("refreshed");
@@ -294,7 +296,7 @@ describe("user queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        deleteUserMutationOptions(testClient.queryClient, transport.runner)
+        deleteUserMutationOptions(testClient.queryClient, transport.effectQuery)
       );
 
       await expect(mutation.mutate("user-1")).rejects.toBeDefined();
@@ -346,7 +348,9 @@ describe("user queries", () => {
       });
 
       await expect(
-        testClient.queryClient.query(sessionQueryOptions(secondUser.runner))
+        testClient.queryClient.query(
+          sessionQueryOptions(secondUser.effectQuery)
+        )
       ).resolves.toMatchObject({ user: { id: "user-2" } });
       expect(secondUser.calls.session).toBe(1);
     } finally {

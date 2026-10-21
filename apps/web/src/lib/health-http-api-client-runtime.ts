@@ -1,11 +1,11 @@
 import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-contract";
-import { Layer } from "effect";
+import { Layer, ManagedRuntime, References } from "effect";
+import { createEffectQueryFromManagedRuntime } from "effect-query";
 import * as Context from "effect/Context";
 import { FetchHttpClient } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import type * as LayerType from "effect/Layer";
 
-import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
@@ -28,15 +28,26 @@ export class HealthHttpApiClient extends Context.Service<
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/**
- * Runs health API effects as Promises without depending on the application
- * client or its authentication groups.
- */
-export const runHealthHttpApi = makeEffectPromiseRunner(
+/** Creates health-only Effect Query factories; the caller must dispose the runtime. */
+export const makeHealthEffectQuery = (
+  layer: LayerType.Layer<HealthHttpApiClient>
+) => {
+  // The published alpha logs full failure causes, which may include private API data.
+  // Keep errors in the Query cache for safe UI projection instead of logging them.
+  const runtime = ManagedRuntime.make(
+    Layer.merge(layer, Layer.succeed(References.MinimumLogLevel, "None"))
+  );
+
+  return { ...createEffectQueryFromManagedRuntime(runtime), runtime };
+};
+
+/** Independent stateless health client and Effect Query factories. */
+export const healthEffectQuery = makeHealthEffectQuery(
   HealthHttpApiClient.layer
 );
 
-/** Creates a health API Promise runner backed by a supplied layer. */
-export const makeHealthHttpApiRunner = (
-  layer: LayerType.Layer<HealthHttpApiClient>
-) => makeEffectPromiseRunner(layer);
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    void healthEffectQuery.runtime.dispose();
+  });
+}

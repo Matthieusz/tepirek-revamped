@@ -5,7 +5,6 @@ import {
   asPendingMargonemAccountRefetchId,
 } from "@/features/squad-builder/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 export interface PreviewAccountRefetchInput {
   readonly accountId: number;
@@ -42,6 +41,3 @@ export const applyAccountRefetch = Effect.fn("Web.SquadAccountRefetch.apply")(
     });
   }
 );
-
-/** Runs account-refetch API effects through the application HTTP client. */
-export type AccountRefetchApiRunner = typeof runAppHttpApi;

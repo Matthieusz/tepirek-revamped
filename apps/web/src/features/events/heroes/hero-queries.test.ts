@@ -3,13 +3,13 @@ import { HeroSummary } from "@tepirek-revamped/api/protocol/heroes/http-api-cont
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { HeroApiRunner } from "@/features/events/heroes/hero-api";
 import {
   heroesByEventQueryKey,
   heroesByEventQueryOptions,
   heroesListQueryKey,
   deleteHeroMutationOptions,
 } from "@/features/events/heroes/hero-queries";
+import { makeFailingAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 const makeHero = (id: number, eventId: number) =>
@@ -22,14 +22,12 @@ const makeHero = (id: number, eventId: number) =>
     pointWorth: "0",
   });
 
-const failingRunner: HeroApiRunner = async () => {
-  await Promise.resolve();
-  throw new Error("Hero request failed");
-};
+const failingEffectQuery = () =>
+  makeFailingAppEffectQuery("Hero request failed");
 
 describe("hero queries", () => {
   it("does not enable a by-event request without a selected event", () => {
-    const options = heroesByEventQueryOptions(null, failingRunner);
+    const options = heroesByEventQueryOptions(null, failingEffectQuery());
 
     expect(options.enabled).toBe(false);
     expect(options.queryKey).toEqual(["heroes", "by-event", "disabled"]);
@@ -44,7 +42,7 @@ describe("hero queries", () => {
     try {
       const mutation = new MutationObserver(
         testClient.queryClient,
-        deleteHeroMutationOptions(testClient.queryClient, failingRunner)
+        deleteHeroMutationOptions(testClient.queryClient, failingEffectQuery())
       );
 
       await expect(mutation.mutate({ id: hero.id })).rejects.toThrow(

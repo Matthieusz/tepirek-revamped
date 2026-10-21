@@ -1,12 +1,11 @@
-// @vitest-environment happy-dom
-
 import { QueryClientProvider } from "@tanstack/react-query";
+// @vitest-environment happy-dom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { ownedAccountsQueryKey } from "@/features/squad-builder/account-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
@@ -24,7 +23,7 @@ const clickButton = (label: string) => {
 describe("BulkAccountRefetchWorkflow", () => {
   it("previews every owned account and only applies after confirmation", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const client = makeTestQueryClient();
     const container = document.createElement("div");
     document.body.append(container);
@@ -40,7 +39,7 @@ describe("BulkAccountRefetchWorkflow", () => {
                 { accountId: 1, displayName: "Pierwsze" },
                 { accountId: 2, displayName: "Drugie" },
               ]}
-              runner={runner}
+              effectQuery={effectQuery}
             />
           </QueryClientProvider>
         );

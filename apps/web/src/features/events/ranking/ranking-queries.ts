@@ -1,16 +1,13 @@
-import { queryOptions } from "@tanstack/react-query";
+import { skipToken } from "@tanstack/react-query";
 
 import {
   getHeroStats,
   getOldestUnpaidEvent,
   getRanking,
 } from "@/features/events/ranking/ranking-api";
-import type {
-  HeroStatsData,
-  RankingApiRunner,
-  RankingInput,
-} from "@/features/events/ranking/ranking-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { RankingInput } from "@/features/events/ranking/ranking-api";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all ranking data. */
 export const rankingQueryKeyPrefix = ["ranking"] as const;
@@ -42,10 +39,10 @@ export const oldestUnpaidEventQueryKey = ["oldest-unpaid-event"] as const;
 /** Returns Query options for one event/hero ranking filter. */
 export const rankingQueryOptions = (
   input: RankingInput,
-  runner: RankingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(getRanking(input), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => getRanking(input),
     queryKey: rankingQueryKey(input),
   });
 
@@ -56,17 +53,12 @@ export const rankingQueryOptions = (
  */
 export const heroStatsQueryOptions = (
   heroId: number | null,
-  runner: RankingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: heroId !== null && heroId > 0,
-    queryFn: async ({ signal }): Promise<HeroStatsData | undefined> => {
-      if (heroId === null || heroId <= 0) {
-        return undefined;
-      }
-
-      return await runner(getHeroStats(heroId), { signal });
-    },
+    queryFn:
+      heroId !== null && heroId > 0 ? () => getHeroStats(heroId) : skipToken,
     queryKey:
       heroId === null || heroId <= 0
         ? disabledHeroStatsQueryKey
@@ -75,10 +67,9 @@ export const heroStatsQueryOptions = (
 
 /** Returns Query options for the oldest unpaid event ID. */
 export const oldestUnpaidEventQueryOptions = (
-  runner: RankingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(getOldestUnpaidEvent(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => getOldestUnpaidEvent(),
     queryKey: oldestUnpaidEventQueryKey,
   });

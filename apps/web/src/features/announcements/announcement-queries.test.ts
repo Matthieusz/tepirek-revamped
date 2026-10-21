@@ -3,17 +3,17 @@ import { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import type {
-  Announcement,
-  AnnouncementApiRunner,
-} from "@/features/announcements/announcement-api";
+import type { Announcement } from "@/features/announcements/announcement-api";
 import {
   announcementsQueryKey,
   announcementsQueryOptions,
   createAnnouncementMutationOptions,
   deleteAnnouncementMutationOptions,
 } from "@/features/announcements/announcement-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import {
+  makeTestAppEffectQuery,
+  makeFailingAppEffectQuery,
+} from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
@@ -29,8 +29,8 @@ const makeAnnouncement = (
     user: null,
   });
 
-const failingRunner: AnnouncementApiRunner = async () =>
-  await Promise.reject(new Error("Announcement request failed"));
+const failingEffectQuery = () =>
+  makeFailingAppEffectQuery("Announcement request failed");
 
 interface Deferred<A> {
   readonly promise: Promise<A>;
@@ -56,12 +56,12 @@ const deferred = <A>(): Deferred<A> => {
 describe("announcement queries and mutations", () => {
   it("loads announcements through the real HttpApiClient transport", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     try {
       await expect(
-        testClient.queryClient.query(announcementsQueryOptions(runner))
+        testClient.queryClient.query(announcementsQueryOptions(effectQuery))
       ).resolves.toEqual([]);
       expect(calls).toEqual([
         {
@@ -81,7 +81,7 @@ describe("announcement queries and mutations", () => {
     try {
       await expect(
         testClient.queryClient.query({
-          ...announcementsQueryOptions(failingRunner),
+          ...announcementsQueryOptions(failingEffectQuery()),
           retry: false,
         })
       ).rejects.toThrow("Announcement request failed");
@@ -95,12 +95,12 @@ describe("announcement queries and mutations", () => {
 
   it("invalidates the list after a successful create", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     const queryObserver = new QueryObserver(
       testClient.queryClient,
-      announcementsQueryOptions(runner)
+      announcementsQueryOptions(effectQuery)
     );
 
     const unsubscribe = queryObserver.subscribe(() => {});
@@ -110,7 +110,7 @@ describe("announcement queries and mutations", () => {
 
       const create = new MutationObserver(
         testClient.queryClient,
-        createAnnouncementMutationOptions(testClient.queryClient, runner)
+        createAnnouncementMutationOptions(testClient.queryClient, effectQuery)
       );
 
       await expect(
@@ -130,7 +130,7 @@ describe("announcement queries and mutations", () => {
 
   it("keeps create successful when refreshing the list fails", async () => {
     const { layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
     const { queryClient } = testClient;
     const refreshErrors: Error[] = [];
@@ -149,7 +149,7 @@ describe("announcement queries and mutations", () => {
     try {
       const create = new MutationObserver(
         queryClient,
-        createAnnouncementMutationOptions(queryClient, runner, {
+        createAnnouncementMutationOptions(queryClient, effectQuery, {
           onRefreshError: (error) => {
             refreshErrors.push(error);
           },
@@ -187,10 +187,10 @@ describe("announcement queries and mutations", () => {
         queryClient,
         deleteAnnouncementMutationOptions(
           queryClient,
-          async () => {
-            await failure.promise;
-            throw new Error("Announcement request failed");
-          },
+          makeFailingAppEffectQuery(
+            "Announcement request failed",
+            failure.promise
+          ),
           {
             onError: (error) => {
               errors.push(error);
@@ -221,7 +221,7 @@ describe("announcement queries and mutations", () => {
 
   it("deletes an announcement without retrying and sends its branded ID", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
     const announcement = makeAnnouncement(7);
     testClient.queryClient.setQueryData(announcementsQueryKey, [announcement]);
@@ -229,11 +229,12 @@ describe("announcement queries and mutations", () => {
     try {
       const deleteMutation = new MutationObserver(
         testClient.queryClient,
-        deleteAnnouncementMutationOptions(testClient.queryClient, runner)
+        deleteAnnouncementMutationOptions(testClient.queryClient, effectQuery)
       );
 
       expect(
-        deleteAnnouncementMutationOptions(testClient.queryClient, runner).retry
+        deleteAnnouncementMutationOptions(testClient.queryClient, effectQuery)
+          .retry
       ).toBe(false);
       await expect(
         deleteMutation.mutate({ id: announcement.id })

@@ -1,5 +1,5 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
+import { Effect } from "effect";
 
 import {
   createHero,
@@ -7,12 +7,9 @@ import {
   listHeroes,
   listHeroesByEvent,
 } from "@/features/events/heroes/hero-api";
-import type {
-  DeleteHeroInput,
-  Hero,
-  HeroApiRunner,
-} from "@/features/events/heroes/hero-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { DeleteHeroInput, Hero } from "@/features/events/heroes/hero-api";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all hero queries. */
 const heroesQueryKey = ["heroes"] as const;
@@ -78,25 +75,27 @@ const invalidateHeroesAfterMutation = async (
 };
 
 /** Returns Query options for all heroes. */
-export const heroesQueryOptions = (runner: HeroApiRunner = runAppHttpApi) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(listHeroes(), { signal }),
+export const heroesQueryOptions = (
+  effectQuery: AppEffectQuery = appEffectQuery
+) =>
+  effectQuery.queryOptions({
+    queryFn: () => listHeroes(),
     queryKey: heroesListQueryKey,
   });
 
 /** Returns Query options for heroes assigned to one valid event. */
 export const heroesByEventQueryOptions = (
   eventId: number | null,
-  runner: HeroApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: eventId !== null && eventId > 0,
-    queryFn: async ({ signal }) => {
+    queryFn: () => {
       if (eventId === null || eventId <= 0) {
-        return [];
+        return Effect.succeed([]);
       }
 
-      return await runner(listHeroesByEvent(eventId), { signal });
+      return listHeroesByEvent(eventId);
     },
     queryKey:
       eventId === null || eventId <= 0
@@ -107,13 +106,12 @@ export const heroesByEventQueryOptions = (
 /** Returns mutation options for creating a hero. */
 export const createHeroMutationOptions = (
   queryClient: QueryClient,
-  runner: HeroApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: HeroMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createHero>[0]) => {
-      await runner(createHero(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createHero>[0]) =>
+      createHero(payload),
     mutationKey: [...heroesQueryKey, "mutation", "create"],
     onError: (error: Error) => {
       callbacks.onError?.(error);
@@ -127,13 +125,11 @@ export const createHeroMutationOptions = (
 /** Returns optimistic mutation options for deleting a hero. */
 export const deleteHeroMutationOptions = (
   queryClient: QueryClient,
-  runner: HeroApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: HeroMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: DeleteHeroInput) => {
-      await runner(deleteHero(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: DeleteHeroInput) => deleteHero(input),
     mutationKey: [...heroesQueryKey, "mutation", "delete"],
     onError: (
       error: Error,

@@ -6,7 +6,6 @@ import { Effect } from "effect";
 
 import { asTodoId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Input for a todo mutation that targets one todo. */
 export interface TodoIdInput {
@@ -60,9 +59,6 @@ export const toggleTodo = Effect.fn("Web.Todo.toggle")(
     });
   }
 );
-
-/** Promise runner type used by todo query and mutation adapters. */
-export type TodoApiRunner = typeof runAppHttpApi;
 
 /** Todo data returned by the list query. */
 export type Todo = TodoSummary;

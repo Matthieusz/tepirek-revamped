@@ -46,7 +46,7 @@ import type { EventColor } from "@/features/events/core/form-schemas";
 import { EVENT_ICON_MAP } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import { cn } from "@/lib/utils";
 
 interface AddEventModalProps {
@@ -85,7 +85,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const queryClient = useQueryClient();
 
   const createEvent = useMutation(
-    createEventMutationOptions(queryClient, runAppHttpApi)
+    createEventMutationOptions(queryClient, appEffectQuery)
   );
 
   const form = useAppForm({

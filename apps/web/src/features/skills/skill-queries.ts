@@ -1,5 +1,5 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
+import { Effect } from "effect";
 
 import {
   createSkill,
@@ -15,10 +15,10 @@ import {
 import type {
   CreateSkillInput,
   Skill,
-  SkillApiRunner,
   SkillRange,
 } from "@/features/skills/skill-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 const skillsQueryKey = ["skills"] as const;
 
@@ -121,38 +121,37 @@ const invalidateSkillQueriesAfterMutation = async (
 
 /** Returns Query options for all skill ranges. */
 export const skillRangesQueryOptions = (
-  runner: SkillApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(listSkillRanges(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listSkillRanges(),
     queryKey: skillRangesQueryKey,
   });
 
 /** Returns Query options for all skill professions. */
 export const skillProfessionsQueryOptions = (
-  runner: SkillApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listSkillProfessions(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listSkillProfessions(),
     queryKey: skillProfessionsQueryKey,
   });
 
 /** Returns Query options for one URL-selected skill range. */
 export const skillRangeBySlugQueryOptions = (
   slug: string,
-  runner: SkillApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) => {
   const normalizedSlug = slug.trim();
 
-  return queryOptions({
+  return effectQuery.queryOptions({
     enabled: normalizedSlug.length > 0,
-    queryFn: async ({ signal }) => {
+    queryFn: () => {
       if (normalizedSlug.length === 0) {
-        return null;
+        return Effect.succeed(null);
       }
 
-      return await runner(getSkillRangeBySlug(normalizedSlug), { signal });
+      return getSkillRangeBySlug(normalizedSlug);
     },
     queryKey: skillRangeBySlugQueryKey(normalizedSlug),
   });
@@ -161,16 +160,16 @@ export const skillRangeBySlugQueryOptions = (
 /** Returns Query options for skills in one valid range. */
 export const skillsByRangeQueryOptions = (
   rangeId: number,
-  runner: SkillApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: rangeId > 0,
-    queryFn: async ({ signal }) => {
+    queryFn: () => {
       if (rangeId <= 0) {
-        return [];
+        return Effect.succeed([]);
       }
 
-      return await runner(listSkillsByRange(rangeId), { signal });
+      return listSkillsByRange(rangeId);
     },
     queryKey: skillsByRangeQueryKey(rangeId),
   });
@@ -178,15 +177,12 @@ export const skillsByRangeQueryOptions = (
 /** Returns mutation options for creating a profession. */
 export const createSkillProfessionMutationOptions = (
   queryClient: QueryClient,
-  runner: SkillApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: SkillMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof createSkillProfession>[0]
-    ) => {
-      await runner(createSkillProfession(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createSkillProfession>[0]) =>
+      createSkillProfession(payload),
     mutationKey: [...skillsQueryKey, "mutation", "create-profession"],
     onSuccess: async () => {
       await invalidateSkillQueriesAfterMutation(
@@ -202,13 +198,12 @@ export const createSkillProfessionMutationOptions = (
 /** Returns mutation options for creating a range. */
 export const createSkillRangeMutationOptions = (
   queryClient: QueryClient,
-  runner: SkillApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: SkillMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createSkillRange>[0]) => {
-      await runner(createSkillRange(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createSkillRange>[0]) =>
+      createSkillRange(payload),
     mutationKey: [...skillsQueryKey, "mutation", "create-range"],
     onSuccess: async () => {
       await invalidateSkillQueriesAfterMutation(
@@ -224,13 +219,11 @@ export const createSkillRangeMutationOptions = (
 /** Returns mutation options for creating a skill in one range. */
 export const createSkillMutationOptions = (
   queryClient: QueryClient,
-  runner: SkillApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: SkillMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: CreateSkillInput) => {
-      await runner(createSkill(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: CreateSkillInput) => createSkill(payload),
     mutationKey: [...skillsQueryKey, "mutation", "create-skill"],
     onSuccess: async (_skill, payload) => {
       await invalidateSkillQueriesAfterMutation(
@@ -246,13 +239,11 @@ export const createSkillMutationOptions = (
 /** Returns optimistic mutation options for deleting a range. */
 export const deleteSkillRangeMutationOptions = (
   queryClient: QueryClient,
-  runner: SkillApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: SkillMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (id: number) => {
-      await runner(deleteSkillRange(id));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (id: number) => deleteSkillRange(id),
     mutationKey: [...skillsQueryKey, "mutation", "delete-range"],
     onError: (
       error: Error,
@@ -318,13 +309,11 @@ export const deleteSkillRangeMutationOptions = (
 /** Returns optimistic mutation options for deleting a skill in any range. */
 export const deleteSkillMutationOptions = (
   queryClient: QueryClient,
-  runner: SkillApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: SkillMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (id: number) => {
-      await runner(deleteSkill(id));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (id: number) => deleteSkill(id),
     mutationKey: [...skillsQueryKey, "mutation", "delete-skill"],
     onError: (
       error: Error,

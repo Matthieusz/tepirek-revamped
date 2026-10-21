@@ -36,7 +36,7 @@ import { distributeGoldMutationOptions } from "@/features/events/vault/vault-que
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 import { parseGoldAmount } from "@/lib/gold";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 import {
   DistributionPreview,
   GoldAmountPreview,
@@ -110,7 +110,7 @@ const DistributeGoldModalContent = ({
   const queryClient = useQueryClient();
 
   const distributeGold = useMutation(
-    distributeGoldMutationOptions(queryClient, runAppHttpApi)
+    distributeGoldMutationOptions(queryClient, appEffectQuery)
   );
 
   const eventsQuery = useQuery(eventsQueryOptions());

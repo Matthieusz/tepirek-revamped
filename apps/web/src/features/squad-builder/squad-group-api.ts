@@ -10,7 +10,6 @@ import {
   asSquadId,
 } from "@/features/squad-builder/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 export interface ListGlobalSquadGroupsInput {
   readonly maxLevel?: number | null;
@@ -69,8 +68,6 @@ export type AvailableSquadCharacter = AvailableSquadCharacterSchema;
 export type GlobalSquadGroupSummary = GlobalSquadGroupSummarySchema;
 
 export type SquadGroupSummary = SquadGroupSummarySchema;
-
-export type SquadGroupApiRunner = typeof runAppHttpApi;
 
 export const listOwnedSquadGroups = Effect.fn("Web.SquadGroup.listOwned")(
   function* listOwnedSquadGroupsEffect() {

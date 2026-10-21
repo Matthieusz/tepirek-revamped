@@ -1,17 +1,14 @@
 import type {
-  AuthenticatedSession,
   Player,
   SetRolePayload,
   SetVerifiedPayload,
   UpdateProfilePayload,
   UpdateUserNamePayload,
-  VerifiedMember,
 } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import { Effect } from "effect";
 
 import { asAppUserId } from "@/lib/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Fetches the authenticated session from the application API. */
 export const getSession = Effect.fn("Web.User.getSession")(
@@ -111,14 +108,5 @@ export const verifyDiscordGuildMembership = Effect.fn(
   return yield* client.user.verifyDiscordGuildMembership({});
 });
 
-/** Promise runner used by user query and mutation adapters. */
-export type UserApiRunner = typeof runAppHttpApi;
-
-/** User session returned by the application API. */
-export type UserSession = AuthenticatedSession;
-
 /** User record returned by the administrator list endpoint. */
 export type UserListItem = Player;
-
-/** Verified user returned by event member selectors. */
-export type VerifiedUser = VerifiedMember;

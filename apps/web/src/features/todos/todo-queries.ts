@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -9,11 +8,11 @@ import {
 } from "@/features/todos/todo-api";
 import type {
   Todo,
-  TodoApiRunner,
   TodoIdInput,
   ToggleTodoInput,
 } from "@/features/todos/todo-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Shared cache key for the current user's todo list. */
 export const todosQueryKey = ["todos"] as const;
@@ -71,22 +70,23 @@ const replaceTodo = (
   todos?.map((todo) => (todo.id === input.id ? replacement : todo));
 
 /** Returns the Query options for the current user's todos. */
-export const todosQueryOptions = (runner: TodoApiRunner = runAppHttpApi) =>
-  queryOptions({
-    queryFn: async ({ signal }) => await runner(listTodos(), { signal }),
+export const todosQueryOptions = (
+  effectQuery: AppEffectQuery = appEffectQuery
+) =>
+  effectQuery.queryOptions({
+    queryFn: () => listTodos(),
     queryKey: todosQueryKey,
   });
 
 /** Returns mutation options for creating a todo and refreshing the list. */
 export const createTodoMutationOptions = (
   queryClient: QueryClient,
-  runner: TodoApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: TodoMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createTodo>[0]) => {
-      await runner(createTodo(payload));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createTodo>[0]) =>
+      createTodo(payload),
     mutationKey: todosQueryKey,
     onError: (error: TodoMutationError) => {
       callbacks.onError?.(error);
@@ -100,13 +100,11 @@ export const createTodoMutationOptions = (
 /** Returns optimistic mutation options for toggling a todo. */
 export const toggleTodoMutationOptions = (
   queryClient: QueryClient,
-  runner: TodoApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: TodoMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: ToggleTodoInput) => {
-      await runner(toggleTodo(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: ToggleTodoInput) => toggleTodo(input),
     mutationKey: todosQueryKey,
     onError: (
       error: TodoMutationError,
@@ -154,13 +152,11 @@ export const toggleTodoMutationOptions = (
 /** Returns optimistic mutation options for deleting a todo. */
 export const deleteTodoMutationOptions = (
   queryClient: QueryClient,
-  runner: TodoApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: TodoMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (input: TodoIdInput) => {
-      await runner(deleteTodo(input));
-    },
+  effectQuery.mutationOptions({
+    mutationFn: (input: TodoIdInput) => deleteTodo(input),
     mutationKey: todosQueryKey,
     onError: (
       error: TodoMutationError,

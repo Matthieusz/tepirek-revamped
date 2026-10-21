@@ -12,6 +12,7 @@ import {
 } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { HttpApiError as HttpApiErrorType } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import { EffectQueryFailure } from "effect-query";
 import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 
@@ -170,8 +171,11 @@ export const getErrorMessage = (
   error: CaughtError,
   fallback = fallbackErrorMessage
 ): string => {
-  if (isApiError(error)) {
-    return getApiErrorMessage(error);
+  const failure: unknown =
+    error instanceof EffectQueryFailure ? error.failure : error;
+
+  if (isApiError(failure)) {
+    return getApiErrorMessage(failure);
   }
 
   return fallback;

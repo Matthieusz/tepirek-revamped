@@ -4,7 +4,6 @@ import { Effect } from "effect";
 import * as Schema from "effect/Schema";
 
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** A legendary item price returned by the catalogue endpoint. */
 export type LegendPrice = LegendPriceSummary;
@@ -39,6 +38,3 @@ export const updateLegendCost = Effect.fn("Web.LegendPricing.updateCost")(
     });
   }
 );
-
-/** Promise runner used by the legend pricing query and mutation adapters. */
-export type LegendPricingApiRunner = typeof runAppHttpApi;

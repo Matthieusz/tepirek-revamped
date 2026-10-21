@@ -5,10 +5,8 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { describe, expect, it } from "vite-plus/test";
 
-import {
-  HealthHttpApiClient,
-  makeHealthHttpApiRunner,
-} from "@/lib/health-http-api-client-runtime";
+import { HealthHttpApiClient } from "@/lib/health-http-api-client-runtime";
+import { makeTestHealthEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 import { loadHealth } from "@/routes/-load-health";
 
@@ -19,7 +17,7 @@ interface HealthResponse {
   readonly status?: number;
 }
 
-const makeHealthRunner = (responses: readonly HealthResponse[]) => {
+const makeHealthQueryFixture = (responses: readonly HealthResponse[]) => {
   let calls = 0;
 
   const httpClient = HttpClient.make((request) => {
@@ -45,7 +43,9 @@ const makeHealthRunner = (responses: readonly HealthResponse[]) => {
 
   return {
     calls: () => calls,
-    runner: makeHealthHttpApiRunner(Layer.effect(HealthHttpApiClient, client)),
+    effectQuery: makeTestHealthEffectQuery(
+      Layer.effect(HealthHttpApiClient, client)
+    ),
   };
 };
 
@@ -56,11 +56,11 @@ const makeHealthResponse = (status = 200): HealthResponse => ({
 
 describe("health query", () => {
   it("deduplicates concurrent consumers through the shared query key", async () => {
-    const health = makeHealthRunner([makeHealthResponse()]);
+    const health = makeHealthQueryFixture([makeHealthResponse()]);
     const testClient = makeTestQueryClient();
 
     try {
-      const query = healthQueryOptions(health.runner);
+      const query = healthQueryOptions(health.effectQuery);
 
       const results = await Promise.all([
         testClient.queryClient.query(query),
@@ -75,13 +75,13 @@ describe("health query", () => {
   });
 
   it("lets a failed route loader retry without turning failure into data", async () => {
-    const health = makeHealthRunner([
+    const health = makeHealthQueryFixture([
       makeHealthResponse(503),
       makeHealthResponse(),
     ]);
 
     const testClient = makeTestQueryClient();
-    const query = { ...healthQueryOptions(health.runner), retry: false };
+    const query = { ...healthQueryOptions(health.effectQuery), retry: false };
 
     try {
       await expect(
@@ -97,12 +97,14 @@ describe("health query", () => {
   });
 
   it("uses dehydrated health data without a redundant request after hydration", async () => {
-    const health = makeHealthRunner([makeHealthResponse()]);
+    const health = makeHealthQueryFixture([makeHealthResponse()]);
     const serverClient = makeTestQueryClient();
     const browserClient = makeTestQueryClient();
 
     try {
-      await serverClient.queryClient.query(healthQueryOptions(health.runner));
+      await serverClient.queryClient.query(
+        healthQueryOptions(health.effectQuery)
+      );
       const dehydrated = dehydrate(serverClient.queryClient);
       const serialized = JSON.stringify(dehydrated);
 
@@ -111,7 +113,7 @@ describe("health query", () => {
 
       await loadHealth(
         browserClient.queryClient,
-        healthQueryOptions(health.runner)
+        healthQueryOptions(health.effectQuery)
       );
 
       expect(health.calls()).toBe(1);
@@ -122,7 +124,7 @@ describe("health query", () => {
   });
 
   it("refreshes an invalidated health query in the route loader", async () => {
-    const health = makeHealthRunner([
+    const health = makeHealthQueryFixture([
       makeHealthResponse(),
       makeHealthResponse(),
     ]);
@@ -132,12 +134,12 @@ describe("health query", () => {
     try {
       await loadHealth(
         testClient.queryClient,
-        healthQueryOptions(health.runner)
+        healthQueryOptions(health.effectQuery)
       );
       await testClient.queryClient.invalidateQueries({ queryKey: ["health"] });
       await loadHealth(
         testClient.queryClient,
-        healthQueryOptions(health.runner)
+        healthQueryOptions(health.effectQuery)
       );
 
       expect(health.calls()).toBe(2);

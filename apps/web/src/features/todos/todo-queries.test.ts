@@ -8,7 +8,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import type { Todo, TodoApiRunner } from "@/features/todos/todo-api";
+import type { Todo } from "@/features/todos/todo-api";
 import {
   createTodoMutationOptions,
   deleteTodoMutationOptions,
@@ -16,10 +16,9 @@ import {
   todosQueryOptions,
   toggleTodoMutationOptions,
 } from "@/features/todos/todo-queries";
-import {
-  AppHttpApiClient,
-  makeAppHttpApiRunner,
-} from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 interface Deferred<A> {
@@ -65,7 +64,7 @@ interface TodoTransport {
     list: number;
     toggle: number;
   };
-  readonly runner: TodoApiRunner;
+  readonly effectQuery: AppEffectQuery;
 }
 
 const makeTodoTransport = (plans: {
@@ -119,7 +118,7 @@ const makeTodoTransport = (plans: {
 
   return {
     calls,
-    runner: makeAppHttpApiRunner(Layer.effect(AppHttpApiClient, client)),
+    effectQuery: makeTestAppEffectQuery(Layer.effect(AppHttpApiClient, client)),
   };
 };
 
@@ -137,7 +136,7 @@ describe("todo queries and mutations", () => {
 
     const queryObserver = new QueryObserver(
       testClient.queryClient,
-      todosQueryOptions(transport.runner)
+      todosQueryOptions(transport.effectQuery)
     );
 
     const unsubscribe = queryObserver.subscribe(() => {});
@@ -147,7 +146,7 @@ describe("todo queries and mutations", () => {
 
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
-        createTodoMutationOptions(testClient.queryClient, transport.runner)
+        createTodoMutationOptions(testClient.queryClient, transport.effectQuery)
       );
 
       await mutationObserver.mutate({ text: "new task" });
@@ -176,7 +175,7 @@ describe("todo queries and mutations", () => {
     const testClient = makeTestQueryClient();
 
     const queryObserver = new QueryObserver(testClient.queryClient, {
-      ...todosQueryOptions(transport.runner),
+      ...todosQueryOptions(transport.effectQuery),
       retry: false,
     });
 
@@ -187,11 +186,15 @@ describe("todo queries and mutations", () => {
 
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
-        createTodoMutationOptions(testClient.queryClient, transport.runner, {
-          onRefreshError: (error) => {
-            refreshErrors.push(error);
-          },
-        })
+        createTodoMutationOptions(
+          testClient.queryClient,
+          transport.effectQuery,
+          {
+            onRefreshError: (error) => {
+              refreshErrors.push(error);
+            },
+          }
+        )
       );
 
       await expect(mutationObserver.mutate({ text: "new task" })).resolves.toBe(
@@ -224,11 +227,15 @@ describe("todo queries and mutations", () => {
     try {
       const toggleObserver = new MutationObserver(
         testClient.queryClient,
-        toggleTodoMutationOptions(testClient.queryClient, transport.runner, {
-          onError: (error) => {
-            errors.push(error);
-          },
-        })
+        toggleTodoMutationOptions(
+          testClient.queryClient,
+          transport.effectQuery,
+          {
+            onError: (error) => {
+              errors.push(error);
+            },
+          }
+        )
       );
 
       await expect(
@@ -241,11 +248,15 @@ describe("todo queries and mutations", () => {
 
       const deleteObserver = new MutationObserver(
         testClient.queryClient,
-        deleteTodoMutationOptions(testClient.queryClient, transport.runner, {
-          onError: (error) => {
-            errors.push(error);
-          },
-        })
+        deleteTodoMutationOptions(
+          testClient.queryClient,
+          transport.effectQuery,
+          {
+            onError: (error) => {
+              errors.push(error);
+            },
+          }
+        )
       );
 
       await expect(
@@ -277,7 +288,7 @@ describe("todo queries and mutations", () => {
 
     const mutationObserver = new MutationObserver(
       testClient.queryClient,
-      toggleTodoMutationOptions(testClient.queryClient, transport.runner)
+      toggleTodoMutationOptions(testClient.queryClient, transport.effectQuery)
     );
 
     try {
@@ -329,7 +340,7 @@ describe("todo queries and mutations", () => {
     testClient.queryClient.setQueryData(todosQueryKey, [firstTodo]);
 
     const delayedRead = testClient.queryClient.query({
-      ...todosQueryOptions(transport.runner),
+      ...todosQueryOptions(transport.effectQuery),
       retry: false,
       staleTime: 0,
     });
@@ -341,7 +352,7 @@ describe("todo queries and mutations", () => {
 
       const mutationObserver = new MutationObserver(
         testClient.queryClient,
-        toggleTodoMutationOptions(testClient.queryClient, transport.runner)
+        toggleTodoMutationOptions(testClient.queryClient, transport.effectQuery)
       );
 
       await mutationObserver.mutate({ completed: true, id: firstTodo.id });
@@ -366,7 +377,7 @@ describe("todo queries and mutations", () => {
 
     const mutationObserver = new MutationObserver(
       testClient.queryClient,
-      toggleTodoMutationOptions(testClient.queryClient, transport.runner)
+      toggleTodoMutationOptions(testClient.queryClient, transport.effectQuery)
     );
 
     try {
@@ -398,7 +409,10 @@ describe("todo queries and mutations", () => {
     try {
       const mutationObserver = new MutationObserver(
         firstClient.queryClient,
-        toggleTodoMutationOptions(firstClient.queryClient, transport.runner)
+        toggleTodoMutationOptions(
+          firstClient.queryClient,
+          transport.effectQuery
+        )
       );
 
       await mutationObserver.mutate({ completed: true, id: firstTodo.id });

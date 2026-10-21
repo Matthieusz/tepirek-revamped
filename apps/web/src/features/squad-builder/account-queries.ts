@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -8,12 +7,10 @@ import {
   previewOwnedAccountImports,
   updateOwnedAccountDisplayName,
 } from "@/features/squad-builder/account-import-api";
-import type { AccountImportApiRunner } from "@/features/squad-builder/account-import-api";
 import {
   applyAccountRefetch,
   previewAccountRefetch,
 } from "@/features/squad-builder/account-refetch-api";
-import type { AccountRefetchApiRunner } from "@/features/squad-builder/account-refetch-api";
 import {
   listAccountAccessGrants,
   listIncomingAccountInvites,
@@ -23,10 +20,10 @@ import {
   searchAccountInviteTargets,
   sendAccountAccessInvite,
 } from "@/features/squad-builder/account-sharing-api";
-import type { AccountSharingApiRunner } from "@/features/squad-builder/account-sharing-api";
 import { squadGroupsQueryKey } from "@/features/squad-builder/squad-group-queries";
 import { sharedSquadGroupsQueryKey } from "@/features/squad-builder/squad-group-sharing-queries";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all account-import and account-sharing data. */
 const accountQueryKey = ["squad-builder", "accounts"] as const;
@@ -65,31 +62,28 @@ export const accountInviteTargetsQueryKey = (
 
 /** Returns query options for accounts owned by the authenticated user. */
 export const ownedAccountsQueryOptions = (
-  runner: AccountImportApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listOwnedAccounts(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listOwnedAccounts(),
     queryKey: ownedAccountsQueryKey,
   });
 
 /** Returns query options for pending account invitations. */
 export const incomingAccountInvitesQueryOptions = (
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listIncomingAccountInvites(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listIncomingAccountInvites(),
     queryKey: incomingAccountInvitesQueryKey,
   });
 
 /** Returns query options for accounts shared with the authenticated user. */
 export const sharedAccountsQueryOptions = (
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listSharedAccounts(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listSharedAccounts(),
     queryKey: sharedAccountsQueryKey,
   });
 
@@ -97,12 +91,11 @@ export const sharedAccountsQueryOptions = (
 export const accountAccessGrantsQueryOptions = (
   accountId: number,
   actorUserId: string,
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: accountId > 0 && actorUserId.length > 0,
-    queryFn: async ({ signal }) =>
-      await runner(listAccountAccessGrants(accountId), { signal }),
+    queryFn: () => listAccountAccessGrants(accountId),
     queryKey: accountAccessGrantsQueryKey(accountId, actorUserId),
   });
 
@@ -111,21 +104,18 @@ export const accountInviteTargetsQueryOptions = (
   accountId: number,
   actorUserId: string,
   query: string,
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) => {
   const normalizedQuery = query.trim();
 
-  return queryOptions({
+  return effectQuery.queryOptions({
     enabled:
       accountId > 0 && actorUserId.length > 0 && normalizedQuery.length >= 2,
-    queryFn: async ({ signal }) =>
-      await runner(
-        searchAccountInviteTargets({
-          accountId,
-          query: normalizedQuery,
-        }),
-        { signal }
-      ),
+    queryFn: () =>
+      searchAccountInviteTargets({
+        accountId,
+        query: normalizedQuery,
+      }),
     queryKey: accountInviteTargetsQueryKey(
       accountId,
       actorUserId,
@@ -147,24 +137,22 @@ export const invalidateAccountResources = async (
 
 /** Returns mutation options for previewing account imports. */
 export const previewOwnedAccountImportsMutationOptions = (
-  runner: AccountImportApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof previewOwnedAccountImports>[0]
-    ) => await runner(previewOwnedAccountImports(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof previewOwnedAccountImports>[0]) =>
+      previewOwnedAccountImports(payload),
     retry: false,
   });
 
 /** Returns mutation options for confirming an account import. */
 export const confirmOwnedAccountImportMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountImportApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof confirmOwnedAccountImport>[0]
-    ) => await runner(confirmOwnedAccountImport(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof confirmOwnedAccountImport>[0]) =>
+      confirmOwnedAccountImport(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -174,12 +162,12 @@ export const confirmOwnedAccountImportMutationOptions = (
 /** Returns mutation options for renaming an owned account. */
 export const updateOwnedAccountDisplayNameMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountImportApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
+  effectQuery.mutationOptions({
+    mutationFn: (
       payload: Parameters<typeof updateOwnedAccountDisplayName>[0]
-    ) => await runner(updateOwnedAccountDisplayName(payload)),
+    ) => updateOwnedAccountDisplayName(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -189,11 +177,11 @@ export const updateOwnedAccountDisplayNameMutationOptions = (
 /** Returns mutation options for deleting an owned account. */
 export const deleteOwnedAccountMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountImportApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof deleteOwnedAccount>[0]) =>
-      await runner(deleteOwnedAccount(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof deleteOwnedAccount>[0]) =>
+      deleteOwnedAccount(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -202,22 +190,22 @@ export const deleteOwnedAccountMutationOptions = (
 
 /** Returns mutation options for previewing account refetch changes. */
 export const previewAccountRefetchMutationOptions = (
-  runner: AccountRefetchApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof previewAccountRefetch>[0]) =>
-      await runner(previewAccountRefetch(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof previewAccountRefetch>[0]) =>
+      previewAccountRefetch(payload),
     retry: false,
   });
 
 /** Returns mutation options for applying account refetch changes. */
 export const applyAccountRefetchMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountRefetchApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof applyAccountRefetch>[0]) =>
-      await runner(applyAccountRefetch(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof applyAccountRefetch>[0]) =>
+      applyAccountRefetch(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -227,12 +215,11 @@ export const applyAccountRefetchMutationOptions = (
 /** Returns mutation options for sending an account access invitation. */
 export const sendAccountAccessInviteMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof sendAccountAccessInvite>[0]
-    ) => await runner(sendAccountAccessInvite(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof sendAccountAccessInvite>[0]) =>
+      sendAccountAccessInvite(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -242,12 +229,11 @@ export const sendAccountAccessInviteMutationOptions = (
 /** Returns mutation options for responding to an account access invitation. */
 export const respondToAccountAccessInviteMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof respondToAccountAccessInvite>[0]
-    ) => await runner(respondToAccountAccessInvite(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof respondToAccountAccessInvite>[0]) =>
+      respondToAccountAccessInvite(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },
@@ -257,11 +243,11 @@ export const respondToAccountAccessInviteMutationOptions = (
 /** Returns mutation options for revoking account access. */
 export const revokeAccountAccessMutationOptions = (
   queryClient: QueryClient,
-  runner: AccountSharingApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof revokeAccountAccess>[0]) =>
-      await runner(revokeAccountAccess(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof revokeAccountAccess>[0]) =>
+      revokeAccountAccess(payload),
     onSuccess: async () => {
       await invalidateAccountResources(queryClient);
     },

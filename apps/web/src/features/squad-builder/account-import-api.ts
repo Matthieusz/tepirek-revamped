@@ -5,7 +5,6 @@ import {
   asPendingMargonemAccountImportId,
 } from "@/features/squad-builder/branded-ids";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
-import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 export interface ConfirmOwnedAccountImportInput {
   readonly displayName: string;
@@ -93,6 +92,3 @@ export const deleteOwnedAccount = Effect.fn("Web.SquadAccountImport.delete")(
     });
   }
 );
-
-/** Runs account-import API effects through the application HTTP client. */
-export type AccountImportApiRunner = typeof runAppHttpApi;

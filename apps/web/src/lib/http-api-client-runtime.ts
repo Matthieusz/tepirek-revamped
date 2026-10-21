@@ -1,6 +1,7 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { HttpApiError } from "@tepirek-revamped/api/protocol/http-api-errors";
-import { Layer } from "effect";
+import { Layer, ManagedRuntime, References } from "effect";
+import { createEffectQueryFromManagedRuntime } from "effect-query";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { FetchHttpClient, HttpClientResponse } from "effect/http";
@@ -9,7 +10,6 @@ import * as HttpClientError from "effect/http/HttpClientError";
 import type * as LayerType from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 
-import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
@@ -62,13 +62,27 @@ export class AppHttpApiClient extends Context.Service<
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/**
- * Runs application API effects as Promises while preserving typed protocol
- * failures for framework-level error handling.
- */
-export const runAppHttpApi = makeEffectPromiseRunner(AppHttpApiClient.layer);
-
-/** Creates an application API Promise runner backed by a supplied layer. */
-export const makeAppHttpApiRunner = (
+/** Creates Effect Query factories; the caller owns and must dispose the runtime. */
+export const makeAppEffectQuery = (
   layer: LayerType.Layer<AppHttpApiClient>
-) => makeEffectPromiseRunner(layer);
+) => {
+  // The published alpha logs full failure causes, which may include private API data.
+  // Keep errors in the Query cache for safe UI projection instead of logging them.
+  const runtime = ManagedRuntime.make(
+    Layer.merge(layer, Layer.succeed(References.MinimumLogLevel, "None"))
+  );
+
+  return { ...createEffectQueryFromManagedRuntime(runtime), runtime };
+};
+
+/** Application Effect Query factories and their caller-owned runtime. */
+export type AppEffectQuery = ReturnType<typeof makeAppEffectQuery>;
+
+/** Shared stateless browser API client and Effect Query factories. */
+export const appEffectQuery = makeAppEffectQuery(AppHttpApiClient.layer);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    void appEffectQuery.runtime.dispose();
+  });
+}

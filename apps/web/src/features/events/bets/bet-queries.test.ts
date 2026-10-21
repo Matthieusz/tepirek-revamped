@@ -1,7 +1,6 @@
 import { MutationObserver } from "@tanstack/react-query";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { BetApiRunner } from "@/features/events/bets/bet-api";
 import {
   createBetMutationOptions,
   deleteBetMutationOptions,
@@ -12,12 +11,13 @@ import {
   paginatedBetsQueryKeyPrefix,
   paginatedBetsQueryOptions,
 } from "@/features/events/bets/bet-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
-const makeRunner = (): BetApiRunner =>
-  makeAppHttpApiRunner(makeHttpApiTestLayer().layer);
+const makeEffectQueryFixture = (): AppEffectQuery =>
+  makeTestAppEffectQuery(makeHttpApiTestLayer().layer);
 
 describe("bet queries", () => {
   it("keeps paginated filters and pages in separate cache keys", async () => {
@@ -25,15 +25,15 @@ describe("bet queries", () => {
     const input = { eventId: 5, heroId: 2, limit: 10, page: 1 };
 
     try {
-      const runner = makeRunner();
+      const effectQuery = makeEffectQueryFixture();
       await testClient.queryClient.query(
-        paginatedBetsQueryOptions(input, runner)
+        paginatedBetsQueryOptions(input, effectQuery)
       );
       await testClient.queryClient.query(
-        paginatedBetsQueryOptions({ ...input, page: 2 }, runner)
+        paginatedBetsQueryOptions({ ...input, page: 2 }, effectQuery)
       );
       await testClient.queryClient.query(
-        paginatedBetsQueryOptions({ ...input, heroId: 4 }, runner)
+        paginatedBetsQueryOptions({ ...input, heroId: 4 }, effectQuery)
       );
 
       expect(paginatedBetsQueryKey(input)).toEqual([
@@ -64,7 +64,7 @@ describe("bet queries", () => {
 
     try {
       await testClient.queryClient.query(
-        latestBetForCopyQueryOptions(makeRunner())
+        latestBetForCopyQueryOptions(makeEffectQueryFixture())
       );
       expect(
         testClient.queryClient.getQueryData(latestBetForCopyQueryKey)
@@ -98,7 +98,7 @@ describe("bet queries", () => {
 
     const mutation = new MutationObserver(
       testClient.queryClient,
-      createBetMutationOptions(testClient.queryClient, makeRunner())
+      createBetMutationOptions(testClient.queryClient, makeEffectQueryFixture())
     );
 
     try {
@@ -126,7 +126,7 @@ describe("bet queries", () => {
 
     const mutation = new MutationObserver(
       testClient.queryClient,
-      editBetMutationOptions(testClient.queryClient, makeRunner())
+      editBetMutationOptions(testClient.queryClient, makeEffectQueryFixture())
     );
 
     try {
@@ -155,7 +155,7 @@ describe("bet queries", () => {
 
     const mutation = new MutationObserver(
       testClient.queryClient,
-      deleteBetMutationOptions(testClient.queryClient, makeRunner())
+      deleteBetMutationOptions(testClient.queryClient, makeEffectQueryFixture())
     );
 
     try {

@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -12,13 +11,8 @@ import {
   updateUserName,
   verifyDiscordGuildMembership,
 } from "@/features/users/user-api";
-import type {
-  UserApiRunner,
-  UserListItem,
-  UserSession,
-  VerifiedUser,
-} from "@/features/users/user-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all private user-related query data. */
 export const usersQueryKey = ["users"] as const;
@@ -60,40 +54,41 @@ const refreshUserData = async (
 };
 
 /** Returns Query options for the authenticated application session. */
-export const sessionQueryOptions = (runner: UserApiRunner = runAppHttpApi) =>
-  queryOptions({
-    queryFn: async ({ signal }): Promise<UserSession> =>
-      await runner(getSession(), { signal }),
+export const sessionQueryOptions = (
+  effectQuery: AppEffectQuery = appEffectQuery
+) =>
+  effectQuery.queryOptions({
+    queryFn: () => getSession(),
     queryKey: sessionQueryKey,
   });
 
 /** Returns Query options for the administrator's user list. */
-export const usersQueryOptions = (runner: UserApiRunner = runAppHttpApi) =>
-  queryOptions({
-    queryFn: async ({ signal }): Promise<readonly UserListItem[]> =>
-      await runner(listUsers(), { signal }),
+export const usersQueryOptions = (
+  effectQuery: AppEffectQuery = appEffectQuery
+) =>
+  effectQuery.queryOptions({
+    queryFn: () => listUsers(),
     queryKey: userListQueryKey,
   });
 
 /** Returns Query options for verified event members. */
 export const verifiedUsersQueryOptions = (
-  runner: UserApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }): Promise<readonly VerifiedUser[]> =>
-      await runner(getVerifiedUsers(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => getVerifiedUsers(),
     queryKey: verifiedUsersQueryKey,
   });
 
 /** Returns mutation options for updating the current user's profile. */
 export const updateProfileMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof updateProfile>[0]) =>
-      await runner(updateProfile(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof updateProfile>[0]) =>
+      updateProfile(payload),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks);
     },
@@ -103,12 +98,12 @@ export const updateProfileMutationOptions = (
 /** Returns mutation options for changing a user's verification status. */
 export const setVerifiedMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof setVerified>[0]) =>
-      await runner(setVerified(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof setVerified>[0]) =>
+      setVerified(payload),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks);
     },
@@ -118,12 +113,11 @@ export const setVerifiedMutationOptions = (
 /** Returns mutation options for changing a user's role. */
 export const setRoleMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof setRole>[0]) =>
-      await runner(setRole(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof setRole>[0]) => setRole(payload),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks);
     },
@@ -133,12 +127,12 @@ export const setRoleMutationOptions = (
 /** Returns mutation options for changing a user's display name. */
 export const updateUserNameMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof updateUserName>[0]) =>
-      await runner(updateUserName(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof updateUserName>[0]) =>
+      updateUserName(payload),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks);
     },
@@ -148,12 +142,12 @@ export const updateUserNameMutationOptions = (
 /** Returns mutation options for deleting a user. */
 export const deleteUserMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async (userId: Parameters<typeof deleteUser>[0]) =>
-      await runner(deleteUser(userId)),
+  effectQuery.mutationOptions({
+    mutationFn: (userId: Parameters<typeof deleteUser>[0]) =>
+      deleteUser(userId),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks);
     },
@@ -163,11 +157,11 @@ export const deleteUserMutationOptions = (
 /** Returns mutation options for rechecking Discord guild membership. */
 export const verifyDiscordGuildMembershipMutationOptions = (
   queryClient: QueryClient,
-  runner: UserApiRunner = runAppHttpApi,
+  effectQuery: AppEffectQuery = appEffectQuery,
   callbacks: UserMutationCallbacks = {}
 ) =>
-  mutationOptions({
-    mutationFn: async () => await runner(verifyDiscordGuildMembership()),
+  effectQuery.mutationOptions({
+    mutationFn: () => verifyDiscordGuildMembership(),
     onSuccess: async () => {
       await refreshUserData(queryClient, callbacks, sessionQueryKey);
     },

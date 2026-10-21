@@ -23,32 +23,32 @@ import {
   squadGroupDetailQueryKey,
 } from "@/features/squad-builder/squad-group-queries";
 import { sharedSquadGroupsQueryKey } from "@/features/squad-builder/squad-group-sharing-queries";
-import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
+import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 describe("account queries", () => {
   it("keys actor-specific searches and skips incomplete resources", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     try {
       await testClient.queryClient.query(
-        accountInviteTargetsQueryOptions(7, "actor", "  al  ", runner)
+        accountInviteTargetsQueryOptions(7, "actor", "  al  ", effectQuery)
       );
       await testClient.queryClient.query(
-        accountInviteTargetsQueryOptions(7, "other-actor", "al", runner)
+        accountInviteTargetsQueryOptions(7, "other-actor", "al", effectQuery)
       );
 
       const invalidGrantsObserver = new QueryObserver(
         testClient.queryClient,
-        accountAccessGrantsQueryOptions(0, "actor", runner)
+        accountAccessGrantsQueryOptions(0, "actor", effectQuery)
       );
 
       const incompleteSearchObserver = new QueryObserver(
         testClient.queryClient,
-        accountInviteTargetsQueryOptions(7, "actor", "a", runner)
+        accountInviteTargetsQueryOptions(7, "actor", "a", effectQuery)
       );
 
       const unsubscribeInvalidGrants = invalidGrantsObserver.subscribe(
@@ -80,21 +80,21 @@ describe("account queries", () => {
 
   it("loads owned, incoming, shared, grants, and search data through queries", async () => {
     const { calls, layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
 
     try {
       await Promise.all([
-        testClient.queryClient.query(ownedAccountsQueryOptions(runner)),
+        testClient.queryClient.query(ownedAccountsQueryOptions(effectQuery)),
         testClient.queryClient.query(
-          incomingAccountInvitesQueryOptions(runner)
+          incomingAccountInvitesQueryOptions(effectQuery)
         ),
-        testClient.queryClient.query(sharedAccountsQueryOptions(runner)),
+        testClient.queryClient.query(sharedAccountsQueryOptions(effectQuery)),
         testClient.queryClient.query(
-          accountAccessGrantsQueryOptions(7, "actor", runner)
+          accountAccessGrantsQueryOptions(7, "actor", effectQuery)
         ),
         testClient.queryClient.query(
-          accountInviteTargetsQueryOptions(7, "actor", "al", runner)
+          accountInviteTargetsQueryOptions(7, "actor", "al", effectQuery)
         ),
       ]);
 
@@ -120,7 +120,7 @@ describe("account queries", () => {
 
   it("invalidates account and squad resources after sharing mutations", async () => {
     const { layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
     const { queryClient } = testClient;
 
@@ -132,7 +132,7 @@ describe("account queries", () => {
     try {
       const send = new MutationObserver(
         queryClient,
-        sendAccountAccessInviteMutationOptions(queryClient, runner)
+        sendAccountAccessInviteMutationOptions(queryClient, effectQuery)
       );
 
       await send.mutate({ accountId: 1, invitedUserId: "user" });
@@ -152,11 +152,11 @@ describe("account queries", () => {
 
   it("does not retry refetches and invalidates account views after observer removal", async () => {
     const { layer } = makeHttpApiTestLayer();
-    const runner = makeAppHttpApiRunner(layer);
+    const effectQuery = makeTestAppEffectQuery(layer);
     const testClient = makeTestQueryClient();
     const { queryClient } = testClient;
-    const ownedGroups = ownedSquadGroupsQueryOptions(runner);
-    const globalGroups = globalSquadGroupsQueryOptions({}, runner);
+    const ownedGroups = ownedSquadGroupsQueryOptions(effectQuery);
+    const globalGroups = globalSquadGroupsQueryOptions({}, effectQuery);
     let callbackCalled = false;
 
     const affectedQueryKeys = [
@@ -174,14 +174,16 @@ describe("account queries", () => {
     }
 
     try {
-      expect(previewAccountRefetchMutationOptions(runner).retry).toBe(false);
+      expect(previewAccountRefetchMutationOptions(effectQuery).retry).toBe(
+        false
+      );
       expect(
-        applyAccountRefetchMutationOptions(queryClient, runner).retry
+        applyAccountRefetchMutationOptions(queryClient, effectQuery).retry
       ).toBe(false);
 
       const apply = new MutationObserver(
         queryClient,
-        applyAccountRefetchMutationOptions(queryClient, runner)
+        applyAccountRefetchMutationOptions(queryClient, effectQuery)
       );
 
       const unsubscribe = apply.subscribe(() => {});

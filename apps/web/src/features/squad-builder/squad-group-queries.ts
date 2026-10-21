@@ -1,4 +1,3 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
 import {
@@ -12,11 +11,9 @@ import {
   saveSquadGroup,
   setSquadGroupVisibility,
 } from "@/features/squad-builder/squad-group-api";
-import type {
-  ListGlobalSquadGroupsInput,
-  SquadGroupApiRunner,
-} from "@/features/squad-builder/squad-group-api";
-import { runAppHttpApi } from "@/lib/http-api-client-runtime";
+import type { ListGlobalSquadGroupsInput } from "@/features/squad-builder/squad-group-api";
+import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
+import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all squad-group queries, including details and character pools. */
 export const squadGroupsQueryKey = ["squad-groups"] as const;
@@ -44,46 +41,42 @@ const globalSquadGroupsQueryKey = (filters: ListGlobalSquadGroupsInput = {}) =>
   [...globalSquadGroupsQueryPrefix, normalizeGlobalFilters(filters)] as const;
 
 export const ownedSquadGroupsQueryOptions = (
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listOwnedSquadGroups(), { signal }),
+  effectQuery.queryOptions({
+    queryFn: () => listOwnedSquadGroups(),
     queryKey: ownedSquadGroupsQueryKey,
   });
 
 export const globalSquadGroupsQueryOptions = (
   filters: ListGlobalSquadGroupsInput = {},
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) => {
   const normalizedFilters = normalizeGlobalFilters(filters);
 
-  return queryOptions({
-    queryFn: async ({ signal }) =>
-      await runner(listGlobalSquadGroups(normalizedFilters), { signal }),
+  return effectQuery.queryOptions({
+    queryFn: () => listGlobalSquadGroups(normalizedFilters),
     queryKey: globalSquadGroupsQueryKey(normalizedFilters),
   });
 };
 
 export const squadGroupDetailQueryOptions = (
   groupId: number,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: groupId > 0,
-    queryFn: async ({ signal }) =>
-      await runner(getSquadGroupDetail({ groupId }), { signal }),
+    queryFn: () => getSquadGroupDetail({ groupId }),
     queryKey: squadGroupDetailQueryKey(groupId),
   });
 
 export const availableSquadCharactersQueryOptions = (
   groupId: number,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  queryOptions({
+  effectQuery.queryOptions({
     enabled: groupId > 0,
-    queryFn: async ({ signal }) =>
-      await runner(listAvailableSquadCharacters({ groupId }), { signal }),
+    queryFn: () => listAvailableSquadCharacters({ groupId }),
     queryKey: availableSquadCharactersQueryKey(groupId),
   });
 
@@ -111,11 +104,11 @@ export const invalidateSquadGroupResources = async (
 
 export const createSquadGroupMutationOptions = (
   queryClient: QueryClient,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof createSquadGroup>[0]) =>
-      await runner(createSquadGroup(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof createSquadGroup>[0]) =>
+      createSquadGroup(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ownedSquadGroupsQueryKey,
@@ -126,11 +119,11 @@ export const createSquadGroupMutationOptions = (
 
 export const deleteSquadGroupMutationOptions = (
   queryClient: QueryClient,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof deleteSquadGroup>[0]) =>
-      await runner(deleteSquadGroup(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof deleteSquadGroup>[0]) =>
+      deleteSquadGroup(payload),
     onSuccess: async (_, payload) => {
       await invalidateSquadGroupResources(queryClient, payload.groupId);
     },
@@ -139,11 +132,11 @@ export const deleteSquadGroupMutationOptions = (
 
 export const saveSquadGroupMutationOptions = (
   queryClient: QueryClient,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (payload: Parameters<typeof saveSquadGroup>[0]) =>
-      await runner(saveSquadGroup(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof saveSquadGroup>[0]) =>
+      saveSquadGroup(payload),
     onSuccess: async (_, payload) => {
       await invalidateSquadGroupResources(queryClient, payload.groupId);
     },
@@ -152,12 +145,12 @@ export const saveSquadGroupMutationOptions = (
 
 export const saveSharedSquadGroupCharactersMutationOptions = (
   queryClient: QueryClient,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
+  effectQuery.mutationOptions({
+    mutationFn: (
       payload: Parameters<typeof saveSharedSquadGroupCharacters>[0]
-    ) => await runner(saveSharedSquadGroupCharacters(payload)),
+    ) => saveSharedSquadGroupCharacters(payload),
     onSuccess: async (_, payload) => {
       await invalidateSquadGroupResources(queryClient, payload.groupId);
     },
@@ -166,12 +159,11 @@ export const saveSharedSquadGroupCharactersMutationOptions = (
 
 export const setSquadGroupVisibilityMutationOptions = (
   queryClient: QueryClient,
-  runner: SquadGroupApiRunner = runAppHttpApi
+  effectQuery: AppEffectQuery = appEffectQuery
 ) =>
-  mutationOptions({
-    mutationFn: async (
-      payload: Parameters<typeof setSquadGroupVisibility>[0]
-    ) => await runner(setSquadGroupVisibility(payload)),
+  effectQuery.mutationOptions({
+    mutationFn: (payload: Parameters<typeof setSquadGroupVisibility>[0]) =>
+      setSquadGroupVisibility(payload),
     onSuccess: async (_, payload) => {
       await invalidateSquadGroupResources(queryClient, payload.groupId);
     },
