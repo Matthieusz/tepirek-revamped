@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "vp run build:app",
-    "check-types": "tsc --noEmit",
+    "check-types": "tsrs --noEmit",
     "test": "vp test run",
     "serve": "vp preview",
     "dev": "vp dev --port=3001",

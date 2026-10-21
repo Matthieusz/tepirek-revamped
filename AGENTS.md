@@ -1,6 +1,6 @@
 # Agent instructions
 
-Use `vp check` to validate formatting and linting. Use `vp fix` when fixes are needed.
+Use `pnpm check` to validate formatting, Rust-backed standard linting, and the separate Effect diagnostics pass. Use `pnpm fix` when fixes are needed. For scoped checks, run both `node tools/lint.ts check <paths...>` and `node tools/lint.ts effect <paths...>`. Bare `vp check` bypasses Rust backend selection and the Effect pass.
 
 Linters do not validate business logic, naming, architecture, edge cases, accessibility, user experience, or documentation. Review those explicitly. Keep functions focused, name complex conditions, prefer early returns, separate unrelated concerns, and hoist reusable regular expressions.
 

@@ -31,7 +31,8 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "ignoreEffectWarningsInTscExitCode": false,
+        // Oxlint owns Effect diagnostics instead of a TypeScript plugin.
+        "diagnostics": false,
         // Accepted, version-pinned Effect v4 integrations; other unstable APIs still warn.
         "allowedUnstableApis": [
           "@effect/platform-node/NodeCrypto#layer",
@@ -47,10 +48,7 @@
           "effect/observability/OtlpSerialization#layerJson",
           "effect/observability/OtlpTracer#layerFromConfig",
           "effect/sql/SqlError"
-        ],
-        "diagnosticSeverity": {
-          "lazyEffect": "off"
-        }
+        ]
       }
     ]
   }

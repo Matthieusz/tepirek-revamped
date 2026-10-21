@@ -66,8 +66,10 @@ export default defineConfig({
   // Only build and unit-test scripts opt into task caching.
   run: { cache: { scripts: false } },
   staged: {
-    "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}":
-      "vp check --fix --no-error-on-unmatched-pattern",
+    "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}": [
+      "node tools/lint.ts check --fix --no-error-on-unmatched-pattern",
+      "node tools/lint.ts effect --no-error-on-unmatched-pattern",
+    ],
   },
   test: {
     exclude: ["src/**/*.integration.test.ts", "src/**/*.smoke.test.ts"],

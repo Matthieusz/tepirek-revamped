@@ -8,7 +8,7 @@
     }
   },
   "scripts": {
-    "check-types": "tsc -b",
+    "check-types": "tsrs -b",
     "test": "vp test run --dir src"
   },
   "dependencies": {

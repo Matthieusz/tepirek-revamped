@@ -124,21 +124,22 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 
 ## Commands
 
-| Command                 | Purpose                                      |
-| ----------------------- | -------------------------------------------- |
-| `pnpm dev`              | Run web and server development processes     |
-| `pnpm build`            | Build all workspaces                         |
-| `pnpm check-types`      | Type-check all workspaces                    |
-| `pnpm test`             | Run unit tests                               |
-| `pnpm test:smoke`       | Check server startup and health              |
-| `pnpm test:integration` | Run API tests against dedicated PostgreSQL   |
-| `pnpm check`            | Check formatting and lint rules              |
-| `pnpm fix`              | Apply formatting and safe lint fixes         |
-| `pnpm check:unused`     | Find unused files, exports, and dependencies |
-| `pnpm db:generate`      | Generate a migration after a schema change   |
-| `pnpm db:migrate`       | Apply committed migrations                   |
-| `pnpm db:studio`        | Open Drizzle Studio                          |
-| `pnpm db:stop`          | Stop local PostgreSQL                        |
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Run web and server development processes |
+| `pnpm build` | Build all workspaces |
+| `pnpm check-types` | Type-check all workspaces |
+| `pnpm test` | Run unit tests |
+| `pnpm test:smoke` | Check server startup and health |
+| `pnpm test:integration` | Run API tests against dedicated PostgreSQL |
+| `pnpm check` | Check formatting, standard lint, and Effect diagnostics |
+| `pnpm check:effect` | Run the separate Effect diagnostics pass |
+| `pnpm fix` | Apply formatting and safe lint fixes |
+| `pnpm check:unused` | Find unused files, exports, and dependencies |
+| `pnpm db:generate` | Generate a migration after a schema change |
+| `pnpm db:migrate` | Apply committed migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm db:stop` | Stop local PostgreSQL |
 
 ## CI and deployment toolchains
 
@@ -160,24 +161,29 @@ postgresql://postgres:password@localhost:5433/tepirek-revamped-test
 
 To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_ALLOW_DATABASE_RESET=1`. The suite applies the application schema and truncates that database, so **never point it at development or production data**.
 
-## Effect TypeScript tooling
+## TypeScript tooling
 
-<details>
-<summary>Editor and compiler setup</summary>
+[`tsrs`](https://github.com/oxc-project/tsrs) handles workspace type-checking and TypeScript editor features. `pnpm check-types` runs it across all workspaces; confirm the installed compiler with `pnpm exec tsrs --version`.
 
-This repository uses `@effect/tsgo` as both its patched TypeScript compiler and its TypeScript language server. `pnpm install` runs `effect-tsgo patch` through the `prepare` script. Confirm the patched compiler with:
+[`@maschwenk/tsrslint`](https://github.com/maschwenk/tsrslint) is Oxlint's Rust backend for standard type-aware rules and its native type-diagnostic pass. `tools/lint.ts` resolves the platform binary and sets `OXLINT_TSGOLINT_PATH` before launching Vite+, including in Zed. Use `pnpm check` rather than bare `vp check` to select this backend and run both lint passes.
 
-```bash
-pnpm exec tsc --version
-```
+Effect's native rules are not supported by tsrslint. `pnpm check:effect` runs them separately through `oxlint.effect.config.ts`, using the Effect-patched Go backend. `pnpm check` and staged checks run both passes; `pnpm fix` applies standard formatting/lint fixes and then validates Effect diagnostics. For targeted checks, use `node tools/lint.ts check <paths...>` and `node tools/lint.ts effect <paths...>`.
 
-The version must include an `effect-tsgo` suffix. In VS Code, use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
+`pnpm install` runs `effect-tsgo patch --no-typescript --oxlint` for the separate Effect pass. `@effect/tsgo`, Oxlint, and oxlint-tsgolint must stay on compatible versions; see the [Effect Oxlint setup guide](https://github.com/Effect-TS/tsgo/blob/main/docs/README.md). Keep oxlint-tsgolint installed for that pass, even though standard checks use Rust. TypeScript remains installed for tooling compatibility but is not patched or used by the workspace check-types scripts.
 
-Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `pnpm exec effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
+The Effect pass preserves the previous rule severities. API and server production files additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors outside tests. These additional restrictions do not apply to the React web project. Effect rule severities live in `oxlint.effect.config.ts`; the shared tsconfig retains the allowed unstable API list for that linter.
 
-Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
+### Zed
 
-</details>
+1. Install the **TypeScript Language Server** (`tsgo`) and **Oxc** extensions.
+2. Open the repository root, run `pnpm install`, and trust the project's language-server commands if prompted. Node.js and pnpm must be available to Zed (launch it from a mise-enabled shell if necessary).
+3. Run **editor: restart language server** after installation or dependency updates.
+
+[`.zed/settings.json`](.zed/settings.json) launches `pnpm exec tsrs --lsp -stdio` through the `typescript-ls` adapter and `pnpm exec node tools/lint.ts lint --lsp` for Oxlint with tsrslint. It disables competing TypeScript servers for JavaScript, JSX, TypeScript, and TSX. Standard type-aware lint diagnostics appear live; native Effect diagnostics are checked separately with `pnpm check:effect` and do not appear in this Rust-backed Oxlint server. Effect-specific hover enhancements and refactors are not provided by tsrs.
+
+Check Zed's language-server logs to confirm these commands are running. Other editors should use the same two commands rather than running an additional TypeScript server; see [tsrs editor setup](https://github.com/oxc-project/tsrs/blob/main/docs/LSP.md#editor-setup).
+
+The pinned tools share support for glibc Linux x64/arm64 and Apple Silicon macOS, but not native Windows or Intel macOS. tsrslint does not ship musl binaries. On Windows, use Zed's WSL remote-development support and install dependencies inside WSL.
 
 ## Technical references
 
