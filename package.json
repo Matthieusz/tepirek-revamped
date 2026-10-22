@@ -30,13 +30,13 @@
     "prepare": "effect-tsgo patch && vp config --no-agent"
   },
   "devDependencies": {
-    "@effect/tsgo": "^0.53.3",
-    "@oxlint/plugins": "1.88.0",
+    "@effect/tsgo": "^0.55.0",
+    "@oxlint/plugins": "1.89.0",
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "5.0.5",
-    "knip": "^6.41.0",
-    "oxc-parser": "0.153.0",
+    "knip": "^6.42.1",
+    "oxc-parser": "0.155.0",
     "oxc-resolver": "11.24.2",
     "typescript": "catalog:",
     "ultracite": "8.0.1",
@@ -46,5 +46,5 @@
     "node": ">=26",
     "pnpm": "12.11.2"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.14.0"
 }

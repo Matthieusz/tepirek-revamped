@@ -7,8 +7,8 @@ allowBuilds:
   msgpackr-extract: true
 
 catalog:
-  better-auth: ^1.7.7
-  dotenv: ^18.0.7
+  better-auth: ^1.7.12
+  dotenv: ^18.0.8
   "@effect/sql-pg": 4.0.3
   "@effect/vitest": 4.0.3
   "@types/pg": 8.23.1
