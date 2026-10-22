@@ -12,8 +12,8 @@ catalog:
   "@effect/sql-pg": 4.0.3
   "@effect/vitest": 4.0.3
   "@types/pg": 8.23.1
-  drizzle-kit: 1.0.0-rc.5
-  drizzle-orm: 1.0.0-rc.5
+  drizzle-kit: 1.0.0-rc.5-5935859
+  drizzle-orm: 1.0.0-rc.5-5935859
   effect: 4.0.3
   hono: ^4.13.13
   pg: 8.23.1
@@ -42,8 +42,6 @@ minimumReleaseAgeExclude:
   - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.2.0"
   - "@voidzero-dev/vite-plus-win32-x64-msvc@1.2.0"
   - vite-plus@1.2.0
-  - drizzle-kit@1.0.0-rc.5
-  - drizzle-orm@1.0.0-rc.5
 
 onlyBuiltDependencies:
   - esbuild
@@ -54,4 +52,4 @@ overrides:
   vitest@*: 5.0.4
 
 patchedDependencies:
-  drizzle-orm@1.0.0-rc.5: patches/drizzle-orm@1.0.0-rc.5.patch
+  drizzle-orm@1.0.0-rc.5-5935859: patches/drizzle-orm@1.0.0-rc.5-5935859.patch

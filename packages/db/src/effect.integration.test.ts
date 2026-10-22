@@ -69,11 +69,9 @@ it("uses distinct connections and closes both database adapters with their scope
           Schema.Tuple([ConnectionRow])
         )(nativeResult);
 
-        const {
-          rows: [authRow],
-        } = yield* Schema.decodeUnknownEffect(
-          Schema.Struct({ rows: Schema.Tuple([ConnectionRow]) })
-        )(authResult);
+        const authRow = yield* Schema.decodeUnknownEffect(ConnectionRow)(
+          authResult.rows[0]
+        );
 
         expect(nativeRow.pid).not.toBe(authRow.pid);
         expect(nativeRow.timestamp).toEqual(authRow.timestamp);
