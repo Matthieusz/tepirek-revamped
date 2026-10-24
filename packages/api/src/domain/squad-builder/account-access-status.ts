@@ -20,10 +20,10 @@ export type AccountAccessStatus = typeof AccountAccessStatusSchema.Type;
 
 /** Expected failure when a persisted status string is not a known status. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidAccountAccessStatus extends Schema.TaggedError<InvalidAccountAccessStatus>()(
-  "InvalidAccountAccessStatus",
-  { value: Schema.String }
-) {}
+export class InvalidAccountAccessStatus extends Schema.TaggedError<
+  InvalidAccountAccessStatus,
+  { readonly brand: unique symbol }
+>()("InvalidAccountAccessStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status string into the domain status. */
 export const parseAccountAccessStatus = (

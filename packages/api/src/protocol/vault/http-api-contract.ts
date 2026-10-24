@@ -70,35 +70,34 @@ export interface MutationSuccess extends Schema.Schema.Type<
 > {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class VaultUnauthorized extends Schema.TaggedError<VaultUnauthorized>()(
-  "VaultUnauthorized",
-  { message: Schema.String },
-  { httpApiStatus: 401 }
-) {}
+export class VaultUnauthorized extends Schema.TaggedError<
+  VaultUnauthorized,
+  { readonly brand: unique symbol }
+>()("VaultUnauthorized", { message: Schema.String }, { httpApiStatus: 401 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class VaultForbidden extends Schema.TaggedError<VaultForbidden>()(
-  "VaultForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class VaultForbidden extends Schema.TaggedError<
+  VaultForbidden,
+  { readonly brand: unique symbol }
+>()("VaultForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class VaultBadRequest extends Schema.TaggedError<VaultBadRequest>()(
-  "VaultBadRequest",
-  { message: Schema.String },
-  { httpApiStatus: 400 }
-) {}
+export class VaultBadRequest extends Schema.TaggedError<
+  VaultBadRequest,
+  { readonly brand: unique symbol }
+>()("VaultBadRequest", { message: Schema.String }, { httpApiStatus: 400 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class VaultNotFound extends Schema.TaggedError<VaultNotFound>()(
-  "VaultNotFound",
-  { message: Schema.String },
-  { httpApiStatus: 404 }
-) {}
+export class VaultNotFound extends Schema.TaggedError<
+  VaultNotFound,
+  { readonly brand: unique symbol }
+>()("VaultNotFound", { message: Schema.String }, { httpApiStatus: 404 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class VaultPersistenceUnavailable extends Schema.TaggedError<VaultPersistenceUnavailable>()(
+export class VaultPersistenceUnavailable extends Schema.TaggedError<
+  VaultPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "VaultPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

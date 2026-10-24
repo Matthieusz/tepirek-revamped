@@ -56,10 +56,10 @@ export class ServerApplication extends Context.Service<
 
 /** Expected failure while binding the Node.js HTTP server. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class ServerStartupError extends Schema.TaggedError<ServerStartupError>()(
-  "ServerStartupError",
-  { cause: Schema.Defect() }
-) {}
+export class ServerStartupError extends Schema.TaggedError<
+  ServerStartupError,
+  { readonly brand: unique symbol }
+>()("ServerStartupError", { cause: Schema.Defect() }) {}
 
 const appHttpApiEvlogExcludePath = "/**";
 

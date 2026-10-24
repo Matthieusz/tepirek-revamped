@@ -6,10 +6,10 @@ import * as Schema from "effect/Schema";
 
 /** Expected failure when Firecrawl config is missing or unsafe. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class ParseFirecrawlConfigError extends Schema.TaggedError<ParseFirecrawlConfigError>()(
-  "InvalidFirecrawlConfig",
-  { message: Schema.String }
-) {}
+export class ParseFirecrawlConfigError extends Schema.TaggedError<
+  ParseFirecrawlConfigError,
+  { readonly brand: unique symbol }
+>()("InvalidFirecrawlConfig", { message: Schema.String }) {}
 
 /** Number of Firecrawl credits consumed by a scrape. */
 export const FirecrawlCreditCount = Schema.Finite.check(

@@ -12,13 +12,13 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class StartupConfigurationError extends Schema.TaggedError<StartupConfigurationError>()(
-  "StartupConfigurationError",
-  {
-    message: Schema.String,
-    variable: Schema.String,
-  }
-) {}
+class StartupConfigurationError extends Schema.TaggedError<
+  StartupConfigurationError,
+  { readonly brand: unique symbol }
+>()("StartupConfigurationError", {
+  message: Schema.String,
+  variable: Schema.String,
+}) {}
 
 /**
  * Compose the config provider with the auth config layer.

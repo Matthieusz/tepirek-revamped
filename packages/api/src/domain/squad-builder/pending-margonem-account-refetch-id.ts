@@ -4,10 +4,10 @@ import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a pending refetch id is not a positive integer. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedError<InvalidPendingMargonemAccountRefetchId>()(
-  "InvalidPendingMargonemAccountRefetchId",
-  {}
-) {}
+export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedError<
+  InvalidPendingMargonemAccountRefetchId,
+  { readonly brand: unique symbol }
+>()("InvalidPendingMargonemAccountRefetchId", {}) {}
 
 const brandedPendingMargonemAccountRefetchId = buildBrandedPositiveInt(
   "PendingMargonemAccountRefetchId",

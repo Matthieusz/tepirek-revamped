@@ -35,24 +35,24 @@ export interface MargonemForumTopicPage {
 
 /** Failure while downloading a Margonem forum guide. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class MargonemForumRequestFailed extends Schema.TaggedError<MargonemForumRequestFailed>()(
-  "MargonemForumRequestFailed",
-  {
-    category: LegendaryEnemyCategory,
-    cause: Schema.Defect(),
-    status: Schema.optionalKey(Schema.Int),
-  }
-) {}
+class MargonemForumRequestFailed extends Schema.TaggedError<
+  MargonemForumRequestFailed,
+  { readonly brand: unique symbol }
+>()("MargonemForumRequestFailed", {
+  category: LegendaryEnemyCategory,
+  cause: Schema.Defect(),
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /** A response was not a complete HTML guide document and is unsafe to parse. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class MargonemForumDocumentRejected extends Schema.TaggedError<MargonemForumDocumentRejected>()(
-  "MargonemForumDocumentRejected",
-  {
-    category: LegendaryEnemyCategory,
-    reason: Schema.String,
-  }
-) {}
+class MargonemForumDocumentRejected extends Schema.TaggedError<
+  MargonemForumDocumentRejected,
+  { readonly brand: unique symbol }
+>()("MargonemForumDocumentRejected", {
+  category: LegendaryEnemyCategory,
+  reason: Schema.String,
+}) {}
 
 /** Expected failures from the Margonem forum HTTP boundary. */
 export type MargonemForumClientError =

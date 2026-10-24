@@ -8,7 +8,10 @@ export { CurrentSession } from "./current-session.ts";
 
 /** Safe response for malformed authenticated session data. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSession extends Schema.TaggedError<InvalidSession>()(
+export class InvalidSession extends Schema.TaggedError<
+  InvalidSession,
+  { readonly brand: unique symbol }
+>()(
   "InvalidSession",
   { message: Schema.Literal("INVALID_SESSION") },
   { httpApiStatus: 401 }
@@ -16,7 +19,10 @@ export class InvalidSession extends Schema.TaggedError<InvalidSession>()(
 
 /** Safe public projection for session-store failures. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class SessionUnavailable extends Schema.TaggedError<SessionUnavailable>()(
+export class SessionUnavailable extends Schema.TaggedError<
+  SessionUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "SessionUnavailable",
   { message: Schema.Literal("SESSION_UNAVAILABLE") },
   { httpApiStatus: 503 }

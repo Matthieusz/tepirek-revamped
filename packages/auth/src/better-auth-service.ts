@@ -10,10 +10,10 @@ import type {
 
 /** Expected failure when Better Auth cannot load a session. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class BetterAuthUnavailable extends Schema.TaggedError<BetterAuthUnavailable>()(
-  "BetterAuthUnavailable",
-  { cause: Schema.Defect() }
-) {}
+export class BetterAuthUnavailable extends Schema.TaggedError<
+  BetterAuthUnavailable,
+  { readonly brand: unique symbol }
+>()("BetterAuthUnavailable", { cause: Schema.Defect() }) {}
 
 /** Operations and vendor instance exposed by the Better Auth boundary. */
 export interface BetterAuthServiceInterface {

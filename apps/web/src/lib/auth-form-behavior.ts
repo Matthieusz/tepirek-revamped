@@ -16,17 +16,17 @@ interface AuthResponse {
 }
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class AuthFormSubmissionError extends Schema.TaggedError<AuthFormSubmissionError>()(
-  "AuthFormSubmissionError",
-  {
-    cause: Schema.optional(Schema.Defect()),
-    code: Schema.optional(Schema.String),
-    kind: Schema.Literals(["provider", "request"]),
-    message: Schema.String,
-    operation: Schema.Literals(["login", "signup"]),
-    status: Schema.optional(Schema.Finite),
-  }
-) {}
+export class AuthFormSubmissionError extends Schema.TaggedError<
+  AuthFormSubmissionError,
+  { readonly brand: unique symbol }
+>()("AuthFormSubmissionError", {
+  cause: Schema.optional(Schema.Defect()),
+  code: Schema.optional(Schema.String),
+  kind: Schema.Literals(["provider", "request"]),
+  message: Schema.String,
+  operation: Schema.Literals(["login", "signup"]),
+  status: Schema.optional(Schema.Finite),
+}) {}
 
 /** Returns the provider's safest available message for an auth failure. */
 export const getAuthProviderErrorMessage = (

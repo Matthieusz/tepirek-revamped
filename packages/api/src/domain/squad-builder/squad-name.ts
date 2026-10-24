@@ -30,21 +30,21 @@ export type SquadName = typeof SquadName.Type;
 
 /** Expected failure when a squad group name is invalid. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadGroupName extends Schema.TaggedError<InvalidSquadGroupName>()(
-  "InvalidSquadGroupName",
-  {
-    message: Schema.String,
-  }
-) {}
+export class InvalidSquadGroupName extends Schema.TaggedError<
+  InvalidSquadGroupName,
+  { readonly brand: unique symbol }
+>()("InvalidSquadGroupName", {
+  message: Schema.String,
+}) {}
 
 /** Expected failure when a squad name is invalid. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadName extends Schema.TaggedError<InvalidSquadName>()(
-  "InvalidSquadName",
-  {
-    message: Schema.String,
-  }
-) {}
+export class InvalidSquadName extends Schema.TaggedError<
+  InvalidSquadName,
+  { readonly brand: unique symbol }
+>()("InvalidSquadName", {
+  message: Schema.String,
+}) {}
 
 /** Parse and normalize a squad group name. */
 export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(

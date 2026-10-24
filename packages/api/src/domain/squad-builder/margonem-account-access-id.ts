@@ -4,10 +4,10 @@ import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when an account access id is not a positive integer. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidMargonemAccountAccessId extends Schema.TaggedError<InvalidMargonemAccountAccessId>()(
-  "InvalidMargonemAccountAccessId",
-  {}
-) {}
+export class InvalidMargonemAccountAccessId extends Schema.TaggedError<
+  InvalidMargonemAccountAccessId,
+  { readonly brand: unique symbol }
+>()("InvalidMargonemAccountAccessId", {}) {}
 
 const brandedMargonemAccountAccessId = buildBrandedPositiveInt(
   "MargonemAccountAccessId",

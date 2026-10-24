@@ -87,36 +87,36 @@ export type LegendCatalogPersistenceOperation =
 
 /** A complete snapshot was internally inconsistent and was not persisted. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class LegendCatalogSnapshotInvalid extends Schema.TaggedError<LegendCatalogSnapshotInvalid>()(
-  "LegendCatalogSnapshotInvalid",
-  { reason: Schema.String }
-) {}
+export class LegendCatalogSnapshotInvalid extends Schema.TaggedError<
+  LegendCatalogSnapshotInvalid,
+  { readonly brand: unique symbol }
+>()("LegendCatalogSnapshotInvalid", { reason: Schema.String }) {}
 
 /** Existing source identity metadata differs from the incoming fingerprint. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class LegendCatalogSourceDrift extends Schema.TaggedError<LegendCatalogSourceDrift>()(
-  "LegendCatalogSourceDrift",
-  {
-    entityType: Schema.Literals(["enemy", "item"]),
-    existingFingerprint: Schema.String,
-    incomingFingerprint: Schema.String,
-    sourceKey: Schema.String,
-  }
-) {}
+export class LegendCatalogSourceDrift extends Schema.TaggedError<
+  LegendCatalogSourceDrift,
+  { readonly brand: unique symbol }
+>()("LegendCatalogSourceDrift", {
+  entityType: Schema.Literals(["enemy", "item"]),
+  existingFingerprint: Schema.String,
+  incomingFingerprint: Schema.String,
+  sourceKey: Schema.String,
+}) {}
 
 /** PostgreSQL could not reconcile the complete legend catalog snapshot. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class LegendCatalogPersistenceUnavailable extends Schema.TaggedError<LegendCatalogPersistenceUnavailable>()(
-  "LegendCatalogPersistenceUnavailable",
-  {
-    cause: Schema.Defect(),
-    operation: Schema.Literals([
-      "recordLegendCatalogSyncFailure",
-      "reconcileLegendCatalog",
-    ]),
-    provider: Schema.Literal("postgres"),
-  }
-) {}
+export class LegendCatalogPersistenceUnavailable extends Schema.TaggedError<
+  LegendCatalogPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()("LegendCatalogPersistenceUnavailable", {
+  cause: Schema.Defect(),
+  operation: Schema.Literals([
+    "recordLegendCatalogSyncFailure",
+    "reconcileLegendCatalog",
+  ]),
+  provider: Schema.Literal("postgres"),
+}) {}
 
 /** Failures expected while atomically reconciling the legend catalog. */
 export type ReconcileLegendCatalogError =

@@ -43,21 +43,22 @@ export const TodoSummary = Schema.Struct({
 export interface TodoSummary extends Schema.Schema.Type<typeof TodoSummary> {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class TodoUnauthorized extends Schema.TaggedError<TodoUnauthorized>()(
-  "TodoUnauthorized",
-  { message: Schema.String },
-  { httpApiStatus: 401 }
-) {}
+export class TodoUnauthorized extends Schema.TaggedError<
+  TodoUnauthorized,
+  { readonly brand: unique symbol }
+>()("TodoUnauthorized", { message: Schema.String }, { httpApiStatus: 401 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class TodoForbidden extends Schema.TaggedError<TodoForbidden>()(
-  "TodoForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class TodoForbidden extends Schema.TaggedError<
+  TodoForbidden,
+  { readonly brand: unique symbol }
+>()("TodoForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class TodoPersistenceUnavailable extends Schema.TaggedError<TodoPersistenceUnavailable>()(
+export class TodoPersistenceUnavailable extends Schema.TaggedError<
+  TodoPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "TodoPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

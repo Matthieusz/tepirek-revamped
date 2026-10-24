@@ -12,10 +12,10 @@ export type AppUserId = typeof AppUserId.Type;
 
 /** Failure returned when an app user id is missing or empty. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidAppUserId extends Schema.TaggedError<InvalidAppUserId>()(
-  "InvalidAppUserId",
-  {}
-) {}
+export class InvalidAppUserId extends Schema.TaggedError<
+  InvalidAppUserId,
+  { readonly brand: unique symbol }
+>()("InvalidAppUserId", {}) {}
 
 /** Parse a BetterAuth user id into the squad-builder domain id. */
 export const parseAppUserId = Effect.fn("AppUserId.parse")(

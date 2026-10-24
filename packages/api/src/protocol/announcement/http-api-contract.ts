@@ -50,21 +50,30 @@ export interface AnnouncementSummary extends Schema.Schema.Type<
 > {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class AnnouncementUnauthorized extends Schema.TaggedError<AnnouncementUnauthorized>()(
+export class AnnouncementUnauthorized extends Schema.TaggedError<
+  AnnouncementUnauthorized,
+  { readonly brand: unique symbol }
+>()(
   "AnnouncementUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class AnnouncementForbidden extends Schema.TaggedError<AnnouncementForbidden>()(
+export class AnnouncementForbidden extends Schema.TaggedError<
+  AnnouncementForbidden,
+  { readonly brand: unique symbol }
+>()(
   "AnnouncementForbidden",
   { message: Schema.String },
   { httpApiStatus: 403 }
 ) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class AnnouncementPersistenceUnavailable extends Schema.TaggedError<AnnouncementPersistenceUnavailable>()(
+export class AnnouncementPersistenceUnavailable extends Schema.TaggedError<
+  AnnouncementPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "AnnouncementPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

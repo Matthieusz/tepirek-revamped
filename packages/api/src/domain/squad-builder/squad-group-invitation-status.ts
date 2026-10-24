@@ -20,10 +20,10 @@ export type SquadGroupInvitationStatus =
 
 /** Expected failure when a persisted squad group invitation status is unknown. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadGroupInvitationStatus extends Schema.TaggedError<InvalidSquadGroupInvitationStatus>()(
-  "InvalidSquadGroupInvitationStatus",
-  { value: Schema.String }
-) {}
+export class InvalidSquadGroupInvitationStatus extends Schema.TaggedError<
+  InvalidSquadGroupInvitationStatus,
+  { readonly brand: unique symbol }
+>()("InvalidSquadGroupInvitationStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status string into the domain status. */
 export const parseSquadGroupInvitationStatus = (

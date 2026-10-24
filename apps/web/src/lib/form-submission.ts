@@ -5,13 +5,13 @@ import * as Schema from "effect/Schema";
 import { getErrorMessage } from "@/lib/errors";
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class FormSubmissionError extends Schema.TaggedError<FormSubmissionError>()(
-  "FormSubmissionError",
-  {
-    cause: Schema.Defect(),
-    message: Schema.String,
-  }
-) {}
+export class FormSubmissionError extends Schema.TaggedError<
+  FormSubmissionError,
+  { readonly brand: unique symbol }
+>()("FormSubmissionError", {
+  cause: Schema.Defect(),
+  message: Schema.String,
+}) {}
 
 /** The result of a mutation that is safe to render from a form component. */
 export type FormSubmissionResult<A> = Data.TaggedEnum<{

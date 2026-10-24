@@ -11,11 +11,10 @@ export const inviteTargetSearchPolicy = {
 
 /** Expected failure when an invite-target search query violates policy. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidAccountInviteTargetQuery extends Schema.TaggedError<InvalidAccountInviteTargetQuery>()(
-  "InvalidAccountInviteTargetQuery",
-  { message: Schema.String },
-  {}
-) {}
+export class InvalidAccountInviteTargetQuery extends Schema.TaggedError<
+  InvalidAccountInviteTargetQuery,
+  { readonly brand: unique symbol }
+>()("InvalidAccountInviteTargetQuery", { message: Schema.String }, {}) {}
 
 /** Parse and normalize an invite-target query according to the shared policy. */
 export const parseInviteTargetQuery = (

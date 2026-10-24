@@ -47,21 +47,22 @@ export const HeroSummary = Schema.Struct({
 export interface HeroSummary extends Schema.Schema.Type<typeof HeroSummary> {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class HeroesUnauthorized extends Schema.TaggedError<HeroesUnauthorized>()(
-  "HeroesUnauthorized",
-  { message: Schema.String },
-  { httpApiStatus: 401 }
-) {}
+export class HeroesUnauthorized extends Schema.TaggedError<
+  HeroesUnauthorized,
+  { readonly brand: unique symbol }
+>()("HeroesUnauthorized", { message: Schema.String }, { httpApiStatus: 401 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class HeroesForbidden extends Schema.TaggedError<HeroesForbidden>()(
-  "HeroesForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class HeroesForbidden extends Schema.TaggedError<
+  HeroesForbidden,
+  { readonly brand: unique symbol }
+>()("HeroesForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class HeroesPersistenceUnavailable extends Schema.TaggedError<HeroesPersistenceUnavailable>()(
+export class HeroesPersistenceUnavailable extends Schema.TaggedError<
+  HeroesPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "HeroesPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

@@ -57,28 +57,32 @@ export interface RankingResult extends Schema.Schema.Type<
 > {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class RankingUnauthorized extends Schema.TaggedError<RankingUnauthorized>()(
+export class RankingUnauthorized extends Schema.TaggedError<
+  RankingUnauthorized,
+  { readonly brand: unique symbol }
+>()(
   "RankingUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class RankingForbidden extends Schema.TaggedError<RankingForbidden>()(
-  "RankingForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class RankingForbidden extends Schema.TaggedError<
+  RankingForbidden,
+  { readonly brand: unique symbol }
+>()("RankingForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class RankingNotFound extends Schema.TaggedError<RankingNotFound>()(
-  "RankingNotFound",
-  { message: Schema.String },
-  { httpApiStatus: 404 }
-) {}
+export class RankingNotFound extends Schema.TaggedError<
+  RankingNotFound,
+  { readonly brand: unique symbol }
+>()("RankingNotFound", { message: Schema.String }, { httpApiStatus: 404 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class RankingPersistenceUnavailable extends Schema.TaggedError<RankingPersistenceUnavailable>()(
+export class RankingPersistenceUnavailable extends Schema.TaggedError<
+  RankingPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "RankingPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

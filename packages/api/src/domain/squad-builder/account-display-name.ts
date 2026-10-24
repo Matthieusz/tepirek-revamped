@@ -21,12 +21,12 @@ export type AccountDisplayName = typeof AccountDisplayName.Type;
 
 /** Expected failure when an account display name is not valid for storage. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidAccountDisplayName extends Schema.TaggedError<InvalidAccountDisplayName>()(
-  "InvalidAccountDisplayName",
-  {
-    message: Schema.String,
-  }
-) {}
+export class InvalidAccountDisplayName extends Schema.TaggedError<
+  InvalidAccountDisplayName,
+  { readonly brand: unique symbol }
+>()("InvalidAccountDisplayName", {
+  message: Schema.String,
+}) {}
 
 /** Parse a user-facing account display name for storage. */
 export const parseAccountDisplayName = Effect.fn("AccountDisplayName.parse")(

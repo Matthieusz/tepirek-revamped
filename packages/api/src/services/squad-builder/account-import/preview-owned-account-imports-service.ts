@@ -68,11 +68,10 @@ export const PreviewOwnedAccountImportItem =
   Data.taggedEnum<PreviewOwnedAccountImportItem>();
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class DuplicateProfileInBatchError extends Schema.TaggedError<DuplicateProfileInBatchError>()(
-  "DuplicateProfileInBatch",
-  { firstLineNumber: Schema.Finite },
-  {}
-) {}
+class DuplicateProfileInBatchError extends Schema.TaggedError<
+  DuplicateProfileInBatchError,
+  { readonly brand: unique symbol }
+>()("DuplicateProfileInBatch", { firstLineNumber: Schema.Finite }, {}) {}
 
 type PreviewOwnedAccountImportLineError =
   | ParseMargonemProfileUrlError
@@ -84,18 +83,16 @@ type PreviewOwnedAccountImportLineError =
   | SquadBuilderPersistenceUnavailable;
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class TooManyProfileUrlsInBatch extends Schema.TaggedError<TooManyProfileUrlsInBatch>()(
-  "TooManyProfileUrlsInBatch",
-  { maxUrls: Schema.Finite },
-  {}
-) {}
+class TooManyProfileUrlsInBatch extends Schema.TaggedError<
+  TooManyProfileUrlsInBatch,
+  { readonly brand: unique symbol }
+>()("TooManyProfileUrlsInBatch", { maxUrls: Schema.Finite }, {}) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-class EmptyProfileUrlBatch extends Schema.TaggedError<EmptyProfileUrlBatch>()(
-  "EmptyProfileUrlBatch",
-  {},
-  {}
-) {}
+class EmptyProfileUrlBatch extends Schema.TaggedError<
+  EmptyProfileUrlBatch,
+  { readonly brand: unique symbol }
+>()("EmptyProfileUrlBatch", {}, {}) {}
 
 export type PreviewOwnedAccountImportsError =
   | TooManyProfileUrlsInBatch

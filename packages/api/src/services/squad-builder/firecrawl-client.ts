@@ -29,7 +29,10 @@ export interface FirecrawlClient {
 }
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class FirecrawlRequestFailed extends Schema.TaggedError<FirecrawlRequestFailed>()(
+export class FirecrawlRequestFailed extends Schema.TaggedError<
+  FirecrawlRequestFailed,
+  { readonly brand: unique symbol }
+>()(
   "FirecrawlRequestFailed",
   {
     cause: Schema.Defect(),
@@ -39,7 +42,10 @@ export class FirecrawlRequestFailed extends Schema.TaggedError<FirecrawlRequestF
 ) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class FirecrawlResponseNotParseable extends Schema.TaggedError<FirecrawlResponseNotParseable>()(
+export class FirecrawlResponseNotParseable extends Schema.TaggedError<
+  FirecrawlResponseNotParseable,
+  { readonly brand: unique symbol }
+>()(
   "FirecrawlResponseNotParseable",
   {
     cause: Schema.Defect(),
@@ -50,19 +56,17 @@ export class FirecrawlResponseNotParseable extends Schema.TaggedError<FirecrawlR
 
 /** Firecrawl failed while scraping an arbitrary URL. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class FirecrawlUrlRequestFailed extends Schema.TaggedError<FirecrawlUrlRequestFailed>()(
-  "FirecrawlUrlRequestFailed",
-  { cause: Schema.Defect() },
-  {}
-) {}
+export class FirecrawlUrlRequestFailed extends Schema.TaggedError<
+  FirecrawlUrlRequestFailed,
+  { readonly brand: unique symbol }
+>()("FirecrawlUrlRequestFailed", { cause: Schema.Defect() }, {}) {}
 
 /** Firecrawl returned an invalid response for an arbitrary URL. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class FirecrawlUrlResponseNotParseable extends Schema.TaggedError<FirecrawlUrlResponseNotParseable>()(
-  "FirecrawlUrlResponseNotParseable",
-  { cause: Schema.Defect() },
-  {}
-) {}
+export class FirecrawlUrlResponseNotParseable extends Schema.TaggedError<
+  FirecrawlUrlResponseNotParseable,
+  { readonly brand: unique symbol }
+>()("FirecrawlUrlResponseNotParseable", { cause: Schema.Defect() }, {}) {}
 
 /** Expected failure returned for profile scraping. */
 export type FirecrawlScrapeError =

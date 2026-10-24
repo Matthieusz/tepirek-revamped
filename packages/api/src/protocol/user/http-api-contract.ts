@@ -114,35 +114,34 @@ export interface AuthenticatedSession extends Schema.Schema.Type<
 > {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UserUnauthorized extends Schema.TaggedError<UserUnauthorized>()(
-  "UserUnauthorized",
-  { message: Schema.String },
-  { httpApiStatus: 401 }
-) {}
+export class UserUnauthorized extends Schema.TaggedError<
+  UserUnauthorized,
+  { readonly brand: unique symbol }
+>()("UserUnauthorized", { message: Schema.String }, { httpApiStatus: 401 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UserForbidden extends Schema.TaggedError<UserForbidden>()(
-  "UserForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class UserForbidden extends Schema.TaggedError<
+  UserForbidden,
+  { readonly brand: unique symbol }
+>()("UserForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UserBadRequest extends Schema.TaggedError<UserBadRequest>()(
-  "UserBadRequest",
-  { message: Schema.String },
-  { httpApiStatus: 400 }
-) {}
+export class UserBadRequest extends Schema.TaggedError<
+  UserBadRequest,
+  { readonly brand: unique symbol }
+>()("UserBadRequest", { message: Schema.String }, { httpApiStatus: 400 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UserNotFound extends Schema.TaggedError<UserNotFound>()(
-  "UserNotFound",
-  { message: Schema.String },
-  { httpApiStatus: 404 }
-) {}
+export class UserNotFound extends Schema.TaggedError<
+  UserNotFound,
+  { readonly brand: unique symbol }
+>()("UserNotFound", { message: Schema.String }, { httpApiStatus: 404 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UserPersistenceUnavailable extends Schema.TaggedError<UserPersistenceUnavailable>()(
+export class UserPersistenceUnavailable extends Schema.TaggedError<
+  UserPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "UserPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

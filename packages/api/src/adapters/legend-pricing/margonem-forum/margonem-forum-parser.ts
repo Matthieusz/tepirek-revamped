@@ -131,14 +131,14 @@ export interface MargonemForumCatalogSnapshot {
 
 /** The forum topic cannot be safely interpreted as a complete official guide. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class MargonemForumGuideNotParseable extends Schema.TaggedError<MargonemForumGuideNotParseable>()(
-  "MargonemForumGuideNotParseable",
-  {
-    category: Schema.Literals(["hero", "elite2"]),
-    postId: Schema.optionalKey(MargonemForumPostId),
-    reason: Schema.String,
-  }
-) {}
+export class MargonemForumGuideNotParseable extends Schema.TaggedError<
+  MargonemForumGuideNotParseable,
+  { readonly brand: unique symbol }
+>()("MargonemForumGuideNotParseable", {
+  category: Schema.Literals(["hero", "elite2"]),
+  postId: Schema.optionalKey(MargonemForumPostId),
+  reason: Schema.String,
+}) {}
 
 interface PostContainer {
   readonly html: string;

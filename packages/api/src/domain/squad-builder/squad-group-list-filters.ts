@@ -81,21 +81,21 @@ export const emptySquadGroupListFilters: SquadGroupListFilters = {
 
 /** Failure returned when a squad group name query is invalid. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadGroupNameQuery extends Schema.TaggedError<InvalidSquadGroupNameQuery>()(
-  "InvalidSquadGroupNameQuery",
-  {
-    message: Schema.String,
-  }
-) {}
+export class InvalidSquadGroupNameQuery extends Schema.TaggedError<
+  InvalidSquadGroupNameQuery,
+  { readonly brand: unique symbol }
+>()("InvalidSquadGroupNameQuery", {
+  message: Schema.String,
+}) {}
 
 /** Failure returned when a squad group character-level range is invalid. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadGroupLevelRange extends Schema.TaggedError<InvalidSquadGroupLevelRange>()(
-  "InvalidSquadGroupLevelRange",
-  {
-    message: Schema.String,
-  }
-) {}
+export class InvalidSquadGroupLevelRange extends Schema.TaggedError<
+  InvalidSquadGroupLevelRange,
+  { readonly brand: unique symbol }
+>()("InvalidSquadGroupLevelRange", {
+  message: Schema.String,
+}) {}
 
 /** Expected failures while parsing squad group list filters. */
 export type SquadGroupListFilterError =

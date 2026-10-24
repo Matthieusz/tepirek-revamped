@@ -50,21 +50,22 @@ export const EventSummary = Schema.Struct({
 export interface EventSummary extends Schema.Schema.Type<typeof EventSummary> {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class EventUnauthorized extends Schema.TaggedError<EventUnauthorized>()(
-  "EventUnauthorized",
-  { message: Schema.String },
-  { httpApiStatus: 401 }
-) {}
+export class EventUnauthorized extends Schema.TaggedError<
+  EventUnauthorized,
+  { readonly brand: unique symbol }
+>()("EventUnauthorized", { message: Schema.String }, { httpApiStatus: 401 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class EventForbidden extends Schema.TaggedError<EventForbidden>()(
-  "EventForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class EventForbidden extends Schema.TaggedError<
+  EventForbidden,
+  { readonly brand: unique symbol }
+>()("EventForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class EventPersistenceUnavailable extends Schema.TaggedError<EventPersistenceUnavailable>()(
+export class EventPersistenceUnavailable extends Schema.TaggedError<
+  EventPersistenceUnavailable,
+  { readonly brand: unique symbol }
+>()(
   "EventPersistenceUnavailable",
   { operation: Schema.String },
   { httpApiStatus: 500 }

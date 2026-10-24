@@ -12,12 +12,12 @@ export type MargonemWorld = typeof MargonemWorld.Type;
 
 /** Expected failure when a world string is not a known Margonem world. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UnknownMargonemWorld extends Schema.TaggedError<UnknownMargonemWorld>()(
-  "UnknownMargonemWorld",
-  {
-    value: Schema.String,
-  }
-) {}
+export class UnknownMargonemWorld extends Schema.TaggedError<
+  UnknownMargonemWorld,
+  { readonly brand: unique symbol }
+>()("UnknownMargonemWorld", {
+  value: Schema.String,
+}) {}
 
 /** Parse a persisted world string into the domain world type. */
 export const parseMargonemWorld = Effect.fn("MargonemWorld.parse")(
@@ -60,12 +60,12 @@ export type MargonemCharacterPreview = MargonemCharacterPreviewSchema;
 
 /** Expected failure when a profession label cannot be normalized. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class UnknownMargonemProfession extends Schema.TaggedError<UnknownMargonemProfession>()(
-  "UnknownMargonemProfession",
-  {
-    label: Schema.String,
-  }
-) {}
+export class UnknownMargonemProfession extends Schema.TaggedError<
+  UnknownMargonemProfession,
+  { readonly brand: unique symbol }
+>()("UnknownMargonemProfession", {
+  label: Schema.String,
+}) {}
 
 const professionLabels = {
   Mag: "mage",

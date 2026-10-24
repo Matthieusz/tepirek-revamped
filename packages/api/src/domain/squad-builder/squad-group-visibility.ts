@@ -12,10 +12,10 @@ export type SquadGroupVisibility = typeof SquadGroupVisibilitySchema.Type;
 
 /** Failure returned when a persisted or submitted squad group visibility is unknown. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidSquadGroupVisibility extends Schema.TaggedError<InvalidSquadGroupVisibility>()(
-  "InvalidSquadGroupVisibility",
-  {}
-) {}
+export class InvalidSquadGroupVisibility extends Schema.TaggedError<
+  InvalidSquadGroupVisibility,
+  { readonly brand: unique symbol }
+>()("InvalidSquadGroupVisibility", {}) {}
 
 /** Parse a squad group visibility into the domain value. */
 export const parseSquadGroupVisibility = (

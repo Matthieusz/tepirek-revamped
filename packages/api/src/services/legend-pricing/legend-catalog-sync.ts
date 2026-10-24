@@ -29,10 +29,10 @@ import { LegendCatalogStoreService } from "./legend-catalog-store.ts";
 
 /** Failure when both complete topics cannot form one internally consistent snapshot. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class LegendCatalogSyncSnapshotInvalid extends Schema.TaggedError<LegendCatalogSyncSnapshotInvalid>()(
-  "LegendCatalogSyncSnapshotInvalid",
-  { reason: Schema.String }
-) {}
+export class LegendCatalogSyncSnapshotInvalid extends Schema.TaggedError<
+  LegendCatalogSyncSnapshotInvalid,
+  { readonly brand: unique symbol }
+>()("LegendCatalogSyncSnapshotInvalid", { reason: Schema.String }) {}
 
 /** Expected failures from one complete catalog synchronization. */
 export type LegendCatalogSyncError =

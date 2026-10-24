@@ -28,27 +28,27 @@ export interface ParseMargonemProfileHtmlInput {
 
 /** Expected failure when a supported profile header has no account name. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class MargonemProfileNameNotFound extends Schema.TaggedError<MargonemProfileNameNotFound>()(
-  "MargonemProfileNameNotFound",
-  { profileId: MargonemProfileId }
-) {}
+export class MargonemProfileNameNotFound extends Schema.TaggedError<
+  MargonemProfileNameNotFound,
+  { readonly brand: unique symbol }
+>()("MargonemProfileNameNotFound", { profileId: MargonemProfileId }) {}
 
 /** Expected failure when the profile has no character rows. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class MargonemCharacterRowsNotFound extends Schema.TaggedError<MargonemCharacterRowsNotFound>()(
-  "MargonemCharacterRowsNotFound",
-  { profileId: MargonemProfileId }
-) {}
+export class MargonemCharacterRowsNotFound extends Schema.TaggedError<
+  MargonemCharacterRowsNotFound,
+  { readonly brand: unique symbol }
+>()("MargonemCharacterRowsNotFound", { profileId: MargonemProfileId }) {}
 
 /** Expected failure when a Jaruna character row has invalid attributes. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class MargonemCharacterRowInvalid extends Schema.TaggedError<MargonemCharacterRowInvalid>()(
-  "MargonemCharacterRowInvalid",
-  {
-    profileId: MargonemProfileId,
-    safeReason: Schema.String,
-  }
-) {}
+export class MargonemCharacterRowInvalid extends Schema.TaggedError<
+  MargonemCharacterRowInvalid,
+  { readonly brand: unique symbol }
+>()("MargonemCharacterRowInvalid", {
+  profileId: MargonemProfileId,
+  safeReason: Schema.String,
+}) {}
 
 /** Expected failure when Margonem profile HTML does not match the supported shape. */
 export type ParseMargonemProfileHtmlError =

@@ -35,20 +35,20 @@ export const invitationAccessTransitionTable = {
 
 /** Failure returned when a lifecycle transition is not legal. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvitationAccessTransitionNotAllowed extends Schema.TaggedError<InvitationAccessTransitionNotAllowed>()(
-  "InvitationAccessTransitionNotAllowed",
-  {
-    attempted: InvitationAccessStatusSchema,
-    currentStatus: InvitationAccessStatusSchema,
-  }
-) {}
+export class InvitationAccessTransitionNotAllowed extends Schema.TaggedError<
+  InvitationAccessTransitionNotAllowed,
+  { readonly brand: unique symbol }
+>()("InvitationAccessTransitionNotAllowed", {
+  attempted: InvitationAccessStatusSchema,
+  currentStatus: InvitationAccessStatusSchema,
+}) {}
 
 /** Failure returned when a persisted lifecycle status is unknown. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidInvitationAccessStatus extends Schema.TaggedError<InvalidInvitationAccessStatus>()(
-  "InvalidInvitationAccessStatus",
-  { value: Schema.String }
-) {}
+export class InvalidInvitationAccessStatus extends Schema.TaggedError<
+  InvalidInvitationAccessStatus,
+  { readonly brand: unique symbol }
+>()("InvalidInvitationAccessStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status into the shared lifecycle state. */
 export const parseInvitationAccessStatus = (

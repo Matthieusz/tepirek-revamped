@@ -4,12 +4,12 @@ import { buildBrandedPositiveInt } from "./positive-int.ts";
 
 /** Failure returned when a numeric id is not valid for the domain. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
-export class InvalidPositiveInteger extends Schema.TaggedError<InvalidPositiveInteger>()(
-  "InvalidPositiveInteger",
-  {
-    field: Schema.String,
-  }
-) {}
+export class InvalidPositiveInteger extends Schema.TaggedError<
+  InvalidPositiveInteger,
+  { readonly brand: unique symbol }
+>()("InvalidPositiveInteger", {
+  field: Schema.String,
+}) {}
 
 const brandedMargonemProfileId = buildBrandedPositiveInt(
   "MargonemProfileId",
