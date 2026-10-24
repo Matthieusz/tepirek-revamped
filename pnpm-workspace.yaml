@@ -8,7 +8,7 @@ allowBuilds:
 
 catalog:
   better-auth: ^1.7.12
-  dotenv: ^18.0.8
+  dotenv: ^18.0.9
   "@effect/sql-pg": 4.0.3
   "@effect/vitest": 4.0.3
   "@types/pg": 8.23.1
@@ -42,6 +42,12 @@ minimumReleaseAgeExclude:
   - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.2.0"
   - "@voidzero-dev/vite-plus-win32-x64-msvc@1.2.0"
   - vite-plus@1.2.0
+  - "@yielded/effect-tsrs-darwin-arm64@0.2.0"
+  - "@yielded/effect-tsrs-darwin-x64@0.2.0"
+  - "@yielded/effect-tsrs-linux-arm64@0.2.0"
+  - "@yielded/effect-tsrs-linux-x64@0.2.0"
+  - "@yielded/effect-tsrs-win32-x64@0.2.0"
+  - "@yielded/effect-tsrs@0.2.0"
 
 onlyBuiltDependencies:
   - esbuild

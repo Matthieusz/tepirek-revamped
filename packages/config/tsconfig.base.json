@@ -31,7 +31,6 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "ignoreEffectWarningsInTscExitCode": false,
         // Accepted, version-pinned Effect v4 integrations; other unstable APIs still warn.
         "allowedUnstableApis": [
           "@effect/platform-node/NodeCrypto#layer",

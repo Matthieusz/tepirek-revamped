@@ -8,7 +8,7 @@
     }
   },
   "scripts": {
-    "check-types": "tsc -b",
+    "check-types": "effect-tsrs diagnostics --project tsconfig.json --strict",
     "test": "vp test run --dir src"
   },
   "dependencies": {

@@ -27,14 +27,15 @@
     "check:unused": "knip",
     "check:architecture": "node --test tools/architecture/check.test.ts",
     "fix": "vp check --fix",
-    "prepare": "effect-tsgo patch && vp config --no-agent"
+    "prepare": "effect-tsgo patch --typescript && vp config --no-agent"
   },
   "devDependencies": {
-    "@effect/tsgo": "^0.55.0",
+    "@effect/tsgo": "0.56.0",
     "@oxlint/plugins": "1.89.0",
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "5.0.5",
+    "@yielded/effect-tsrs": "0.2.0",
     "knip": "^6.42.1",
     "oxc-parser": "0.155.0",
     "oxc-resolver": "11.24.2",

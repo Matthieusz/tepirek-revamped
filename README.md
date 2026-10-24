@@ -165,15 +165,22 @@ To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_A
 <details>
 <summary>Editor and compiler setup</summary>
 
-This repository uses `@effect/tsgo` as both its patched TypeScript compiler and its TypeScript language server. `pnpm install` runs `effect-tsgo patch` through the `prepare` script. Confirm the patched compiler with:
+This repository uses [`@yielded/effect-tsrs`](https://github.com/yielded-dev/effect-tsrs) to check both ordinary TypeScript errors and Effect diagnostics in a single pass using its bundled tsrs compiler. Each workspace's `check-types` script runs `effect-tsrs diagnostics --project tsconfig.json --strict` so TypeScript errors, Effect errors, and Effect warnings fail the check. These checks do not emit JavaScript or declarations and do not invoke `@effect/tsgo`. Builds remain handled by Vite+.
 
 ```bash
-pnpm exec tsc --version
+pnpm check-types
 ```
 
-The version must include an `effect-tsgo` suffix. In VS Code, use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
+Editors use [`@effect/tsgo`](https://github.com/Effect-TS/tsgo) for TypeScript and Effect diagnostics, quick fixes, refactors, and completions. `pnpm install` runs `effect-tsgo patch --typescript` to replace the workspace's native TypeScript binary with the Effect-enabled version. This editor integration does not add a second pass to `pnpm check-types`.
 
-Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `pnpm exec effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
+```bash
+pnpm exec tsc --version                   # Must include an effect-tsgo suffix
+pnpm exec effect-tsgo get-exe-path        # Locate the Effect-enabled server
+```
+
+In VS Code, enable the TypeScript native integration and select the workspace TypeScript version when prompted. Other editors must launch the executable returned by `get-exe-path` with `--lsp --stdio`. Use `@effect/tsgo` as the sole TypeScript language server; disable any separate TypeScript server to avoid duplicate diagnostics. Restart the editor's TypeScript server after installing or updating dependencies.
+
+Both tools read the existing `@effect/language-service` plugin options from the TypeScript configuration. They bundle different compiler versions, so CLI and editor results can occasionally differ.
 
 Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
 

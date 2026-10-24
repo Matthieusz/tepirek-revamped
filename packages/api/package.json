@@ -55,7 +55,7 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit --composite false --declaration false --declarationMap false --rootDir src",
+    "check-types": "effect-tsrs diagnostics --project tsconfig.json --strict",
     "test": "vp test run",
     "test:integration": "vp test run --config vitest.integration.config.ts"
   },

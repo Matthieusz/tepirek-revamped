@@ -15,7 +15,7 @@
     "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "effect-tsrs diagnostics --project tsconfig.json --strict",
     "test": "vp test run"
   },
   "dependencies": {
