@@ -22,7 +22,7 @@ jobs:
         uses: pnpm/setup@v3
         with:
           # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
+          runtime: node@26.12.1
           cache: true
           install: false
 

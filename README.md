@@ -50,7 +50,7 @@ You need:
 - [mise](https://mise.jdx.dev/getting-started.html) on your shell and Git runtime `PATH`
 - Docker
 
-[`mise.toml`](mise.toml) pins Node.js 26.10.0 and pnpm 12.9.1. CI uses the same versions; keep the pnpm pin aligned with `packageManager` in `package.json`.
+[`mise.toml`](mise.toml) pins Node.js 26.12.1 and pnpm 12.15.0. CI uses the same versions; keep the pnpm pin aligned with `packageManager` in `package.json`.
 
 ### Install
 

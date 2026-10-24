@@ -22,7 +22,7 @@ jobs:
         uses: pnpm/setup@v3
         with:
           # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
+          runtime: node@26.12.1
           cache: true
           install: false
 
@@ -33,9 +33,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node26.12.1-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-node26.10.0-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
+            ${{ runner.os }}-${{ runner.arch }}-node26.12.1-vp-unit-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
 
       - name: Test
         run: pnpm exec vp run --cache test
@@ -64,7 +64,7 @@ jobs:
         uses: pnpm/setup@v3
         with:
           # Keep aligned with mise.toml; pnpm comes from packageManager.
-          runtime: node@26.10.0
+          runtime: node@26.12.1
           cache: true
           install: false
 
