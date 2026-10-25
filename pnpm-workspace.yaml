@@ -18,7 +18,7 @@ catalog:
   hono: ^4.13.13
   pg: 8.23.1
   typescript: 7.0.2
-  vitest: 5.0.4
+  vitest: 5.0.5
   zod: ^4.6.7
   linkedom: ^0.18.14
 
@@ -42,20 +42,36 @@ minimumReleaseAgeExclude:
   - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.2.0"
   - "@voidzero-dev/vite-plus-win32-x64-msvc@1.2.0"
   - vite-plus@1.2.0
-  - "@yielded/effect-tsrs-darwin-arm64@0.2.0"
-  - "@yielded/effect-tsrs-darwin-x64@0.2.0"
-  - "@yielded/effect-tsrs-linux-arm64@0.2.0"
-  - "@yielded/effect-tsrs-linux-x64@0.2.0"
-  - "@yielded/effect-tsrs-win32-x64@0.2.0"
-  - "@yielded/effect-tsrs@0.2.0"
+  - "@effect/tsgo@0.57.0"
+  - "@effect/tsgo-darwin-arm64@0.57.0"
+  - "@effect/tsgo-darwin-x64@0.57.0"
+  - "@effect/tsgo-linux-arm64@0.57.0"
+  - "@effect/tsgo-linux-arm@0.57.0"
+  - "@effect/tsgo-linux-x64@0.57.0"
+  - "@effect/tsgo-win32-arm64@0.57.0"
+  - "@effect/tsgo-win32-x64@0.57.0"
+  - "tsrs@0.18.0-ts7.1.0-dev.20260929"
+  - "@tsrs/darwin-arm64@0.18.0-ts7.1.0-dev.20260929"
+  - "@tsrs/linux-arm64-gnu@0.18.0-ts7.1.0-dev.20260929"
+  - "@tsrs/linux-arm64-musl@0.18.0-ts7.1.0-dev.20260929"
+  - "@tsrs/linux-x64-gnu@0.18.0-ts7.1.0-dev.20260929"
+  - "@tsrs/linux-x64-musl@0.18.0-ts7.1.0-dev.20260929"
 
 onlyBuiltDependencies:
   - esbuild
   - msgpackr-extract
 
 overrides:
-  vite@*: npm:@voidzero-dev/vite-plus-core@1.2.0
-  vitest@*: 5.0.4
+  vite@*: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vitest@*: 5.0.5
+  # Keep the ranged transitive dependency compatible with our pinned Effect 4.0.3.
+  "@effect/platform-node@4.0.3>@effect/platform-node-shared": 4.0.3
+
+peerDependencyRules:
+  allowedVersions:
+    # Vite+ implements Vite's API but publishes its own version, not Vite's 8.x.
+    # Upstream also allows this alias; restrict acceptance to our exact toolchain.
+    vite: 1.3.0
 
 patchedDependencies:
   drizzle-orm@1.0.0-rc.5-5935859: patches/drizzle-orm@1.0.0-rc.5-5935859.patch

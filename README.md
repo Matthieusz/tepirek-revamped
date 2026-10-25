@@ -165,22 +165,25 @@ To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_A
 <details>
 <summary>Editor and compiler setup</summary>
 
-This repository uses [`@yielded/effect-tsrs`](https://github.com/yielded-dev/effect-tsrs) to check both ordinary TypeScript errors and Effect diagnostics in a single pass using its bundled tsrs compiler. Each workspace's `check-types` script runs `effect-tsrs diagnostics --project tsconfig.json --strict` so TypeScript errors, Effect errors, and Effect warnings fail the check. These checks do not emit JavaScript or declarations and do not invoke `@effect/tsgo`. Builds remain handled by Vite+.
+This repository uses [`tsrs`](https://github.com/oxc-project/tsrs), patched by [`@effect/tsgo`](https://github.com/Effect-TS/tsgo), to check ordinary TypeScript errors and Effect diagnostics in a single compiler pass. Each workspace's `check-types` script runs `tsrs --noEmit --project tsconfig.json`. TypeScript errors, Effect errors, and Effect warnings fail the check; suggestions do not. These checks do not emit JavaScript or declarations, but may update incremental `.tsbuildinfo` caches. Builds remain handled by Vite+.
 
 ```bash
 pnpm check-types
 ```
 
-Editors use [`@effect/tsgo`](https://github.com/Effect-TS/tsgo) for TypeScript and Effect diagnostics, quick fixes, refactors, and completions. `pnpm install` runs `effect-tsgo patch --typescript` to replace the workspace's native TypeScript binary with the Effect-enabled version. This editor integration does not add a second pass to `pnpm check-types`.
+Editors use `@effect/tsgo` for TypeScript and Effect diagnostics, quick fixes, refactors, and completions. `pnpm install` runs `effect-tsgo patch --typescript --tsrs` to replace both native compiler binaries with their Effect-enabled versions. Keep `@effect/tsgo` and `tsrs` pinned to a supported combination; an unsupported version or platform fails installation rather than silently losing Effect checks. This editor integration does not add a second pass to `pnpm check-types`.
+
+The experimental TSRS patch currently supports macOS arm64 and Linux x64/arm64 with glibc. Windows, Intel macOS, and Linux musl are not supported.
 
 ```bash
+pnpm exec tsrs --version                  # Must include an effect-tsgo suffix
 pnpm exec tsc --version                   # Must include an effect-tsgo suffix
 pnpm exec effect-tsgo get-exe-path        # Locate the Effect-enabled server
 ```
 
 In VS Code, enable the TypeScript native integration and select the workspace TypeScript version when prompted. Other editors must launch the executable returned by `get-exe-path` with `--lsp --stdio`. Use `@effect/tsgo` as the sole TypeScript language server; disable any separate TypeScript server to avoid duplicate diagnostics. Restart the editor's TypeScript server after installing or updating dependencies.
 
-Both tools read the existing `@effect/language-service` plugin options from the TypeScript configuration. They bundle different compiler versions, so CLI and editor results can occasionally differ.
+Both compilers read the existing `@effect/language-service` plugin options from the TypeScript configuration. TSRS currently uses TypeScript `7.1.0-dev.20260929`, while the editor's workspace TypeScript remains `7.0.2`, so CLI and editor results can occasionally differ.
 
 Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
 

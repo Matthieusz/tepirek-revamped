@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "vp pack",
-    "check-types": "effect-tsrs diagnostics --project tsconfig.json --strict",
+    "check-types": "tsrs --noEmit --project tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
     "sync:legend-catalog": "tsx src/sync-legend-catalog.ts",

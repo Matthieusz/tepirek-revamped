@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "vp run build:app",
-    "check-types": "effect-tsrs diagnostics --project tsconfig.json --strict",
+    "check-types": "tsrs --noEmit --project tsconfig.json",
     "test": "vp test run",
     "serve": "vp preview",
     "dev": "vp dev --port=3001",
