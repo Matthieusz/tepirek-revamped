@@ -1,0 +1,48 @@
+{
+  "languages": {
+    "JavaScript": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "..."
+      ]
+    },
+    "JSX": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "..."
+      ]
+    },
+    "TypeScript": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "..."
+      ]
+    },
+    "TSX": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "..."
+      ]
+    }
+  },
+  "lsp": {
+    "typescript-ls": {
+      "binary": {
+        "path": "./node_modules/.bin/tsrs",
+        "arguments": ["--lsp", "--stdio"]
+      }
+    }
+  }
+}

@@ -181,9 +181,11 @@ pnpm exec tsc --version                   # Must include an effect-tsgo suffix
 pnpm exec effect-tsgo get-exe-path        # Locate the Effect-enabled server
 ```
 
-In VS Code, enable the TypeScript native integration and select the workspace TypeScript version when prompted. Other editors must launch the executable returned by `get-exe-path` with `--lsp --stdio`. Use `@effect/tsgo` as the sole TypeScript language server; disable any separate TypeScript server to avoid duplicate diagnostics. Restart the editor's TypeScript server after installing or updating dependencies.
+In VS Code, enable the TypeScript native integration and select the workspace TypeScript version when prompted. Editors using the Go-based server launch the executable returned by `get-exe-path` with `--lsp --stdio`. Restart the editor's TypeScript server after installing or updating dependencies.
 
-Both compilers read the existing `@effect/language-service` plugin options from the TypeScript configuration. TSRS currently uses TypeScript `7.1.0-dev.20260929`, while the editor's workspace TypeScript remains `7.0.2`, so CLI and editor results can occasionally differ.
+In Zed, install the **TypeScript Language Server** extension (`tsgo`). The committed `.zed/settings.json` points its `typescript-ls` slot at the workspace's patched `tsrs --lsp --stdio` and disables `vtsls` and `typescript-language-server`. Oxlint and Tailwind remain available. Use only one TypeScript server to avoid duplicate diagnostics.
+
+Both compilers read the existing `@effect/language-service` plugin options from the TypeScript configuration. TSRS currently uses TypeScript `7.1.0-dev.20260929`, matching CLI and Zed checks. The Go-based workspace compiler remains at TypeScript `7.0.2`, so editors using it can occasionally report different results.
 
 Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
 
