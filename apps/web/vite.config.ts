@@ -8,7 +8,29 @@ export default defineConfig(({ mode }) => ({
   plugins:
     mode === "test"
       ? []
-      : [tailwindcss(), tanstackStart(), nitro(), viteReact()],
+      : [
+          tailwindcss(),
+          tanstackStart(),
+          nitro({
+            rolldownConfig: {
+              onLog(level, warning, defaultHandler) {
+                // This app uses SSR, not RSC: dependency "use client" markers
+                // have no boundary semantics here. Keep other warnings visible.
+                const isDependencyClientDirective =
+                  warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+                  warning.message.includes('directive "use client"') &&
+                  warning.id?.includes("/node_modules/") === true;
+
+                if (isDependencyClientDirective) {
+                  return;
+                }
+
+                defaultHandler(level, warning);
+              },
+            },
+          }),
+          viteReact(),
+        ],
   resolve: {
     tsconfigPaths: true,
   },
