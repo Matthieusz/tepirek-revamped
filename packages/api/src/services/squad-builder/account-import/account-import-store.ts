@@ -99,7 +99,7 @@ export interface DeleteOwnedAccountInput {
 }
 
 /** Impact counts returned after deleting an owned account. */
-interface DeleteOwnedAccountResult {
+export interface DeleteOwnedAccountResult {
   readonly accountId: MargonemAccountId;
   readonly removedCharacterCount: number;
   readonly removedSquadCharacterCount: number;

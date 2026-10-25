@@ -9,6 +9,7 @@ import type {
   PendingMargonemAccountRefetchNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../squad-groups/squad-group-errors.ts";
+import type { ApplyPendingRefetchOutput } from "./account-refetch-store.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 
 /** Input for applying a previously previewed account refetch. */
@@ -32,11 +33,13 @@ export const apply = EffectRuntime.fn("AccountRefetch.apply")(
     const store = yield* AccountRefetchStoreService;
     const now = yield* currentDate;
 
-    const applied = yield* store.applyPendingRefetch({
-      actorUserId: input.actorUserId,
-      now,
-      refetchPreviewId: input.refetchPreviewId,
-    });
+    const applied: ApplyPendingRefetchOutput = yield* store.applyPendingRefetch(
+      {
+        actorUserId: input.actorUserId,
+        now,
+        refetchPreviewId: input.refetchPreviewId,
+      }
+    );
 
     return applied;
   }

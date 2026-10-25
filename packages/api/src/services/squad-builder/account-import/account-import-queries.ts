@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect";
 
+import type { DeleteOwnedAccountResult } from "./account-import-store.ts";
 import { AccountImportStoreService } from "./account-import-store.ts";
 
 /** Delete an owned imported account after enforcing ownership in the port. */
@@ -11,7 +12,10 @@ export const deleteOwnedAccount = Effect.fn("AccountImport.deleteOwnedAccount")(
   ) {
     const store = yield* AccountImportStoreService;
 
-    return yield* store.deleteOwnedAccount(input);
+    const result: DeleteOwnedAccountResult =
+      yield* store.deleteOwnedAccount(input);
+
+    return result;
   }
 );
 

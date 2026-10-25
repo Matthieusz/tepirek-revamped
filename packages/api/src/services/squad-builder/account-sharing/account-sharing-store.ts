@@ -93,7 +93,7 @@ export interface RevokeAccountAccessStoreInput {
 }
 
 /** Result of revoking account access, including squad cleanup impact. */
-interface RevokeAccountAccessResult {
+export interface RevokeAccountAccessResult {
   readonly accessId: MargonemAccountAccessId;
   readonly accountId: MargonemAccountId;
   readonly revokedUserId: AppUserId;

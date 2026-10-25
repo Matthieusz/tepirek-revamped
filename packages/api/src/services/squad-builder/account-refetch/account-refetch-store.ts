@@ -39,7 +39,7 @@ interface PendingMargonemAccountRefetch {
 }
 
 /** Result summary for applying a pending account refetch. */
-interface ApplyPendingRefetchOutput {
+export interface ApplyPendingRefetchOutput {
   readonly accountId: MargonemAccountId;
   readonly profileId: MargonemProfileId;
   readonly lastFetchedAt: Date;

@@ -108,7 +108,7 @@ export interface SetSquadGroupVisibilityStoreInput {
 }
 
 /** Result of changing squad group visibility. */
-interface SquadGroupVisibilityChange {
+export interface SquadGroupVisibilityChange {
   readonly groupId: SquadGroupId;
   readonly visibility: SquadGroupVisibility;
   readonly updatedAt: Date;

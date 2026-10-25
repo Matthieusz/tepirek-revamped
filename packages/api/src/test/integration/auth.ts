@@ -1,5 +1,5 @@
 import { createAuth } from "@tepirek-revamped/auth";
-import type { AuthEnv } from "@tepirek-revamped/auth";
+import type { AuthEnv, BetterAuthInstance } from "@tepirek-revamped/auth";
 import * as Redacted from "effect/Redacted";
 
 import { testDb } from "./database.ts";
@@ -14,4 +14,4 @@ const authEnv: AuthEnv = {
 };
 
 /** Better Auth capability owned by the integration-test composition root. */
-export const testAuth = createAuth(authEnv, testDb);
+export const testAuth: BetterAuthInstance = createAuth(authEnv, testDb);

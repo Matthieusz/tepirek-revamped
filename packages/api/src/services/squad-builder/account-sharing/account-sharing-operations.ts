@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import type { RevokeAccountAccessResult } from "./account-sharing-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store.ts";
 
 /** Input for responding to an account access invite. */
@@ -40,9 +41,11 @@ export const revoke = Effect.fn("AccountSharing.revokeAccess")(function* revoke(
   const store = yield* AccountSharingStoreService;
   const now = yield* DateTime.nowAsDate;
 
-  return yield* store.revokeAccountAccess({
+  const result: RevokeAccountAccessResult = yield* store.revokeAccountAccess({
     accessId: input.accessId,
     now,
     ownerUserId: input.actorUserId,
   });
+
+  return result;
 });
