@@ -2,9 +2,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig } from "vite-plus";
 
-export default defineConfig(({ mode }) => ({
+const createConfig = ({ mode }: { mode: string }) => ({
   plugins:
     mode === "test"
       ? []
@@ -52,4 +51,6 @@ export default defineConfig(({ mode }) => ({
       ),
     },
   }),
-}));
+});
+
+export default createConfig;
