@@ -5,7 +5,7 @@ Infisical remains the secret store. Local root scripts use `infisical run`, and 
 ## Schemas and commands
 
 - `apps/server/.env.schema`: API configuration, importing database configuration. Validated by server `dev`, `start`, and `start:deploy`.
-- `apps/web/.env.schema`: public `VITE_SERVER_URL`. Validated by web `dev` and `build`, before the build task can use its cache.
+- `apps/web/.env.schema`: public `VITE_SERVER_URL`. Validated by web `dev` and the `build:app` task. That task explicitly declares `VITE_SERVER_URL` in `cache.env` so Vite+ passes it to Varlock and invalidates cached results when it changes or disappears.
 - `packages/db/.env.schema`: only `DATABASE_URL`. Validated by `db:push`, `db:studio`, `db:generate`, and `db:migrate`.
 
 Existing root development and database commands still inject Infisical values before these package scripts execute. Database container lifecycle commands remain unchanged. Server builds do not require runtime secrets. Existing Effect validation remains in place, including defaults and application-specific checks.

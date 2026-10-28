@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "varlock load --agent && vp run build:app",
+    "build": "vp run build:app",
     "check-types": "tsrs --noEmit --project tsconfig.json",
     "test": "vp test run",
     "serve": "vp preview",
