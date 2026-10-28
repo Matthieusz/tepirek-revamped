@@ -37,12 +37,10 @@ const createConfig = ({ mode }: { mode: string }) => ({
     tasks: {
       "build:app": {
         cache: {
-          // Varlock runs before Vite can report its environment dependencies.
-          env: ["VITE_SERVER_URL"],
           input: [{ auto: true }, "!.output/**", "!dist/**", "!.tanstack/**"],
           output: ["dist/**", ".output/**"],
         },
-        command: "varlock load --agent && vp build",
+        command: "vp build",
       },
     },
   },

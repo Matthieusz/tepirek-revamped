@@ -7,7 +7,7 @@
     "check-types": "tsrs --noEmit --project tsconfig.json",
     "test": "vp test run",
     "serve": "vp preview",
-    "dev": "varlock load --agent && vp dev --port=3001",
+    "dev": "vp dev --port=3001",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {

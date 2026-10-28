@@ -38,7 +38,4 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-node26.12.1-vp-build-v1-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}-
 
       - name: Build
-        # CI checks compilation only; Dokploy rebuilds with its vault-supplied URL.
-        env:
-          VITE_SERVER_URL: http://localhost:3000
         run: pnpm build
