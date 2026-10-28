@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vp run build:app",
+    "build": "varlock run -- vp run build:app",
     "check-types": "tsrs --noEmit --project tsconfig.json",
     "test": "vp test run",
     "serve": "vp preview",
-    "dev": "vp dev --port=3001",
+    "dev": "varlock run -- vp dev --port=3001",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {

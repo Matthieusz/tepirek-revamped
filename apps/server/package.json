@@ -6,8 +6,9 @@
   "scripts": {
     "build": "vp pack",
     "check-types": "tsrs --noEmit --project tsconfig.json",
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.mjs",
+    "dev": "varlock run -- tsx watch src/index.ts",
+    "start": "varlock run -- node dist/index.mjs",
+    "start:deploy": "varlock run -- sh -c 'pnpm --filter @tepirek-revamped/db db:migrate && exec node dist/index.mjs'",
     "sync:legend-catalog": "tsx src/sync-legend-catalog.ts",
     "test": "vp test run src/server-lifecycle.test.ts src/startup-config.test.ts",
     "test:smoke": "vp test run --config vitest.smoke.config.ts",

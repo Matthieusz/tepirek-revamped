@@ -29,6 +29,9 @@
     "fix": "vp check --fix",
     "prepare": "effect-tsgo patch --typescript --tsrs && vp config --no-agent"
   },
+  "dependencies": {
+    "varlock": "^1.23.0"
+  },
   "devDependencies": {
     "@effect/tsgo": "0.57.0",
     "@oxlint/plugins": "1.89.0",
