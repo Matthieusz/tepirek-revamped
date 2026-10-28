@@ -10,7 +10,7 @@ Infisical remains the secret store. Local root scripts use `infisical run`, and 
 
 Existing root development and database commands still inject Infisical values before these package scripts execute. Database container lifecycle commands remain unchanged. Server builds do not require runtime secrets. Existing Effect validation remains in place, including defaults and application-specific checks.
 
-Varlock is a root production dependency so deployment startup can execute it. Keep root dependencies and the schemas in the deployed image. `varlock run` passes validated values to the child process and fails before running it when configuration is invalid. It also handles any local schema overrides consistently; no secret values belong in committed schemas.
+Varlock is a root production dependency so deployment startup can execute it. Keep root dependencies and the schemas in the deployed image. Package scripts use `varlock load --agent && ...` to validate before running the original command, with sensitive values redacted. Infisical/Dokploy must inject values into the environment: validation does not export file-only values or schema defaults to subsequent commands. Keep defaults in the existing Effect configuration and do not add local value overrides for this workflow. No secret values belong in committed schemas. Separating validation from execution also avoids a subprocess-spawning failure when nesting `varlock run` inside Vite+ tasks.
 
 To inspect configuration safely after Infisical injection:
 
@@ -32,6 +32,8 @@ pnpm --filter server start:deploy
 ```
 
 This validates API configuration before migrations, runs the database migration script, and starts the server only after migration succeeds. The migration script also validates its database-only schema when called independently.
+
+GitHub Actions uses `http://localhost:3000` as the public API URL for its compilation-only build. Those artifacts are not deployed; Dokploy rebuilds with its vault-supplied URL.
 
 For the **frontend**, keep:
 
