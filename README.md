@@ -185,7 +185,7 @@ In VS Code, enable the TypeScript native integration and select the workspace Ty
 
 In Zed, install the **TypeScript Language Server** extension (`tsgo`). The committed `.zed/settings.json` points its `typescript-ls` slot at the workspace's patched `tsrs --lsp --stdio` and disables `vtsls` and `typescript-language-server`. Oxlint and Tailwind remain available. Use only one TypeScript server to avoid duplicate diagnostics.
 
-Both compilers read the existing `@effect/language-service` plugin options from the TypeScript configuration. TSRS currently uses TypeScript `7.1.0-dev.20260929`, matching CLI and Zed checks. The Go-based workspace compiler remains at TypeScript `7.0.2`, so editors using it can occasionally report different results.
+Both compilers read the existing `@effect/language-service` plugin options from the TypeScript configuration. TSRS currently uses TypeScript `7.1.0-beta`, matching CLI and Zed checks. The Go-based workspace compiler remains at TypeScript `7.0.2`, so editors using it can occasionally report different results.
 
 Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
 
