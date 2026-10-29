@@ -1,12 +1,13 @@
-import { Crypto, Effect, Layer, Logger, References } from "effect";
+import { Effect, Layer, Logger, References } from "effect";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import type { LogLevel } from "effect/LogLevel";
 
 import * as Logging from "./observability/logging.ts";
 import * as Otlp from "./observability/otlp.ts";
 
 const makeRunId = Effect.gen(function* makeObservabilityRunId() {
-  const cryptoService = yield* Crypto.Crypto;
-  const uuid = yield* cryptoService.randomUUIDv4();
+  const random = yield* SecureRandom.SecureRandom;
+  const uuid = yield* random.uuidV4();
 
   return uuid.slice(0, 8);
 });

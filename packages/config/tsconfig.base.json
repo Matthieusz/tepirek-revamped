@@ -33,13 +33,13 @@
         "name": "@effect/language-service",
         // Accepted, version-pinned Effect v4 integrations; other unstable APIs still warn.
         "allowedUnstableApis": [
-          "@effect/platform-node/NodeCrypto#layer",
+          "@effect/platform-node-shared/NodeCrypto#layer",
           "@effect/platform-node/NodeFileSystem#layer",
           "@effect/platform-node/NodeRuntime#runMain",
           "@effect/sql-pg/PgClient",
           "@effect/vitest#it",
           "effect/ConfigProvider#fromDotEnv",
-          "effect/Crypto#Crypto",
+          "effect/crypto/SecureRandom#SecureRandom",
           "effect/http",
           "effect/http-api",
           "effect/observability/OtlpLogger#layerFromConfig",
