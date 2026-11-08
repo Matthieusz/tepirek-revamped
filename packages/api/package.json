@@ -70,7 +70,7 @@
     "@tepirek-revamped/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
-    "evlog": "2.34.0",
+    "evlog": "2.35.1",
     "linkedom": "catalog:",
     "zod": "catalog:"
   },

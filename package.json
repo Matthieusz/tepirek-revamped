@@ -30,18 +30,18 @@
     "prepare": "effect-tsgo patch --typescript --tsrs && vp config --no-agent"
   },
   "devDependencies": {
-    "@effect/tsgo": "0.63.0",
-    "@oxlint/plugins": "1.90.0",
+    "@effect/tsgo": "0.67.4",
+    "@oxlint/plugins": "1.92.0",
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.6",
-    "@vitest/coverage-v8": "5.0.5",
-    "knip": "^6.43.0",
-    "oxc-parser": "0.156.0",
+    "@vitest/coverage-v8": "5.1.0",
+    "knip": "^6.44.2",
+    "oxc-parser": "0.157.0",
     "oxc-resolver": "11.24.2",
-    "tsrs": "0.20.1-ts7.1.0-beta",
+    "tsrs": "0.22.0-ts7.1.0-beta",
     "typescript": "catalog:",
-    "ultracite": "8.1.0",
-    "vite-plus": "1.4.0"
+    "ultracite": "8.1.1",
+    "vite-plus": "1.5.0"
   },
   "engines": {
     "node": ">=26",

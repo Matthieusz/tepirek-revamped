@@ -9,10 +9,7 @@ interface FormFieldErrorProps {
 }
 
 /** Renders a localized field error with a stable id. */
-export const FormFieldError = ({
-  error,
-  id,
-}: FormFieldErrorProps): ReactNode =>
+export const FormFieldError = ({ error, id }: FormFieldErrorProps): ReactNode =>
   error === undefined ? null : (
     <p className="text-destructive text-sm" id={id}>
       {error}

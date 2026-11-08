@@ -12,7 +12,11 @@ const createConfig = ({ mode }: { mode: string }) => ({
           tanstackStart(),
           nitro({
             rolldownConfig: {
-              onLog(level, warning, defaultHandler) {
+              onLog(
+                level,
+                warning: { code?: string; message: string; id?: string },
+                defaultHandler
+              ) {
                 // This app uses SSR, not RSC: dependency "use client" markers
                 // have no boundary semantics here. Keep other warnings visible.
                 const isDependencyClientDirective =
