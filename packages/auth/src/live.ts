@@ -1,0 +1,34 @@
+import { BetterAuthDatabaseService } from "@tepirek-revamped/db/effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
+
+import { AuthConfig } from "./auth-config.ts";
+import { createAuth } from "./better-auth-instance.ts";
+import {
+  BetterAuthService,
+  buildBetterAuthService,
+} from "./better-auth-service.ts";
+
+/** Expected startup failure when Better Auth construction rejects its inputs. */
+// oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
+export class BetterAuthInitializationError extends Schema.TaggedError<
+  BetterAuthInitializationError,
+  { readonly brand: unique symbol }
+>()("BetterAuthInitializationError", { cause: Schema.Defect() }) {}
+
+/** Construct Better Auth from validated config and the shared database adapter. */
+export const BetterAuthServiceLiveLayer = Layer.effect(
+  BetterAuthService,
+  Effect.gen(function* makeLiveBetterAuthService() {
+    const config = yield* AuthConfig;
+    const database = yield* BetterAuthDatabaseService;
+
+    const instance = yield* Effect.try({
+      catch: (cause) => new BetterAuthInitializationError({ cause }),
+      try: () => createAuth(config, database),
+    });
+
+    return buildBetterAuthService(instance);
+  })
+);
