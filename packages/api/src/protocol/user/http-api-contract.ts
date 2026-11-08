@@ -158,46 +158,46 @@ export const UserError = Schema.Union([
 export const UserHttpApiGroup = HttpApiGroup.make("user")
   .add(
     HttpApiEndpoint.post("deleteUser", "/delete", {
-      error: UserError,
+      error: UserError.members,
       payload: DeleteUserPayload,
       success: MutationSuccess,
     }),
     HttpApiEndpoint.get("getSession", "/session", {
-      error: UserError,
+      error: UserError.members,
       success: AuthenticatedSession,
     }),
     HttpApiEndpoint.get("getVerified", "/verified", {
-      error: UserError,
+      error: UserError.members,
       success: Schema.Array(VerifiedMember),
     }),
     HttpApiEndpoint.get("list", "/", {
-      error: UserError,
+      error: UserError.members,
       success: Schema.Array(Player),
     }),
     HttpApiEndpoint.post("setRole", "/set-role", {
-      error: UserError,
+      error: UserError.members,
       payload: SetRolePayload,
       success: MutatedUser,
     }),
     HttpApiEndpoint.post("setVerified", "/set-verified", {
-      error: UserError,
+      error: UserError.members,
       payload: SetVerifiedPayload,
       success: MutatedUser,
     }),
     HttpApiEndpoint.post("updateProfile", "/profile", {
-      error: UserError,
+      error: UserError.members,
       payload: UpdateProfilePayload,
       success: MutatedUser,
     }),
     HttpApiEndpoint.post("updateUserName", "/name", {
-      error: UserError,
+      error: UserError.members,
       payload: UpdateUserNamePayload,
       success: MutatedUser,
     }),
     HttpApiEndpoint.post(
       "verifyDiscordGuildMembership",
       "/verify-discord-guild-membership",
-      { error: UserError, success: DiscordMembershipResult }
+      { error: UserError.members, success: DiscordMembershipResult }
     )
   )
   .prefix("/user");

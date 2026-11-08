@@ -200,41 +200,41 @@ export const BetError = Schema.Union([
 export const BetHttpApiGroup = HttpApiGroup.make("bet")
   .add(
     HttpApiEndpoint.post("create", "/", {
-      error: BetError,
+      error: BetError.members,
       payload: CreateBetPayload,
       success: CreatedBet,
     }),
     HttpApiEndpoint.post("delete", "/delete", {
-      error: BetError,
+      error: BetError.members,
       payload: DeleteBetPayload,
       success: MutationSuccess,
     }),
     HttpApiEndpoint.post("edit", "/edit", {
-      error: BetError,
+      error: BetError.members,
       payload: EditBetPayload,
       success: MutationSuccess,
     }),
     HttpApiEndpoint.get("getAll", "/", {
-      error: BetError,
+      error: BetError.members,
       success: Schema.Array(BetSummary),
     }),
     HttpApiEndpoint.post("getAllPaginated", "/paginated", {
-      error: BetError,
+      error: BetError.members,
       payload: GetAllPaginatedBetsPayload,
       success: PaginatedBets,
     }),
     HttpApiEndpoint.post("getBetMembers", "/members", {
-      error: BetError,
+      error: BetError.members,
       payload: GetBetMembersPayload,
       success: Schema.Array(StoredBetMember),
     }),
     HttpApiEndpoint.post("getByEvent", "/by-event", {
-      error: BetError,
+      error: BetError.members,
       payload: GetBetsByEventPayload,
       success: Schema.Array(BetByEventSummary),
     }),
     HttpApiEndpoint.get("getLatestForCopy", "/latest-for-copy", {
-      error: BetError,
+      error: BetError.members,
       success: LatestBetForCopy,
     })
   )

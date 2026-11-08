@@ -150,27 +150,27 @@ export const AuctionError = Schema.Union([
 export const AuctionHttpApiGroup = HttpApiGroup.make("auction")
   .add(
     HttpApiEndpoint.post("getAuctionSignups", "/signups", {
-      error: AuctionError,
+      error: AuctionError.members,
       payload: AuctionGroupPayload,
       success: Schema.Array(AuctionSignupSummary),
     }),
     HttpApiEndpoint.post("getAuctionStats", "/stats", {
-      error: AuctionError,
+      error: AuctionError.members,
       payload: AuctionGroupPayload,
       success: AuctionStats,
     }),
     HttpApiEndpoint.post("removeAuctionSignup", "/signups/remove", {
-      error: AuctionError,
+      error: AuctionError.members,
       payload: RemoveAuctionSignupPayload,
       success: RemoveAuctionSignupSuccess,
     }),
     HttpApiEndpoint.post("clearAuctionSignups", "/signups/clear", {
-      error: AuctionError,
+      error: AuctionError.members,
       payload: AuctionGroupPayload,
       success: ClearAuctionSignupsSuccess,
     }),
     HttpApiEndpoint.post("toggleAuctionSignup", "/signups/toggle", {
-      error: AuctionError,
+      error: AuctionError.members,
       payload: AuctionSignupPayload,
       success: ToggleAuctionSignupSuccess,
     })
