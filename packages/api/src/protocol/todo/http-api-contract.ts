@@ -73,21 +73,21 @@ export const TodoError = Schema.Union([
 export const TodoHttpApiGroup = HttpApiGroup.make("todo")
   .add(
     HttpApiEndpoint.post("createTodo", "/", {
-      error: TodoError,
+      error: TodoError.members,
       payload: CreateTodoPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteTodo", "/delete", {
-      error: TodoError,
+      error: TodoError.members,
       payload: DeleteTodoPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listTodos", "/", {
-      error: TodoError,
+      error: TodoError.members,
       success: Schema.Array(TodoSummary),
     }),
     HttpApiEndpoint.post("toggleTodo", "/toggle", {
-      error: TodoError,
+      error: TodoError.members,
       payload: ToggleTodoPayload,
       success: Schema.Void,
     })

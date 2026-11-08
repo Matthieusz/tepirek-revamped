@@ -98,16 +98,16 @@ export const RankingError = Schema.Union([
 export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
   .add(
     HttpApiEndpoint.post("getHeroStats", "/hero-stats", {
-      error: RankingError,
+      error: RankingError.members,
       payload: HeroIdPayload,
       success: HeroStats,
     }),
     HttpApiEndpoint.get("getOldestUnpaidEvent", "/oldest-unpaid-event", {
-      error: RankingError,
+      error: RankingError.members,
       success: Schema.NullOr(EventId),
     }),
     HttpApiEndpoint.post("getRanking", "/", {
-      error: RankingError,
+      error: RankingError.members,
       payload: RankingPayload,
       success: RankingResult,
     })

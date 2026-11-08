@@ -28,6 +28,11 @@
       "node": "./src/protocol/*.ts",
       "default": "./src/protocol/*.ts"
     },
+    "./server/auth/http-routes": {
+      "browser": null,
+      "node": "./src/server/auth/http-routes.ts",
+      "default": "./src/server/auth/http-routes.ts"
+    },
     "./server/effect-app": {
       "browser": null,
       "node": "./src/server/effect-app.ts",
@@ -65,6 +70,7 @@
     "@tepirek-revamped/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
+    "evlog": "2.34.0",
     "linkedom": "catalog:",
     "zod": "catalog:"
   },

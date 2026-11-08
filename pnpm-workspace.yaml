@@ -15,7 +15,6 @@ catalog:
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
   effect: 4.1.0
-  hono: ^4.13.14
   pg: 8.23.1
   typescript: 7.0.2
   vitest: 5.0.5

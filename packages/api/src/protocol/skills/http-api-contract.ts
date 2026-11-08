@@ -157,45 +157,45 @@ export const SkillsError = Schema.Union([
 export const SkillsHttpApiGroup = HttpApiGroup.make("skills")
   .add(
     HttpApiEndpoint.post("createProfession", "/professions", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: CreateProfessionPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("createRange", "/ranges", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: CreateRangePayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("createSkill", "/", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: CreateSkillPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteRange", "/ranges/delete", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: DeleteRangePayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteSkill", "/delete", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: DeleteSkillPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listProfessions", "/professions", {
-      error: SkillsError,
+      error: SkillsError.members,
       success: Schema.Array(ProfessionSummary),
     }),
     HttpApiEndpoint.get("listRanges", "/ranges", {
-      error: SkillsError,
+      error: SkillsError.members,
       success: Schema.Array(RangeSummary),
     }),
     HttpApiEndpoint.post("getRangeBySlug", "/ranges/by-slug", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: GetRangeBySlugPayload,
       success: Schema.NullOr(RangeSummary),
     }),
     HttpApiEndpoint.post("listSkillsByRange", "/by-range", {
-      error: SkillsError,
+      error: SkillsError.members,
       payload: GetSkillsByRangePayload,
       success: Schema.Array(SkillSummary),
     })

@@ -77,21 +77,21 @@ export const HeroesError = Schema.Union([
 export const HeroesHttpApiGroup = HttpApiGroup.make("heroes")
   .add(
     HttpApiEndpoint.post("createHero", "/", {
-      error: HeroesError,
+      error: HeroesError.members,
       payload: CreateHeroPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteHero", "/delete", {
-      error: HeroesError,
+      error: HeroesError.members,
       payload: DeleteHeroPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listHeroes", "/", {
-      error: HeroesError,
+      error: HeroesError.members,
       success: Schema.Array(HeroSummary),
     }),
     HttpApiEndpoint.post("listHeroesByEvent", "/by-event", {
-      error: HeroesError,
+      error: HeroesError.members,
       payload: HeroesByEventPayload,
       success: Schema.Array(HeroSummary),
     })

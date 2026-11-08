@@ -12,13 +12,13 @@ Tepirek Revamped is dark-mode-only guild operations software for [Margonem](http
 - ODW, "ulepa", and bounty calculators.
 - Email/password and Discord sign-in, with Discord guild-membership verification gating the `verified` flag an admin approves.
 
-The monorepo has six workspaces: `apps/web` (TanStack Start + React frontend on port 3001), `apps/server` (Hono host on Node.js, port 3000), `packages/api` (Effect HttpApi contracts, domain logic, services, and handlers, plus Drizzle adapters), `packages/db` (Drizzle schemas and migrations), and `packages/auth` (Better Auth). `packages/config` holds shared types and configuration. The web app consumes the same Effect `AppHttpApi` contract the server implements; the server's OpenAPI document is at `/api/openapi.json`. See `README.md` for local setup and `DESIGN.md` / `PRODUCT.md` for the product and design direction.
+The monorepo has six workspaces: `apps/web` (TanStack Start + React frontend on port 3001), `apps/server` (Effect native HTTP host on Node.js, port 3000), `packages/api` (Effect HttpApi contracts, domain logic, services, and handlers, plus Drizzle adapters), `packages/db` (Drizzle schemas and migrations), and `packages/auth` (Better Auth). `packages/config` holds shared types and configuration. The web app consumes the same Effect `AppHttpApi` contract the server implements; the server's OpenAPI document is at `/api/openapi.json`. See `README.md` for local setup and `DESIGN.md` / `PRODUCT.md` for the product and design direction.
 
 ## Architecture vocabulary
 
 ### Executable boundary
 
-The outermost layer where environment values are parsed and dependencies are wired before any traffic flows. In the server (`apps/server/src/index.ts`), startup configuration is parsed before the launched server layer acquires the shared PostgreSQL pool, Better Auth service, Effect HTTP handlers, or Node.js listener. Hono remains the HTTP routing boundary, while Effect scope owns the complete long-lived resource graph. Observability transport values are parsed here because they configure external OTLP, but the observability layers themselves remain adapter concerns.
+The outermost layer where environment values are parsed and dependencies are wired before any traffic flows. In the server (`apps/server/src/index.ts`), startup configuration is parsed before the launched server layer acquires the shared PostgreSQL pool, Better Auth service, Effect HTTP handlers, or Node.js listener. Effect's HttpRouter is the HTTP routing boundary, NodeHttpServer owns the native listener, and Effect scope owns the complete long-lived resource graph. Observability transport values are parsed here because they configure external OTLP, but the observability layers themselves remain adapter concerns.
 
 ### HttpApi contract / handlers / adapters (Effect layering)
 
@@ -41,7 +41,7 @@ Protocol and domain `Schema.Struct` declarations carry an explicit TypeScript in
 
 ### Observability boundary
 
-The logging/tracing composition in `packages/api/src/observability.ts`: a `Logger.layer` plus OTLP tracing, fed a parsed `ObservabilityConfig`. The `evlog` library wires request logging and Better Auth middleware at the Hono boundary; secrets such as the persisted Discord access token are redacted before they reach logs.
+The logging/tracing composition in `packages/api/src/observability.ts`: a `Logger.layer` plus OTLP tracing, fed a parsed `ObservabilityConfig`. The `evlog/effect` integration supplies request-scoped wide events through `routerLayer`, with initialization and drain flushing owned by `initLoggerLayer`. The server supplies secure request IDs; session middleware adds only the parsed user ID without another session lookup. Request events are redacted, and persisted Discord access tokens remain redacted before they reach application logs.
 
 ## Glossary
 

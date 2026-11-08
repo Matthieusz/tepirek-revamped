@@ -82,21 +82,21 @@ export const defaultEventColor = "#6366f1";
 export const EventHttpApiGroup = HttpApiGroup.make("event")
   .add(
     HttpApiEndpoint.post("createEvent", "/", {
-      error: EventError,
+      error: EventError.members,
       payload: CreateEventPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteEvent", "/delete", {
-      error: EventError,
+      error: EventError.members,
       payload: DeleteEventPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listEvents", "/", {
-      error: EventError,
+      error: EventError.members,
       success: Schema.Array(EventSummary),
     }),
     HttpApiEndpoint.post("toggleEventActive", "/toggle-active", {
-      error: EventError,
+      error: EventError.members,
       payload: ToggleEventActivePayload,
       success: Schema.Void,
     })

@@ -94,6 +94,7 @@ export default defineConfig({
         extends: true,
         test: {
           include: [
+            "src/http-application.test.ts",
             "src/server-lifecycle.test.ts",
             "src/startup-config.test.ts",
           ],

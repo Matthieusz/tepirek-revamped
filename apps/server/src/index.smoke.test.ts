@@ -1,13 +1,14 @@
+import { createServer } from "node:http";
+
+import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect, it } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { HttpServer } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-import { makeServerApplicationLayer, ServerApplication } from "./index.js";
-import type { ServerApplicationService } from "./index.js";
-
-const requestIdPattern = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/iu;
+import { makeServerApplicationLayer, makeServerHostLayer } from "./index.js";
 
 const serverApplicationLayer = makeServerApplicationLayer({
   auth: {
@@ -37,76 +38,36 @@ const serverApplicationLayer = makeServerApplicationLayer({
   },
 });
 
-const withServerApplication = <A>(
-  runWith: (application: ServerApplicationService) => Effect.Effect<A>
-) =>
-  Effect.scoped(
-    Effect.gen(function* scopedServerApplication() {
-      const context = yield* Layer.build(serverApplicationLayer);
-
-      return yield* runWith(Context.get(context, ServerApplication));
-    })
-  );
-
-it.effect("responds to the Effect HttpApi health endpoint", () =>
-  withServerApplication(({ app }) =>
-    Effect.gen(function* healthRequest() {
-      const response = yield* Effect.promise(
-        async () => await app.request("/health")
-      );
-
-      const body = yield* Effect.promise(async () => await response.json());
-
-      expect(body).toBe("OK");
-      expect(response.status).toBe(200);
-      expect(response.headers.get("x-request-id")).toMatch(requestIdPattern);
-    })
-  )
-);
-
-it.effect("forwards application API routes to the Effect handler", () =>
-  withServerApplication(({ app }) =>
-    Effect.gen(function* applicationApiRequest() {
-      const response = yield* Effect.promise(
-        async () =>
-          await app.request("/announcements", {
-            headers: {
-              Origin: "http://localhost:3001",
-              "x-request-id": "private-client-supplied-id",
-            },
+it.live(
+  "starts the full application with health, protected API, and Better Auth routes",
+  () =>
+    Effect.gen(function* assembledServerSmoke() {
+      const context = yield* Layer.build(
+        makeServerHostLayer(
+          serverApplicationLayer,
+          NodeHttpServer.layerServer(createServer, {
+            host: "127.0.0.1",
+            port: 0,
           })
+        )
       );
 
-      const body = yield* Effect.promise(async () => await response.text());
+      const server = Context.get(context, HttpServer.HttpServer);
+      const baseUrl = HttpServer.formatAddress(server.address);
 
-      expect(body).toContain("AnnouncementUnauthorized");
-      expect(response.status).not.toBe(404);
-      expect(response.headers.get("x-request-id")).toMatch(requestIdPattern);
-      expect(response.headers.get("access-control-expose-headers")).toBe(
-        "Retry-After,x-request-id"
-      );
+      for (const [path, status, body] of [
+        ["/health", 200, '"OK"'],
+        ["/announcements", 401, "AnnouncementUnauthorized"],
+        ["/api/auth/get-session", 200, "null"],
+      ] as const) {
+        const response = yield* Effect.promise(
+          async () => await fetch(new URL(path, baseUrl))
+        );
+
+        expect(response.status, path).toBe(status);
+        expect(
+          yield* Effect.promise(async () => await response.text())
+        ).toContain(body);
+      }
     })
-  )
-);
-
-it.effect("handles CORS preflight for the configured origin", () =>
-  withServerApplication(({ app }) =>
-    Effect.gen(function* corsRequest() {
-      const response = yield* Effect.promise(
-        async () =>
-          await app.request("/health", {
-            headers: {
-              "Access-Control-Request-Method": "POST",
-              Origin: "http://localhost:3001",
-            },
-            method: "OPTIONS",
-          })
-      );
-
-      expect(response.status).toBe(204);
-      expect(response.headers.get("access-control-allow-origin")).toBe(
-        "http://localhost:3001"
-      );
-    })
-  )
 );

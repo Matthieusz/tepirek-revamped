@@ -2,6 +2,7 @@ import { BetterAuthService } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
+import { set } from "evlog/effect";
 
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
@@ -39,6 +40,9 @@ export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
     const sessionUserId = yield* parseAppUserId(session.session.userId).pipe(
       Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
     );
+
+    // Identity is attached after parsing, without a second session lookup or PII.
+    yield* set({ userId });
 
     return {
       ...session,

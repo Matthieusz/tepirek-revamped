@@ -154,11 +154,11 @@ export const LegendPricingError = Schema.Union([
 export const LegendPricingHttpApiGroup = HttpApiGroup.make("legendPricing")
   .add(
     HttpApiEndpoint.get("listLegendPrices", "/", {
-      error: LegendPricingError,
+      error: LegendPricingError.members,
       success: Schema.Array(LegendPriceSummary),
     }),
     HttpApiEndpoint.post("updateLegendCost", "/cost", {
-      error: LegendPricingError,
+      error: LegendPricingError.members,
       payload: UpdateLegendCostPayload,
       success: LegendPriceSummary,
     })

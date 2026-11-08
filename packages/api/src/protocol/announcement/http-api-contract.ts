@@ -88,17 +88,17 @@ export const AnnouncementError = Schema.Union([
 export const AnnouncementHttpApiGroup = HttpApiGroup.make("announcement")
   .add(
     HttpApiEndpoint.post("createAnnouncement", "/", {
-      error: AnnouncementError,
+      error: AnnouncementError.members,
       payload: CreateAnnouncementPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteAnnouncement", "/delete", {
-      error: AnnouncementError,
+      error: AnnouncementError.members,
       payload: DeleteAnnouncementPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listAnnouncements", "/", {
-      error: AnnouncementError,
+      error: AnnouncementError.members,
       success: Schema.Array(AnnouncementSummary),
     })
   )

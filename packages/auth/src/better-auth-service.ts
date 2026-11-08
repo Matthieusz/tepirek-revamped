@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file -- Collocated service error schema. */
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import type {
@@ -42,3 +43,9 @@ export const buildBetterAuthService = (
     ),
     instance,
   });
+
+/** Construct a Better Auth service layer around a supplied vendor instance. */
+export const buildBetterAuthServiceLayer = (
+  instance: BetterAuthInstance
+): Layer.Layer<BetterAuthService> =>
+  Layer.succeed(BetterAuthService, buildBetterAuthService(instance));

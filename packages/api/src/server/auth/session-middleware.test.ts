@@ -9,6 +9,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
+import { createLogger } from "evlog";
+import { EvlogLogger } from "evlog/effect";
 import { Pool } from "pg";
 import { afterAll } from "vite-plus/test";
 
@@ -104,18 +106,30 @@ it.effect("provides an empty current session for an expired session", () => {
   }).pipe(Effect.provide(authLayer));
 });
 
-it.effect("decodes the authenticated user id at the session boundary", () => {
-  const authLayer = Layer.succeed(BetterAuthService, {
-    getSession: () => Effect.succeed(authenticatedSession("user-id")),
-    instance: testBetterAuthInstance,
-  });
+it.effect(
+  "adds only parsed identity to the Effect request event without another lookup",
+  () => {
+    let sessionLookups = 0;
+    const log = createLogger();
 
-  return Effect.gen(function* validUserIdTest() {
-    const session = yield* loadCurrentSession(new Headers());
+    const authLayer = Layer.succeed(BetterAuthService, {
+      getSession: () =>
+        Effect.sync(() => {
+          sessionLookups += 1;
 
-    expect(session?.user.id).toBe(AppUserId.make("user-id"));
-  }).pipe(Effect.provide(authLayer));
-});
+          return authenticatedSession("user-id");
+        }),
+      instance: testBetterAuthInstance,
+    });
+
+    return Effect.gen(function* requestIdentity() {
+      const session = yield* loadCurrentSession(new Headers());
+      expect(session?.user.id).toBe(AppUserId.make("user-id"));
+      expect(log.getContext()).toEqual({ userId: "user-id" });
+      expect(sessionLookups).toBe(1);
+    }).pipe(Effect.provide(authLayer), Effect.provideService(EvlogLogger, log));
+  }
+);
 
 it.effect(
   "rejects an empty authenticated user id as an invalid session",

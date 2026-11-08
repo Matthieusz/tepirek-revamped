@@ -114,17 +114,17 @@ export const VaultError = Schema.Union([
 export const VaultHttpApiGroup = HttpApiGroup.make("vault")
   .add(
     HttpApiEndpoint.post("distributeGold", "/distribute-gold", {
-      error: VaultError,
+      error: VaultError.members,
       payload: DistributeGoldPayload,
       success: DistributeGoldSuccess,
     }),
     HttpApiEndpoint.post("getVault", "/", {
-      error: VaultError,
+      error: VaultError.members,
       payload: EventFilterPayload,
       success: Schema.Array(VaultRow),
     }),
     HttpApiEndpoint.post("togglePaidOut", "/toggle-paid-out", {
-      error: VaultError,
+      error: VaultError.members,
       payload: TogglePaidOutPayload,
       success: MutationSuccess,
     })
