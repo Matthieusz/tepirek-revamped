@@ -1,6 +1,6 @@
 import type { createAuth } from "./better-auth-instance.ts";
 
-/** Vendor Better Auth runtime instance used by Hono and evlog. */
+/** Vendor Better Auth runtime instance mounted by the Effect HTTP adapter. */
 export type BetterAuthInstance = ReturnType<typeof createAuth>;
 
 /** Session payload returned by Better Auth's vendor API. */

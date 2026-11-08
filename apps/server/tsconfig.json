@@ -6,8 +6,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
     "strictNullChecks": true,
     "plugins": [
       {
@@ -16,6 +14,7 @@
         "allowedUnstableApis": [
           "@effect/platform-node-shared/NodeCrypto#layer",
           "@effect/platform-node/NodeFileSystem#layer",
+          "@effect/platform-node/NodeHttpServer",
           "@effect/platform-node/NodeRuntime#runMain",
           "@effect/sql-pg/PgClient",
           "@effect/vitest#it",
@@ -23,6 +22,7 @@
           "effect/crypto/SecureRandom#SecureRandom",
           "effect/http",
           "effect/http-api",
+          "effect/net/NetAddress#inetAddressFromIpStringUnsafe",
           "effect/observability/OtlpLogger#layerFromConfig",
           "effect/observability/OtlpSerialization#layerJson",
           "effect/observability/OtlpTracer#layerFromConfig",
