@@ -107,7 +107,7 @@ The repository is a pnpm monorepo. The web and server applications share the sam
 
 ```text
 apps/web       TanStack Start + React frontend (port 3001)
-apps/server    Node.js/Hono HTTP server (port 3000)
+apps/server    Effect native Node.js HTTP server (port 3000)
 packages/api   Effect HTTP contracts, domain logic, and handlers
 packages/auth  Better Auth configuration
 packages/db    Drizzle schemas, migrations, and local PostgreSQL
@@ -196,7 +196,7 @@ Effect diagnostics use their defaults throughout the repository. The API and ser
 - [Margonem](https://www.margonem.com/) — the game this project supports
 - [TanStack Start](https://tanstack.com/start/latest) and [React](https://react.dev/) — web application
 - [Effect](https://effect.website/) — schemas, services, and HTTP contracts
-- [Hono](https://hono.dev/) and [Node.js](https://nodejs.org/docs/latest-v24.x/api/) — server host and runtime
+- [Effect HTTP](https://effect.website/docs/v4/platform/introduction) and [Node.js](https://nodejs.org/api/) — server host and runtime
 - [Better Auth](https://www.better-auth.com/docs) — sessions and Discord OAuth
 - [Drizzle ORM](https://orm.drizzle.team/docs/overview) and [PostgreSQL](https://www.postgresql.org/docs/) — persistence
 - [Vite+](https://viteplus.dev/guide) and [pnpm workspaces](https://pnpm.io/workspaces) — task running, builds, tests, linting, and formatting
