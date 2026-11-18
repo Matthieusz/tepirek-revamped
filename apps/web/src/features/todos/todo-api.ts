@@ -60,5 +60,5 @@ export const toggleTodo = Effect.fn("Web.Todo.toggle")(
   }
 );
 
-/** Todo data returned by the list query. */
+/** A todo returned by the list query. */
 export type Todo = TodoSummary;

@@ -7,14 +7,14 @@ allowBuilds:
   msgpackr-extract: true
 
 catalog:
-  better-auth: ^1.7.18
-  dotenv: ^18.0.9
-  "@effect/sql-pg": 4.1.2
-  "@effect/vitest": 4.1.2
+  better-auth: ^1.7.25
+  dotenv: ^18.0.10
+  "@effect/sql-pg": 4.1.4
+  "@effect/vitest": 4.1.4
   "@types/pg": 8.23.1
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
-  effect: 4.1.2
+  effect: 4.1.4
   pg: 8.23.1
   typescript: 7.0.2
   vitest: 5.1.0
@@ -68,14 +68,13 @@ onlyBuiltDependencies:
   - msgpackr-extract
 
 overrides:
-  vite@*: npm:@voidzero-dev/vite-plus-core@1.5.0
+  vite@*: npm:@voidzero-dev/vite-plus-core@8.3.8000
   vitest@*: 5.1.0
 
 peerDependencyRules:
   allowedVersions:
-    # Vite+ implements Vite's API but publishes its own version, not Vite's 8.x.
-    # Upstream also allows this alias; restrict acceptance to our exact toolchain.
-    vite: 1.5.0
+    # Vite+ encodes its upstream Vite version in the alias's patch number.
+    vite: 8.3.8000
 
 patchedDependencies:
   drizzle-orm@1.0.0-rc.5-5935859: patches/drizzle-orm@1.0.0-rc.5-5935859.patch

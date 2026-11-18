@@ -21,7 +21,7 @@ const { requireVerifiedSession } = buildAuthorizationPolicy({
 const mapTodoError = (error: ApplicationDependencyUnavailable) =>
   new TodoPersistenceUnavailable({ operation: error.operation });
 
-/** Todo transport handlers; operation spans wrap persistence calls after authorization. */
+/** Transport handlers for todos; operation spans wrap persistence calls after authorization. */
 export const TodoHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "todo",
