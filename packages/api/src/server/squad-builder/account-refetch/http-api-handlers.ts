@@ -46,9 +46,7 @@ function mapAccountRefetchError(
 function mapAccountRefetchError(
   error: PreviewAccountRefetchError
 ): PreviewAccountRefetchProtocolError;
-function mapAccountRefetchError(
-  error: AccountRefetchHandlerError
-): PreviewAccountRefetchProtocolError {
+function mapAccountRefetchError(error: AccountRefetchHandlerError) {
   return Match.value(error).pipe(
     Match.tag(
       "MargonemAccountNotFound",
@@ -89,13 +87,11 @@ function mapAccountRefetchError(
   );
 }
 
-const mapPreviewAccountRefetchError = (
-  error: PreviewAccountRefetchError
-): PreviewAccountRefetchProtocolError => mapAccountRefetchError(error);
+const mapPreviewAccountRefetchError = (error: PreviewAccountRefetchError) =>
+  mapAccountRefetchError(error);
 
-const mapApplyAccountRefetchError = (
-  error: ApplyAccountRefetchError
-): ApplyAccountRefetchProtocolError => mapAccountRefetchError(error);
+const mapApplyAccountRefetchError = (error: ApplyAccountRefetchError) =>
+  mapAccountRefetchError(error);
 
 export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

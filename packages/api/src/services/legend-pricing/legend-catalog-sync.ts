@@ -22,7 +22,6 @@ import type {
   LegendCatalogItem,
   LegendCatalogReconciliationResult,
   LegendCatalogSourcePost,
-  ReconcileLegendCatalogInput,
   ReconcileLegendCatalogError,
 } from "./legend-catalog-store.ts";
 import { LegendCatalogStoreService } from "./legend-catalog-store.ts";
@@ -61,7 +60,7 @@ export class LegendCatalogSyncService extends Context.Service<
   LegendCatalogSyncContract
 >()("@tepirek-revamped/api/legend-pricing/LegendCatalogSyncService") {}
 
-const syncErrorMessage = (input: LegendCatalogSyncError): string =>
+const syncErrorMessage = (input: LegendCatalogSyncError) =>
   Match.value(input).pipe(
     Match.tag(
       "LegendCatalogPersistenceUnavailable",
@@ -83,19 +82,23 @@ const syncErrorMessage = (input: LegendCatalogSyncError): string =>
     Match.exhaustive
   );
 
-const topicUrl = (category: LegendaryEnemyCategory): string =>
+const topicUrl = (category: LegendaryEnemyCategory) =>
   category === "hero"
     ? "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0"
     : "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0";
 
-const mergeItems = (
+const mergeItems: (
   snapshots: readonly {
     readonly items: readonly LegendCatalogItem[];
   }[]
-): Effect.Effect<
+) => Effect.Effect<
   readonly LegendCatalogItem[],
   LegendCatalogSyncSnapshotInvalid
-> => {
+> = (
+  snapshots: readonly {
+    readonly items: readonly LegendCatalogItem[];
+  }[]
+) => {
   const items = new Map<LegendaryItemSourceKey, LegendCatalogItem>();
 
   for (const snapshot of snapshots) {
@@ -137,10 +140,7 @@ const makeInput = (
   },
   startedAt: Date,
   synchronizedAt: Date
-): Effect.Effect<
-  ReconcileLegendCatalogInput,
-  LegendCatalogSyncSnapshotInvalid
-> =>
+) =>
   mergeItems([hero, elite2]).pipe(
     Effect.map((items) => ({
       drops: [...hero.drops, ...elite2.drops],

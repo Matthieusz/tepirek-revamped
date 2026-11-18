@@ -1,5 +1,5 @@
 /** Derives at most two uppercase initials for an avatar fallback. */
-export const userInitials = (name: string): string =>
+export const userInitials = (name: string) =>
   name
     .split(/\s+/u)
     .filter((part) => part.length > 0)

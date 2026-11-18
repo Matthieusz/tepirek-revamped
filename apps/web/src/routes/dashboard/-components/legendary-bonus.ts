@@ -22,7 +22,7 @@ const trailingBonusLevelPattern = /,\d+$/u;
  * The trailing item level encoded by Margonem is omitted. Unknown bonus codes
  * remain visible so newly introduced bonuses do not render as empty labels.
  */
-export const formatLegendaryBonus = (value: string): string => {
+export const formatLegendaryBonus = (value: string) => {
   const bonusCode = value.trim().replace(trailingBonusLevelPattern, "");
 
   return legendaryBonusLabels.get(bonusCode) ?? bonusCode;

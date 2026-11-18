@@ -5,16 +5,6 @@ import * as HashSet from "effect/HashSet";
 
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
-/**
- * Deep Hero bet member picker model.
- *
- * Pure selection logic shared by the add-bet and edit-bet flows. Owns
- * search filtering, available/selected user derivation, toggle/remove/
- * restore/copy actions, empty-state decisions, and the points preview.
- * React rendering lives in the picker component; this module only deals
- * with selection shape and rules.
- */
-
 type PointsPreviewVariant = "default" | "destructive" | "secondary";
 
 /** Closed state for the add-flow copy-last-bet action. */
@@ -27,21 +17,13 @@ export type LastBetState =
 
 export const LastBetState = Data.taggedEnum<LastBetState>();
 
-interface PointsPreview {
-  currentMemberCount: number;
-  currentPointsPerMember: number;
-  newMemberCount: number;
-  newPointsPerMember: number;
-  variant: PointsPreviewVariant;
-}
-
 /**
  * Filter users by name case-insensitively.
  */
 export const filterUsersBySearch = (
   users: readonly SelectableUser[],
   searchQuery: string
-): SelectableUser[] => {
+) => {
   const query = searchQuery.toLowerCase();
 
   return Arr.filter<SelectableUser>((user) =>
@@ -56,7 +38,7 @@ export const getAvailableUsers = (
   users: readonly SelectableUser[] | undefined,
   selectedUserIds: readonly string[],
   searchQuery: string
-): SelectableUser[] => {
+) => {
   if (users === undefined) {
     return [];
   }
@@ -75,7 +57,7 @@ export const getAvailableUsers = (
 export const getSelectedUsers = (
   users: readonly SelectableUser[] | undefined,
   selectedUserIds: readonly string[]
-): SelectableUser[] => {
+) => {
   if (users === undefined) {
     return [];
   }
@@ -93,7 +75,7 @@ export const getSelectedUsers = (
 export const toggleUser = (
   userId: string,
   selectedUserIds: readonly string[]
-): string[] => {
+) => {
   if (Arr.contains(userId)(selectedUserIds)) {
     return Arr.filter<string>((id) => id !== userId)(selectedUserIds);
   }
@@ -107,31 +89,24 @@ export const toggleUser = (
 export const removeUser = (
   userId: string,
   selectedUserIds: readonly string[]
-): string[] => Arr.filter<string>((id) => id !== userId)(selectedUserIds);
+) => Arr.filter<string>((id) => id !== userId)(selectedUserIds);
 
 /**
  * Restore the initial member IDs (edit flow).
  */
-export const restoreSelection = (
-  initialMemberIds: readonly string[]
-): string[] => Arr.copy(initialMemberIds);
+export const restoreSelection = (initialMemberIds: readonly string[]) =>
+  Arr.copy(initialMemberIds);
 
 /**
  * Copy the last bet's member IDs into the selection (add flow).
  */
-export const copyLastBet = (lastBet: LastBetState): string[] => {
+export const copyLastBet = (lastBet: LastBetState) => {
   if (LastBetState.$is("unavailable")(lastBet)) {
     return [];
   }
 
   return lastBet.members.map((member) => member.userId);
 };
-
-type PickerEmptyState =
-  | "loading"
-  | "no-users"
-  | "no-search-results"
-  | "has-users";
 
 /**
  * Decide which empty state to show for the available-users list.
@@ -140,7 +115,7 @@ export const getAvailableListState = (input: {
   usersLoading: boolean;
   users: readonly SelectableUser[] | undefined;
   availableUsers: readonly SelectableUser[];
-}): PickerEmptyState => {
+}) => {
   if (input.usersLoading) {
     return "loading";
   }
@@ -162,7 +137,7 @@ export const getAvailableListState = (input: {
 export const getPointsPreview = (
   newMemberCount: number,
   currentMemberCount: number
-): PointsPreview => {
+) => {
   const newPointsPerMember = calculatePointsPerMember(newMemberCount);
   const currentPointsPerMember = calculatePointsPerMember(currentMemberCount);
 

@@ -23,7 +23,7 @@ export const getHeroStatsPreviewState = (params: {
   readonly isError: boolean;
   readonly isLoading: boolean;
   readonly onRetry: () => void;
-}): HeroStatsPreviewState => {
+}) => {
   if (!params.enabled) {
     return HeroStatsPreviewState.hidden();
   }

@@ -56,9 +56,7 @@ export type PreviewMargonemProfileImportError =
 
 const noDuplicateAccountError = undefined;
 
-const profileAccessStateToDuplicateError = (
-  state: ProfileAccessState
-): DuplicateMargonemAccountError | undefined =>
+const profileAccessStateToDuplicateError = (state: ProfileAccessState) =>
   Match.value(state).pipe(
     Match.tag("Available", () => noDuplicateAccountError),
     Match.tag("OwnedByActor", () => new MargonemAccountAlreadyOwnedByActor()),

@@ -21,7 +21,10 @@ export interface OtlpResource {
   readonly serviceVersion: string;
 }
 
-export const resource = (config: OtlpConfig, runId: string): OtlpResource => ({
+export const resource: (config: OtlpConfig, runId: string) => OtlpResource = (
+  config,
+  runId
+) => ({
   attributes: {
     "deployment.environment.name": config.deploymentEnvironmentName,
     "service.instance.id": runId,

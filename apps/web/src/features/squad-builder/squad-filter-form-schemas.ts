@@ -11,7 +11,7 @@ const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
 export const validateSquadFilterLevelOrder = (values: {
   readonly maxLevel: string;
   readonly minLevel: string;
-}): true | { readonly issue: string; readonly path: readonly ["maxLevel"] } => {
+}) => {
   const minLevel = values.minLevel.trim();
   const maxLevel = values.maxLevel.trim();
 

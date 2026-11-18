@@ -17,8 +17,6 @@ const createConfig = ({ mode }: { mode: string }) => ({
                 warning: { code?: string; message: string; id?: string },
                 defaultHandler
               ) {
-                // This app uses SSR, not RSC: dependency "use client" markers
-                // have no boundary semantics here. Keep other warnings visible.
                 const isDependencyClientDirective =
                   warning.code === "MODULE_LEVEL_DIRECTIVE" &&
                   warning.message.includes('directive "use client"') &&

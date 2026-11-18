@@ -22,7 +22,7 @@ const testProjection = (
     readonly cause: EffectDrizzleQueryError | SqlErrorType;
     readonly operation: string;
   }) => ProjectedError
-): void => {
+) => {
   const persistenceQuery = buildDirectPersistenceQuery(makeError);
 
   it.effect("projects direct query failures", () =>

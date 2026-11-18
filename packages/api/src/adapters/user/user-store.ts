@@ -331,10 +331,7 @@ const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
 
 const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
-  (input: {
-    readonly updatedAt: Date;
-    readonly userId: AppUserId;
-  }): Effect.Effect<void, ApplicationDependencyUnavailable> =>
+  (input: { readonly updatedAt: Date; readonly userId: AppUserId }) =>
     userPersistenceQuery(
       "markUserVerified",
       database

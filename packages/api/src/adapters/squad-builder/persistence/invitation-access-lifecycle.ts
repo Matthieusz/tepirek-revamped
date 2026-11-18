@@ -12,17 +12,7 @@ export interface ValidatedInvitationAccessTransition {
   readonly nextStatus: InvitationAccessStatus;
 }
 
-/**
- * Parse and validate a lifecycle transition.
- *
- * The caller owns the table-specific transaction and must lock the persisted
- * row before invoking this helper. Keeping the SQL in each adapter makes the
- * natural key, authorization joins, and lock scope explicit.
- */
-export const validateInvitationAccessTransition = <
-  ParseError,
-  TransitionError,
->(input: {
+interface ValidateInvitationAccessTransitionInput<ParseError, TransitionError> {
   readonly currentStatus: string;
   readonly nextStatus: InvitationAccessStatus;
   readonly parseStatus: (
@@ -31,10 +21,21 @@ export const validateInvitationAccessTransition = <
   readonly onTransitionNotAllowed: (
     error: InvitationAccessTransitionNotAllowed
   ) => TransitionError;
-}): Effect.Effect<
+}
+
+/**
+ * Parse and validate a lifecycle transition.
+ *
+ * The caller owns the table-specific transaction and must lock the persisted
+ * row before invoking this helper. Keeping the SQL in each adapter makes the
+ * natural key, authorization joins, and lock scope explicit.
+ */
+export const validateInvitationAccessTransition: <ParseError, TransitionError>(
+  input: ValidateInvitationAccessTransitionInput<ParseError, TransitionError>
+) => Effect.Effect<
   ValidatedInvitationAccessTransition,
   ParseError | TransitionError
-> =>
+> = (input) =>
   Effect.gen(function* validateInvitationAccessTransitionEffect() {
     const previousStatus = yield* input.parseStatus(input.currentStatus);
 

@@ -18,9 +18,11 @@ export class InvalidSquadGroupVisibility extends Schema.TaggedError<
 >()("InvalidSquadGroupVisibility", {}) {}
 
 /** Parse a squad group visibility into the domain value. */
-export const parseSquadGroupVisibility = (
+export const parseSquadGroupVisibility: (
   input: string
-): Effect.Effect<SquadGroupVisibility, InvalidSquadGroupVisibility> => {
+) => Effect.Effect<SquadGroupVisibility, InvalidSquadGroupVisibility> = (
+  input: string
+) => {
   if (input === "private" || input === "global") {
     return Effect.succeed(input);
   }

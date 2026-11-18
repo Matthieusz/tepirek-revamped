@@ -133,15 +133,12 @@ const RangeSkillsContent = ({
   );
 
   const deleteSkillById = (id: number) => {
-    void (async () => {
-      try {
-        await deleteSkill.mutateAsync(id);
+    deleteSkill.mutate(id, {
+      onSuccess: () => {
         toast.success("Usunięto zestaw");
         setSkillToDelete(null);
-      } catch {
-        // The mutation callback already reports the error to the user.
-      }
-    })();
+      },
+    });
   };
 
   return (

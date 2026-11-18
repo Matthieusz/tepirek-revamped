@@ -82,9 +82,7 @@ export const availableSquadCharactersQueryOptions = (
     queryKey: availableSquadCharactersQueryKey(groupId),
   });
 
-const invalidateSquadGroupLists = async (
-  queryClient: QueryClient
-): Promise<void> => {
+const invalidateSquadGroupLists = async (queryClient: QueryClient) => {
   await Promise.all([
     queryClient.invalidateQueries({
       exact: true,
@@ -101,7 +99,7 @@ const invalidateSquadGroupLists = async (
 export const invalidateSquadGroupResources = async (
   queryClient: QueryClient,
   groupId: number
-): Promise<void> => {
+) => {
   await Promise.all([
     invalidateSquadGroupLists(queryClient),
     queryClient.invalidateQueries({

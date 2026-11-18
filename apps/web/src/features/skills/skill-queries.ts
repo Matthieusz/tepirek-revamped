@@ -22,13 +22,10 @@ import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
 const skillsQueryKey = ["skills"] as const;
 
-/** Cache key for the complete skill-range list. */
 const skillRangesQueryKey = [...skillsQueryKey, "ranges"] as const;
 
-/** Cache key for the complete skill-profession list. */
 const skillProfessionsQueryKey = [...skillsQueryKey, "professions"] as const;
 
-/** Cache key prefix for skill-range detail queries. */
 const skillRangeBySlugQueryKeyPrefix = [
   ...skillsQueryKey,
   "range-by-slug",
@@ -38,7 +35,6 @@ const skillRangeBySlugQueryKeyPrefix = [
 export const skillRangeBySlugQueryKey = (slug: string) =>
   [...skillRangeBySlugQueryKeyPrefix, slug] as const;
 
-/** Cache key prefix for skill lists grouped by range. */
 const skillsByRangeQueryKeyPrefix = [...skillsQueryKey, "by-range"] as const;
 
 /** Cache key for skills belonging to one range. */
@@ -68,12 +64,12 @@ interface SkillDeleteContext {
 const getRangeAtIndex = (
   ranges: readonly SkillRange[] | undefined,
   index: number
-): SkillRange | undefined =>
+) =>
   ranges === undefined || index < 0 || index >= ranges.length
     ? undefined
     : ranges[index];
 
-const hasConcurrentSkillMutation = (queryClient: QueryClient): boolean =>
+const hasConcurrentSkillMutation = (queryClient: QueryClient) =>
   queryClient
     .getMutationCache()
     .getAll()
@@ -88,7 +84,7 @@ const invalidateSkillQueries = async (
   queryKeys: readonly (readonly unknown[])[],
   callbacks: SkillMutationCallbacks,
   fallback: string
-): Promise<void> => {
+) => {
   const results = await Promise.allSettled(
     queryKeys.map(async (queryKey) => {
       await queryClient.invalidateQueries({ queryKey }, { throwOnError: true });
@@ -111,7 +107,7 @@ const invalidateSkillQueriesAfterMutation = async (
   queryKeys: readonly (readonly unknown[])[],
   callbacks: SkillMutationCallbacks,
   fallback: string
-): Promise<void> => {
+) => {
   if (hasConcurrentSkillMutation(queryClient)) {
     return;
   }

@@ -22,7 +22,6 @@ import {
 import type {
   DistributeGoldInput,
   TogglePaidOutInput,
-  VaultServiceInterface,
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
 import {
@@ -226,7 +225,7 @@ const togglePaidOutWithDatabase = (database: EffectPgDatabase) =>
     return { success: true } as const;
   });
 
-const makeService = (database: EffectPgDatabase): VaultServiceInterface => ({
+const makeService = (database: EffectPgDatabase) => ({
   distributeGold: Effect.fn("VaultService.distributeGold")(
     (input: DistributeGoldInput) => distributeGoldWithDatabase(database)(input)
   ),

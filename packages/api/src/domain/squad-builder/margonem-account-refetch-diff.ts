@@ -107,7 +107,7 @@ export interface ComputeMargonemAccountRefetchDiffInput {
 const fieldChangesForCharacter = (
   current: StoredMargonemCharacterSnapshot,
   latest: MargonemCharacterPreview
-): readonly MargonemCharacterFieldChange[] => {
+) => {
   const changes: MargonemCharacterFieldChange[] = [];
 
   if (current.name !== latest.name) {
@@ -148,7 +148,7 @@ export const computeMargonemAccountRefetchDiff = ({
   fetchedAt,
   latestCharacters,
   profileId,
-}: ComputeMargonemAccountRefetchDiffInput): MargonemAccountRefetchDiff => {
+}: ComputeMargonemAccountRefetchDiffInput) => {
   const currentByCharacterId = HashMap.fromIterable(
     currentCharacters.map(
       (current) => [current.margonemCharacterId, current] as const

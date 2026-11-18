@@ -1,7 +1,6 @@
 import * as Num from "effect/Number";
 import * as Option from "effect/Option";
 import { Trophy, User } from "lucide-react";
-import type { ReactElement } from "react";
 
 import {
   Accordion,
@@ -27,7 +26,7 @@ const SILVER_MEDAL = 2;
 
 const BRONZE_MEDAL = 3;
 
-const getRankIcon = (position: number): ReactElement | null => {
+const getRankIcon = (position: number) => {
   if (position === GOLD_MEDAL) {
     return <Trophy aria-hidden="true" className="size-5 text-yellow-500" />;
   }
@@ -68,9 +67,7 @@ export const RankingList = ({ players }: RankingListProps) => (
           key={player.userId}
         >
           <CardContent className="px-4 py-0">
-            {/* Desktop View */}
             <div className="hidden items-center gap-4 sm:flex">
-              {/* Rank Icon or Number */}
               <div className="flex w-8 shrink-0 items-center justify-center">
                 {rankIcon ?? (
                   <span className="text-muted-foreground font-medium">
@@ -79,7 +76,6 @@ export const RankingList = ({ players }: RankingListProps) => (
                 )}
               </div>
 
-              {/* Avatar */}
               <Avatar className="border-border size-10 shrink-0 border">
                 <AvatarImage
                   alt={player.userName ?? "Nieznany użytkownik"}
@@ -90,14 +86,11 @@ export const RankingList = ({ players }: RankingListProps) => (
                 </AvatarFallback>
               </Avatar>
 
-              {/* Name */}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{player.userName}</p>
               </div>
 
-              {/* Stats */}
               <div className="flex shrink-0 items-center gap-8 text-sm">
-                {/* Points */}
                 <div className="w-24 text-center">
                   <p className="text-muted-foreground text-xs">Punkty</p>
                   <p className="font-mono text-sm font-bold">
@@ -105,13 +98,11 @@ export const RankingList = ({ players }: RankingListProps) => (
                   </p>
                 </div>
 
-                {/* Bets */}
                 <div className="w-24 text-center">
                   <p className="text-muted-foreground text-xs">Obstawienia</p>
                   <p className="font-semibold">{player.totalBets}</p>
                 </div>
 
-                {/* Gold */}
                 <div className="w-28 text-center">
                   <p className="text-muted-foreground text-xs">Zarobek</p>
                   <p className="font-mono font-semibold">
@@ -123,12 +114,10 @@ export const RankingList = ({ players }: RankingListProps) => (
               </div>
             </div>
 
-            {/* Mobile View - Accordion */}
             <Accordion className="sm:hidden">
               <AccordionItem className="border-0" value={player.userId}>
                 <AccordionTrigger className="flex w-full items-center hover:no-underline">
                   <div className="flex w-full items-center gap-3">
-                    {/* Rank Icon or Number */}
                     <div className="flex w-6 shrink-0 items-center justify-center">
                       {rankIcon ?? (
                         <span className="text-muted-foreground font-medium">
@@ -137,7 +126,6 @@ export const RankingList = ({ players }: RankingListProps) => (
                       )}
                     </div>
 
-                    {/* Avatar */}
                     <Avatar className="border-border size-12 shrink-0 border">
                       <AvatarImage
                         alt={player.userName ?? "Nieznany użytkownik"}
@@ -148,7 +136,6 @@ export const RankingList = ({ players }: RankingListProps) => (
                       </AvatarFallback>
                     </Avatar>
 
-                    {/* Name and Points Preview */}
                     <div className="flex w-full items-center justify-between">
                       <p className="truncate font-semibold">
                         {player.userName}

@@ -403,7 +403,6 @@ const listGlobalSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
     return groups;
   });
 
-/** Provide the squad-group directory store with its Drizzle implementation. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleSquadGroupDirectoryStoreServiceLayer: Layer.Layer<

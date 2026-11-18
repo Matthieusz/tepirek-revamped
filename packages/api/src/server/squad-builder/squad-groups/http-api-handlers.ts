@@ -103,9 +103,7 @@ function mapSquadGroupsError(
 function mapSquadGroupsError(
   error: SaveSquadGroupError | EffectSharedSquadGroupSaveError
 ): SaveSquadGroupProtocolError;
-function mapSquadGroupsError(
-  error: SquadGroupsHandlerError
-): SaveSquadGroupProtocolError {
+function mapSquadGroupsError(error: SquadGroupsHandlerError) {
   return Match.value(error).pipe(
     Match.tag(
       "SquadGroupNotFound",
@@ -148,41 +146,34 @@ function mapSquadGroupsError(
   );
 }
 
-const mapCreateSquadGroupError = (
-  error: CreateSquadGroupError
-): CreateSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapCreateSquadGroupError = (error: CreateSquadGroupError) =>
+  mapSquadGroupsError(error);
 
-const mapDeleteSquadGroupError = (
-  error: DeleteSquadGroupError
-): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapDeleteSquadGroupError = (error: DeleteSquadGroupError) =>
+  mapSquadGroupsError(error);
 
-const mapListOwnedSquadGroupsError = (
-  error: ListOwnedSquadGroupsError
-): SquadBuilderPersistenceUnavailable => mapSquadGroupsError(error);
+const mapListOwnedSquadGroupsError = (error: ListOwnedSquadGroupsError) =>
+  mapSquadGroupsError(error);
 
-const mapListGlobalSquadGroupsError = (
-  error: ListGlobalSquadGroupsError
-): ListGlobalSquadGroupsProtocolError => mapSquadGroupsError(error);
+const mapListGlobalSquadGroupsError = (error: ListGlobalSquadGroupsError) =>
+  mapSquadGroupsError(error);
 
-const mapGetSquadGroupDetailError = (
-  error: GetSquadGroupDetailError
-): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapGetSquadGroupDetailError = (error: GetSquadGroupDetailError) =>
+  mapSquadGroupsError(error);
 
 const mapListAvailableSquadCharactersError = (
   error: ListAvailableSquadCharactersError
-): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+) => mapSquadGroupsError(error);
 
-const mapSaveSquadGroupError = (
-  error: SaveSquadGroupError
-): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapSaveSquadGroupError = (error: SaveSquadGroupError) =>
+  mapSquadGroupsError(error);
 
 const mapSaveSharedSquadGroupCharactersError = (
   error: EffectSharedSquadGroupSaveError
-): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+) => mapSquadGroupsError(error);
 
-const mapSetSquadGroupVisibilityError = (
-  error: SetSquadGroupVisibilityError
-): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapSetSquadGroupVisibilityError = (error: SetSquadGroupVisibilityError) =>
+  mapSquadGroupsError(error);
 
 export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

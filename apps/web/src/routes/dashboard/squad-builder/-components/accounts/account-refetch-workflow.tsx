@@ -61,9 +61,7 @@ interface AccountRefetchPreview {
 
 type AccountRefetchPreviewApi = PreviewAccountRefetchSuccess;
 
-const toAccountRefetchPreview = (
-  preview: AccountRefetchPreviewApi
-): AccountRefetchPreview => ({
+const toAccountRefetchPreview = (preview: AccountRefetchPreviewApi) => ({
   diff: {
     added: preview.diff.added.map(({ latest }) => ({
       avatarUrl: latest.avatarUrl,

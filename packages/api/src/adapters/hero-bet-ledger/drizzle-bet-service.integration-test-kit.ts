@@ -37,7 +37,6 @@ export {
 
 /** Shared live layers used by the hero-bet-ledger integration tests. */
 export const testLayer = (() => {
-  // Pool eviction uses real time; ledger timestamps remain controlled by TestClock.
   const databaseLayer = makeLiveDatabaseLayer(testDatabaseUrl).pipe(
     Layer.provide(Layer.succeed(Clock.Clock, Clock.Clock.defaultValue()))
   );

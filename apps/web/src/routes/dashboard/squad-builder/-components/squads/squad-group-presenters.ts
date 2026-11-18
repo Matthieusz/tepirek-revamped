@@ -3,7 +3,7 @@ const pluralize = (
   singular: string,
   few: string,
   many: string
-): string => {
+) => {
   if (count === 1) {
     return singular;
   }
@@ -15,8 +15,8 @@ const pluralize = (
   return many;
 };
 
-export const formatCharacterCount = (count: number): string =>
+export const formatCharacterCount = (count: number) =>
   `${count} ${pluralize(count, "postać", "postacie", "postaci")}`;
 
-export const formatSquadCount = (count: number): string =>
+export const formatSquadCount = (count: number) =>
   `${count} ${pluralize(count, "skład", "składy", "składów")}`;

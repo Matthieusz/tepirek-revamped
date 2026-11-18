@@ -35,9 +35,8 @@ const isUnexpectedApiError = (
 
 const decodeUnexpectedApiError = (
   response: Effect.Effect<unknown, unknown, unknown>
-): Effect.Effect<unknown, unknown, unknown> =>
+) =>
   response.pipe(
-    // Effect.catchIf receives an Effect handler, not a Promise callback.
     // oxlint-disable-next-line promise/prefer-await-to-callbacks -- required by Effect's recovery API
     Effect.catchIf(isUnexpectedApiError, (error) =>
       HttpClientResponse.schemaBodyJson(HttpApiError)(
@@ -52,9 +51,6 @@ const decodeUnexpectedApiError = (
 /** Builds the protocol client on the supplied HTTP transport, preserving safe failure guidance. */
 export const makeAppHttpApiClient = Effect.gen(
   function* makeClientWithFailureGuidance() {
-    // HttpApiClient gives transformResponse the decoded effect, not the response.
-    // Pair allowlisted headers with its executing fiber until decoding finishes;
-    // this also keeps simultaneous requests from sharing correlation IDs.
     const headersByFiber = new WeakMap<
       Fiber.Fiber<unknown, unknown>,
       Readonly<Record<string, string>>

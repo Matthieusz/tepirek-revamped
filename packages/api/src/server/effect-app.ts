@@ -11,31 +11,11 @@ import { buildFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/f
 import { DrizzleFirecrawlRequestAccountingStoreServiceLayer } from "../adapters/squad-builder/persistence/firecrawl-request-accounting-store.ts";
 import { buildDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
 import type { DiscordVerificationConfig as DiscordVerificationConfigService } from "../adapters/user/discord-verification-config.ts";
-import type { AnnouncementStore } from "../services/announcement/announcement-store.ts";
-import type { AuctionStore } from "../services/auction/auction-store.ts";
-import type { BetService } from "../services/bet/bet-service.ts";
-import type { EventStore } from "../services/event/event-store.ts";
-import type { HeroesStore } from "../services/heroes/heroes-store.ts";
 import { LegendCatalogSyncLiveLayer } from "../services/legend-pricing/legend-catalog-sync.ts";
-import type { LegendPricingStore } from "../services/legend-pricing/legend-pricing-store.ts";
-import type { RankingService } from "../services/ranking/ranking-service.ts";
-import type { SkillsStore } from "../services/skills/skills-store.ts";
-import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store.ts";
-import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store.ts";
-import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store.ts";
-import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.ts";
 import type {
   FirecrawlConfig,
   FirecrawlConfigService,
 } from "../services/squad-builder/firecrawl-config.ts";
-import type { FirecrawlRequestAccountingStoreService } from "../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { SquadGroupAggregateStoreService } from "../services/squad-builder/squad-groups/squad-group-aggregate-store.ts";
-import type { SquadGroupDirectoryStoreService } from "../services/squad-builder/squad-groups/squad-group-directory-store.ts";
-import type { SquadGroupSharingStoreService } from "../services/squad-builder/squad-groups/squad-group-sharing-store.ts";
-import type { TodoStore } from "../services/todo/todo-store.ts";
-import type { DiscordGuildVerifier } from "../services/user/discord-guild-verifier.ts";
-import type { UserStore } from "../services/user/user-store.ts";
-import type { VaultService } from "../services/vault/vault-service.ts";
 import { GuildLedgerLiveLayer } from "./guild-ledger/live.ts";
 import { GuildToolsLiveLayer } from "./guild-tools/live.ts";
 import { SquadBuilderLiveLayer } from "./squad-builder/live.ts";
@@ -44,7 +24,7 @@ const makeApiStableLayer = <DatabaseError>(
   databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>,
   discordConfigLayer: Layer.Layer<DiscordVerificationConfigService>,
   firecrawlConfigLayer: Layer.Layer<FirecrawlConfigService>
-): Layer.Layer<ApplicationServices, DatabaseError> =>
+) =>
   Layer.mergeAll(
     GuildToolsLiveLayer,
     GuildLedgerLiveLayer,
@@ -53,7 +33,7 @@ const makeApiStableLayer = <DatabaseError>(
   ).pipe(
     Layer.provide(databaseLayer),
     Layer.provide(discordConfigLayer),
-    // Scraping workflows also consume the configuration directly.
+
     Layer.provideMerge(firecrawlConfigLayer)
   );
 
@@ -117,26 +97,3 @@ export const buildApiLiveLayerFromValues = (config: {
     discordGuildId: config.discordGuildId,
     firecrawl: config.firecrawl,
   });
-
-type ApplicationServices =
-  | AnnouncementStore
-  | TodoStore
-  | HeroesStore
-  | BetService
-  | RankingService
-  | VaultService
-  | LegendPricingStore
-  | EventStore
-  | SkillsStore
-  | AuctionStore
-  | UserStore
-  | DiscordGuildVerifier
-  | SquadGroupAggregateStoreService
-  | SquadGroupDirectoryStoreService
-  | SquadGroupSharingStoreService
-  | AccountImportStoreService
-  | AccountRefetchStoreService
-  | AccountSharingStoreService
-  | FirecrawlClientService
-  | FirecrawlConfigService
-  | FirecrawlRequestAccountingStoreService;

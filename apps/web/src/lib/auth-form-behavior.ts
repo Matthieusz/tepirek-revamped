@@ -31,7 +31,7 @@ export class AuthFormSubmissionError extends Schema.TaggedError<
 /** Returns the provider's safest available message for an auth failure. */
 export const getAuthProviderErrorMessage = (
   error: AuthProviderErrorDetails
-): string => {
+) => {
   const message = error.message?.trim();
 
   if (message !== undefined && message.length > 0) {
@@ -63,7 +63,7 @@ export const AuthFormSubmissionResult =
 export const authFormSubmission = <Response extends AuthResponse>(
   operation: AuthOperation,
   request: () => Promise<Response>
-): Effect.Effect<void, AuthFormSubmissionError> =>
+) =>
   Effect.tryPromise({
     catch: (cause) => {
       if (!(cause instanceof Error)) {
@@ -100,7 +100,7 @@ export const authFormSubmission = <Response extends AuthResponse>(
 export const runAuthFormSubmission = async <Response extends AuthResponse>(
   operation: AuthOperation,
   request: () => Promise<Response>
-): Promise<AuthFormSubmissionResult> => {
+) => {
   try {
     await Effect.runPromise(authFormSubmission(operation, request));
 
@@ -119,7 +119,7 @@ export const handleLoginSuccess = async (actions: {
   readonly invalidate: () => Promise<void>;
   readonly navigate: () => Promise<void>;
   readonly notifySuccess: (message: string) => void;
-}): Promise<void> => {
+}) => {
   actions.notifySuccess("Zalogowano pomyślnie");
   await actions.invalidate();
   await actions.navigate();
@@ -129,7 +129,7 @@ export const handleLoginSuccess = async (actions: {
 export const handleSignupSuccess = async (actions: {
   readonly navigate: () => Promise<void>;
   readonly notifySuccess: (message: string) => void;
-}): Promise<void> => {
+}) => {
   await actions.navigate();
   actions.notifySuccess("Zarejestrowano pomyślnie");
 };

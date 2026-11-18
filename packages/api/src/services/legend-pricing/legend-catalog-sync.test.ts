@@ -7,10 +7,7 @@ import * as Layer from "effect/Layer";
 import { describe } from "vite-plus/test";
 
 import { MargonemForumClientService } from "../../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
-import type {
-  MargonemForumClient,
-  MargonemForumTopicPage,
-} from "../../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
+import type { MargonemForumClient } from "../../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
 import type {
   LegendCatalogStoreContract,
   LegendCatalogSyncFailure,
@@ -21,21 +18,20 @@ import {
   LegendCatalogSyncService,
 } from "./legend-catalog-sync.ts";
 
-const emptyTopic = (category: "hero" | "elite2"): MargonemForumTopicPage => ({
+const emptyTopic = (category: "hero" | "elite2") => ({
   category,
   html: "<html><body><table id=posts></table></body></html>",
   url: `https://forum.margonem.pl/?category=${category}`,
 });
 
-const makeStore = (
-  failures: LegendCatalogSyncFailure[]
-): LegendCatalogStoreContract => ({
-  reconcile: () => Effect.die("reconcile should not be called in this test"),
-  recordFailure: (input) =>
-    Effect.sync(() => {
-      failures.push(input);
-    }),
-});
+const makeStore = (failures: LegendCatalogSyncFailure[]) =>
+  ({
+    reconcile: () => Effect.die("reconcile should not be called in this test"),
+    recordFailure: (input) =>
+      Effect.sync(() => {
+        failures.push(input);
+      }),
+  }) satisfies LegendCatalogStoreContract;
 
 const provideSync = (
   forum: MargonemForumClient,

@@ -2,7 +2,6 @@
 import * as Arr from "effect/Array";
 import * as Data from "effect/Data";
 import * as DateTime from "effect/DateTime";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
@@ -120,12 +119,12 @@ interface LineFailure {
   readonly error: PreviewOwnedAccountImportLineError;
 }
 
-const isEmpty = (value: string): boolean => Str.isEmpty(Str.trim(value));
+const isEmpty = (value: string) => Str.isEmpty(Str.trim(value));
 
 const defaultDisplayNameFor = (
   suggestedAccountName: string,
   profileId: MargonemProfileId
-): Effect<AccountDisplayName> =>
+) =>
   parseAccountDisplayName(suggestedAccountName).pipe(
     EffectRuntime.matchEffect({
       onFailure: () =>
@@ -142,9 +141,7 @@ const defaultDisplayNameFor = (
     })
   );
 
-const accessStateToLineError = (
-  state: ProfileAccessState
-): DuplicateMargonemAccountError | undefined =>
+const accessStateToLineError = (state: ProfileAccessState) =>
   ProfileAccessState.$match(state, {
     Available: () =>
       Option.none<DuplicateMargonemAccountError>().pipe(Option.getOrUndefined),
@@ -153,9 +150,7 @@ const accessStateToLineError = (
     SharedWithActor: () => new MargonemAccountAlreadySharedWithActor(),
   });
 
-const toFailedItem = (
-  lineFailure: LineFailure
-): PreviewOwnedAccountImportItem =>
+const toFailedItem = (lineFailure: LineFailure) =>
   PreviewOwnedAccountImportItem.PreviewFailed({
     error: lineFailure.error,
     inputUrl: lineFailure.inputUrl,
@@ -176,10 +171,7 @@ const persistPendingImport = ({
   readonly now: Date;
   readonly preview: PreviewMargonemProfileImportOutput;
   readonly store: typeof AccountImportStoreService.Service;
-}): Effect<{
-  readonly lineNumber: number;
-  readonly item: PreviewOwnedAccountImportItem;
-}> =>
+}) =>
   EffectRuntime.gen(function* persistPendingImportEffect() {
     const expiresAt = DateTime.fromDateUnsafe(now).pipe(
       DateTime.add({ minutes: pendingImportPolicy.expiresAfterMinutes }),

@@ -103,7 +103,6 @@ const CellContent: React.FC<CellContentProps> = ({
           </AvatarFallback>
         </Avatar>
         <span className="relative min-w-0 flex-1 text-sm font-medium">
-          {/* Keep username width to prevent layout shift */}
           <span className="block truncate group-hover/signup:invisible">
             {signup.userName}
           </span>
@@ -223,20 +222,21 @@ const AuctionTableContent: React.FC<AuctionTableContentProps> = ({
     (signup) => `${signup.level}-${signup.round}-${signup.column}`
   );
 
-  const getSignupForCell = (
+  const getSignupForCell: (
     level: number,
     round: number,
     column: number
-  ): AuctionSignup | undefined => {
+  ) => AuctionSignup | undefined = (
+    level: number,
+    round: number,
+    column: number
+  ) => {
     const cellSignups = signupMap[`${level}-${round}-${column}`];
 
-    if (cellSignups && cellSignups.length > 0) {
-      const own = cellSignups.find((signup) => signup.userId === currentUserId);
-
-      return own ?? cellSignups[0];
-    }
-
-    return undefined;
+    return (
+      cellSignups?.find((signup) => signup.userId === currentUserId) ??
+      cellSignups?.[0]
+    );
   };
 
   return (

@@ -47,11 +47,15 @@ export interface QueryDiagnostic {
 }
 
 /** Projects unknown cache failures to a closed set of operation and semantic error labels. */
-export const queryDiagnostic = (
+export const queryDiagnostic: (
   kind: "query" | "mutation",
   operation: CaughtError,
   error: CaughtError
-): QueryDiagnostic => {
+) => QueryDiagnostic = (
+  kind: "query" | "mutation",
+  operation: CaughtError,
+  error: CaughtError
+) => {
   const failure: unknown =
     error instanceof EffectQueryFailure ? error.failure : error;
 
@@ -72,6 +76,6 @@ export const queryDiagnostic = (
 };
 
 /** Reports only the safe cache projection to the browser diagnostic sink. */
-export const reportQueryDiagnostic = (diagnostic: QueryDiagnostic): void => {
+export const reportQueryDiagnostic = (diagnostic: QueryDiagnostic) => {
   console.warn("API operation failed", diagnostic);
 };

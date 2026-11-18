@@ -8,7 +8,6 @@ import type { UpdateLegendCostInput } from "@/features/legend-pricing/legend-pri
 import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
-/** Cache key for the active legendary item price catalogue. */
 const legendPricesQueryKey = ["legend-pricing", "list"] as const;
 
 interface LegendPricingMutationCallbacks {
@@ -18,7 +17,7 @@ interface LegendPricingMutationCallbacks {
 const invalidateLegendPrices = async (
   queryClient: QueryClient,
   callbacks: LegendPricingMutationCallbacks
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries(
       { queryKey: legendPricesQueryKey },

@@ -17,7 +17,7 @@ const item = (
     readonly path?: string;
     readonly stats?: string;
   } = {}
-): string =>
+) =>
   `<div class=itemborder><IMG src='https://micc.garmory-cdn.cloud/obrazki/itemy/${input.path ?? "pie/ring.gif"}' stats='${input.name ?? "Pierścień Strażnika"}||${input.stats ?? "binds;legbon=critred,23;lvl=23;rarity=legendary;reqp=bh"}||${input.itemClass ?? 12}||427178' ctip=item></div>`;
 
 const enemy = (
@@ -28,13 +28,13 @@ const enemy = (
     readonly name?: string;
     readonly profession?: string;
   } = {}
-): string => `
+) => `
   <center><blockquote><b>${input.name ?? "Domina Ecclesiae"}</b> - <i>${input.profession ?? "Tancerz Ostrzy"}, ${input.level ?? 21} lvl</i></blockquote></center>
   <BR><img src='//micc.garmory-cdn.cloud/obrazki/npc/${input.icon ?? "her/domina.gif"}'>
   <BR><b>Szablon zdobyczy:</b><BR>${input.items ?? item()}
 `;
 
-const officialPost = (postId: number, content: string): string => `
+const officialPost = (postId: number, content: string) => `
   <tr><td class="puser mod"><a name="post${postId}"></a>
     <div class="nickwood"><h3>Ekipa Garmory</h3></div>
     <a href="https://www.margonem.pl/profile/view,7798898"><img src="avatar.gif"></a>
@@ -43,7 +43,7 @@ const officialPost = (postId: number, content: string): string => `
   <tr><td class="postid mod">2026.01.01<BR><i>Edytowany 14:59:56 1.7.2026 przez Vigellal</i>
 `;
 
-const userPost = (postId: number, content: string): string => `
+const userPost = (postId: number, content: string) => `
   <tr><td class="puser"><a name="post${postId}"></a>
     <div class="nickwood"><h3>Zwykły gracz</h3></div>
     <a href="https://www.margonem.pl/profile/view,123"><img src="avatar.gif"></a>
@@ -51,16 +51,13 @@ const userPost = (postId: number, content: string): string => `
   <tr><td class="postid">2026.01.01
 `;
 
-const page = (
-  category: "hero" | "elite2",
-  posts: string
-): Parameters<typeof parseMargonemForumTopic>[0] => ({
+const page = (category: "hero" | "elite2", posts: string) => ({
   category,
   html: `<html><body><table id=posts>${posts}</table></body></html>`,
   url: category === "hero" ? HERO_URL : ELITE2_URL,
 });
 
-const headingPost = (category: "hero" | "elite2"): string =>
+const headingPost = (category: "hero" | "elite2") =>
   officialPost(
     100,
     `<blockquote>${category === "hero" ? "HEROSI" : "ELITY II"}</blockquote>`

@@ -18,7 +18,7 @@ const queryGcTime = 5 * 60_000;
  */
 export const createQueryClient = (
   report: (diagnostic: QueryDiagnostic) => void = reportQueryDiagnostic
-): QueryClient =>
+) =>
   new QueryClient({
     defaultOptions: {
       mutations: {

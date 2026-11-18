@@ -14,7 +14,7 @@ const namedHtmlEntities = new Map([
 ]);
 
 /** Decode the HTML entities used by Margonem forum attributes and text. */
-export const decodeMargonemForumHtmlEntities = (value: string): string =>
+export const decodeMargonemForumHtmlEntities = (value: string) =>
   value.replaceAll(htmlEntityPattern, (entity) => {
     const entityName = entity.slice(1, -1).toLowerCase();
     const namedEntity = namedHtmlEntities.get(entityName);
@@ -38,7 +38,7 @@ export const decodeMargonemForumHtmlEntities = (value: string): string =>
 export const extractMargonemForumAttribute = (
   html: string,
   attribute: string
-): string | undefined => {
+) => {
   const pattern = new RegExp(
     `\\b${attribute}\\s*=\\s*(?:"(?<double>[^"]*)"|'(?<single>[^']*)'|(?<unquoted>[^\\s>]+))`,
     "iu"
@@ -52,7 +52,7 @@ export const extractMargonemForumAttribute = (
 };
 
 /** Remove markup and normalize visible text from a small HTML fragment. */
-export const extractMargonemForumText = (value: string): string =>
+export const extractMargonemForumText = (value: string) =>
   decodeMargonemForumHtmlEntities(value.replaceAll(htmlTagPattern, " "))
     .replaceAll(/\s+/gu, " ")
     .trim();

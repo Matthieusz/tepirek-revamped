@@ -127,9 +127,7 @@ const decodeFirecrawlResponse = (
     return envelope.data;
   });
 
-const makeFirecrawlClient = (
-  client: HttpClient.HttpClient
-): HttpClient.HttpClient =>
+const makeFirecrawlClient = (client: HttpClient.HttpClient) =>
   client.pipe(
     HttpClient.mapRequest(HttpClientRequest.prependUrl(FIRECRAWL_API_BASE_URL))
   );

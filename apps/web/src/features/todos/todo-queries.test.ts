@@ -16,7 +16,6 @@ import {
   todosQueryOptions,
   toggleTodoMutationOptions,
 } from "@/features/todos/todo-queries";
-import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
@@ -26,7 +25,7 @@ interface Deferred<A> {
   readonly resolve: (value: A) => void;
 }
 
-const deferred = <A>(): Deferred<A> => {
+const deferred = <A>() => {
   let resolvePromise: (value: A) => void;
 
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
@@ -39,10 +38,10 @@ const deferred = <A>(): Deferred<A> => {
     resolve: (value) => {
       resolvePromise(value);
     },
-  };
+  } satisfies Deferred<A>;
 };
 
-const makeTodo = (id: number, completed = false, text = `todo ${id}`): Todo =>
+const makeTodo = (id: number, completed = false, text = `todo ${id}`) =>
   Schema.decodeSync(TodoSummary)({
     completed,
     id,
@@ -50,29 +49,19 @@ const makeTodo = (id: number, completed = false, text = `todo ${id}`): Todo =>
     userId: "user-1",
   });
 
-const jsonResponse = (body: readonly Todo[], status = 200): Response =>
+const jsonResponse = (body: readonly Todo[], status = 200) =>
   Response.json(body, { status });
 
-const voidResponse = (): Response => new Response(null, { status: 200 });
+const voidResponse = () => new Response(null, { status: 200 });
 
 type PlannedResponse = Response | Promise<Response>;
-
-interface TodoTransport {
-  readonly calls: {
-    create: number;
-    delete: number;
-    list: number;
-    toggle: number;
-  };
-  readonly effectQuery: AppEffectQuery;
-}
 
 const makeTodoTransport = (plans: {
   readonly create?: PlannedResponse[];
   readonly delete?: PlannedResponse[];
   readonly list?: PlannedResponse[];
   readonly toggle?: PlannedResponse[];
-}): TodoTransport => {
+}) => {
   const queues = {
     create: [...(plans.create ?? [])],
     delete: [...(plans.delete ?? [])],

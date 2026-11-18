@@ -3,7 +3,6 @@ import { SkillSummary } from "@tepirek-revamped/api/protocol/skills/http-api-con
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import type { Skill } from "@/features/skills/skill-api";
 import {
   createSkillRangeMutationOptions,
   deleteSkillMutationOptions,
@@ -20,7 +19,7 @@ import {
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
-const makeSkill = (id: number): Skill =>
+const makeSkill = (id: number) =>
   Schema.decodeSync(SkillSummary)({
     addedBy: "user-1",
     addedByImage: null,
@@ -37,7 +36,7 @@ interface Deferred<A> {
   readonly resolve: (value: A) => void;
 }
 
-const deferred = <A>(): Deferred<A> => {
+const deferred = <A>() => {
   let resolvePromise: (value: A) => void;
 
   // oxlint-disable-next-line promise/avoid-new -- tests need manually controlled responses
@@ -50,7 +49,7 @@ const deferred = <A>(): Deferred<A> => {
     resolve: (value) => {
       resolvePromise(value);
     },
-  };
+  } satisfies Deferred<A>;
 };
 
 describe("skill queries and mutations", () => {

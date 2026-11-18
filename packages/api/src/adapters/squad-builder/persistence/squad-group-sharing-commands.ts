@@ -559,5 +559,3 @@ export const saveSharedSquadGroupCharactersWithDatabase = (
 
     return yield* persistenceQuery(operation, transaction);
   });
-
-/** Provide the squad-group sharing store with its Drizzle implementation. */

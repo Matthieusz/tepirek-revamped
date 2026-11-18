@@ -11,12 +11,11 @@ import {
   paginatedBetsQueryKeyPrefix,
   paginatedBetsQueryOptions,
 } from "@/features/events/bets/bet-queries";
-import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
-const makeEffectQueryFixture = (): AppEffectQuery =>
+const makeEffectQueryFixture = () =>
   makeTestAppEffectQuery(makeHttpApiTestLayer().layer);
 
 describe("bet queries", () => {

@@ -21,7 +21,6 @@ describe("formatVaultEarnings", () => {
   });
 
   it("rounds a fractional-million remainder down to whole millions", () => {
-    // 1_500_500_000 rounds down to 1_500_000_000 — the rule most likely to drift
     expect(formatVaultEarnings("1500500000")).toBe(pl(1_500_000_000));
   });
 

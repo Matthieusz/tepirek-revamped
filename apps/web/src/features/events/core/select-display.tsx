@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import type {
   EventSelectOption,
   HeroSelectOption,
@@ -18,7 +16,7 @@ const getEventSelectDisplay = ({
   events,
   allLabel = "Wszystkie eventy",
   placeholder = "Wybierz event",
-}: EventSelectDisplayParams): ReactNode => {
+}: EventSelectDisplayParams) => {
   if (selectedEventId === "all") {
     return allLabel;
   }
@@ -61,7 +59,7 @@ const getHeroSelectDisplay = ({
   eventPlaceholder = "Wybierz event",
   allLabel = "Wszyscy herosi",
   placeholder = "Wybierz herosa",
-}: HeroSelectDisplayParams): string => {
+}: HeroSelectDisplayParams) => {
   if (selectedEventId === "all") {
     return eventPlaceholder;
   }

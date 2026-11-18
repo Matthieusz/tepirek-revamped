@@ -12,10 +12,8 @@ import {
 } from "@/features/events/core/event-hero-filter";
 import type {
   EventHeroFilterSearch,
-  EventHeroFilterState,
   FilterSelection,
 } from "@/features/events/core/event-hero-filter";
-import type { EventSelectOption } from "@/features/events/core/event-hero-options";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { heroesByEventQueryOptions } from "@/features/events/heroes/hero-queries";
 
@@ -33,30 +31,12 @@ interface UseEventHeroFilterOptions {
   routeId: EventHeroFilterRouteId;
 }
 
-interface UseEventHeroFilterResult {
-  state: EventHeroFilterState;
-  events: readonly EventSelectOption[] | undefined;
-  /** Heroes for the selected Event, sorted by level. Empty when all Events. */
-  sortedHeroes: ReturnType<typeof sortHeroesByLevel>;
-  heroesLoading: boolean;
-  /** Whether the Hero query is enabled (specific Event selected). */
-  heroQueryEnabled: boolean;
-  /** The Event/Hero filter as router query inputs (undefined for all). */
-  queryInputs: { eventId: number | undefined; heroId: number | undefined };
-  /** Choose an Event; clears Hero. */
-  selectEvent: (eventId: FilterSelection) => void;
-  /** Choose a Hero; no-op when all Events is selected. */
-  selectHero: (heroId: FilterSelection) => void;
-}
-
 /**
  * Connects the pure Event/Hero filter module to the router: validated route
  * search, navigation, and the Event/Hero list queries. Page-specific data
  * queries (ranking, vault, bets) stay in the pages.
  */
-export const useEventHeroFilter = (
-  options: UseEventHeroFilterOptions
-): UseEventHeroFilterResult => {
+export const useEventHeroFilter = (options: UseEventHeroFilterOptions) => {
   const { routeId } = options;
 
   const { eventId: urlEventId, heroId: urlHeroId } = useSearch({

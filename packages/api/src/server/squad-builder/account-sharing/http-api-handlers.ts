@@ -95,9 +95,7 @@ function mapAccountSharingError(
 function mapAccountSharingError(
   error: SendAccountAccessInviteError
 ): SendAccountAccessInviteProtocolError;
-function mapAccountSharingError(
-  error: AccountSharingHandlerError
-): SendAccountAccessInviteProtocolError {
+function mapAccountSharingError(error: AccountSharingHandlerError) {
   return Match.value(error).pipe(
     Match.tag(
       "MargonemAccountNotFound",
@@ -133,31 +131,27 @@ function mapAccountSharingError(
 
 const mapSearchAccountInviteTargetsError = (
   error: SearchAccountInviteTargetsError
-): SearchAccountInviteTargetsProtocolError => mapAccountSharingError(error);
+) => mapAccountSharingError(error);
 
-const mapSendAccountAccessInviteError = (
-  error: SendAccountAccessInviteError
-): SendAccountAccessInviteProtocolError => mapAccountSharingError(error);
+const mapSendAccountAccessInviteError = (error: SendAccountAccessInviteError) =>
+  mapAccountSharingError(error);
 
 const mapRespondToAccountAccessInviteError = (
   error: RespondToAccountAccessInviteError
-): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+) => mapAccountSharingError(error);
 
-const mapRevokeAccountAccessError = (
-  error: RevokeAccountAccessError
-): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+const mapRevokeAccountAccessError = (error: RevokeAccountAccessError) =>
+  mapAccountSharingError(error);
 
 const mapListIncomingAccountInvitesError = (
   error: ListIncomingAccountInvitesError
-): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+) => mapAccountSharingError(error);
 
-const mapListSharedAccountsError = (
-  error: ListSharedAccountsError
-): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+const mapListSharedAccountsError = (error: ListSharedAccountsError) =>
+  mapAccountSharingError(error);
 
-const mapListAccountAccessGrantsError = (
-  error: ListAccountAccessGrantsError
-): ListAccountAccessGrantsProtocolError => mapAccountSharingError(error);
+const mapListAccountAccessGrantsError = (error: ListAccountAccessGrantsError) =>
+  mapAccountSharingError(error);
 
 export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

@@ -78,7 +78,7 @@ export const AddAnnouncementModal = ({
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
 
-  const handleOpenChange = (nextOpen: boolean): void => {
+  const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;

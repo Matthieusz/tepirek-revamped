@@ -54,7 +54,7 @@ interface SquadRosterWorkspaceProps {
   readonly onRemoveSquad: (squadKey: string) => void;
 }
 
-const avatarFallback = (name: string): string => name.slice(0, 2).toUpperCase();
+const avatarFallback = (name: string) => name.slice(0, 2).toUpperCase();
 
 const ownerTintStyle = (color: string | undefined) =>
   color === undefined
@@ -198,7 +198,7 @@ interface SquadLevelRange {
 const getSquadLevelRange = (
   squad: DraftSquad,
   characterById: HashMap.HashMap<number, SquadCharacterMetadata>
-): SquadLevelRange | undefined => {
+) => {
   let min: number | undefined;
   let max: number | undefined;
 
@@ -219,15 +219,10 @@ const getSquadLevelRange = (
   return min === undefined || max === undefined ? undefined : { max, min };
 };
 
-interface ProfessionCount {
-  readonly count: number;
-  readonly profession: string;
-}
-
 const getSquadProfessionCounts = (
   squad: DraftSquad,
   characterById: HashMap.HashMap<number, SquadCharacterMetadata>
-): readonly ProfessionCount[] => {
+) => {
   const professions = squad.characters.flatMap((draftCharacter) => {
     const character = HashMap.get(
       characterById,
@@ -245,9 +240,7 @@ const getSquadProfessionCounts = (
   }));
 };
 
-const formatSquadLevelRange = (
-  levelRange: SquadLevelRange | undefined
-): string => {
+const formatSquadLevelRange = (levelRange: SquadLevelRange | undefined) => {
   if (levelRange === undefined) {
     return "Poziomy postaci niedostępne";
   }
@@ -494,7 +487,6 @@ export const SquadRosterWorkspace = ({
     }
   }
 
-  // Include the pool so removing a placement does not recolor remaining owners.
   const ownerIds = [
     ...new Set(
       [...characterById].map(([, character]) => character.accountOwnerUserId)

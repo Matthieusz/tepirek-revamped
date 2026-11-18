@@ -121,7 +121,7 @@ const AddSkillModalContent = ({
     submitLabel = "Tworzenie...";
   }
 
-  const handleOpenChange = (nextOpen: boolean): void => {
+  const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;

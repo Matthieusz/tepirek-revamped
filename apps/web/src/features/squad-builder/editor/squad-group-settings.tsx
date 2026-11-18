@@ -53,7 +53,7 @@ interface SquadGroupSettingsProps {
   readonly groupName: string;
 }
 
-const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
+const useDebouncedValue = <T,>(value: T, delayMs: number) => {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -68,10 +68,7 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
   return debounced;
 };
 
-const searchStatus = (
-  queryLength: number,
-  loaded: boolean
-): string | undefined => {
+const searchStatus = (queryLength: number, loaded: boolean) => {
   if (queryLength < 2) {
     return "Wpisz co najmniej 2 znaki";
   }

@@ -12,9 +12,8 @@ import {
   SessionUnavailable,
 } from "../../protocol/auth/http-api-middleware.ts";
 
-const headersFromRequest = (
-  request: HttpServerRequest.HttpServerRequest
-): Headers => new Headers(request.headers);
+const headersFromRequest = (request: HttpServerRequest.HttpServerRequest) =>
+  new Headers(request.headers);
 
 /** Load and decode the request session through the Better Auth boundary. */
 export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
@@ -41,7 +40,6 @@ export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
       Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
     );
 
-    // Identity is attached after parsing, without a second session lookup or PII.
     yield* set({ userId });
 
     return {

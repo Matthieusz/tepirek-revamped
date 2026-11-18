@@ -323,7 +323,6 @@ const updateWithDatabase =
       database.transaction((tx) => updateWithTransaction(tx, input))
     );
 
-/** Provide PostgreSQL-backed legendary price reads and optimistic writes. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleLegendPricingStoreLayer: Layer.Layer<

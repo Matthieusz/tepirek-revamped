@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { FormFieldFrame } from "@/components/forms/form-field-helpers";
 import {
   getFieldErrorMessage,
@@ -68,7 +66,7 @@ export const EventFormField = ({
   eventsLoading,
   field,
   onChange,
-}: EventFormFieldProps): ReactNode => {
+}: EventFormFieldProps) => {
   const { error, errorId, fieldId, showError } = getSelectFieldState(field);
 
   return (
@@ -130,7 +128,7 @@ export const HeroFormField = ({
   field,
   heroes,
   heroesLoading,
-}: HeroFormFieldProps): ReactNode => {
+}: HeroFormFieldProps) => {
   const { error, errorId, fieldId, showError } = getSelectFieldState(field);
   const value = eventId === ALL_FILTER ? ALL_FILTER : field.state.value;
 

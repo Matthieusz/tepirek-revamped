@@ -33,7 +33,6 @@ export interface MargonemForumTopicPage {
   readonly url: string;
 }
 
-/** Failure while downloading a Margonem forum guide. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
 class MargonemForumRequestFailed extends Schema.TaggedError<
   MargonemForumRequestFailed,
@@ -44,7 +43,6 @@ class MargonemForumRequestFailed extends Schema.TaggedError<
   status: Schema.optionalKey(Schema.Int),
 }) {}
 
-/** A response was not a complete HTML guide document and is unsafe to parse. */
 // oxlint-disable-next-line unicorn/throw-new-error -- Schema.TaggedError is a curried class factory, not an error constructor.
 class MargonemForumDocumentRejected extends Schema.TaggedError<
   MargonemForumDocumentRejected,
@@ -76,21 +74,15 @@ const requestFailed = (
   category: LegendaryEnemyCategory,
   cause: unknown,
   status?: number
-): MargonemForumRequestFailed =>
+) =>
   status === undefined
     ? new MargonemForumRequestFailed({ category, cause })
     : new MargonemForumRequestFailed({ category, cause, status });
 
-const rejectDocument = (
-  category: LegendaryEnemyCategory,
-  reason: string
-): MargonemForumDocumentRejected =>
+const rejectDocument = (category: LegendaryEnemyCategory, reason: string) =>
   new MargonemForumDocumentRejected({ category, reason });
 
-const validateDocument = (
-  category: LegendaryEnemyCategory,
-  html: string
-): Effect.Effect<string, MargonemForumDocumentRejected> => {
+const validateDocument = (category: LegendaryEnemyCategory, html: string) => {
   const { byteLength } = new TextEncoder().encode(html);
 
   if (byteLength > MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES) {

@@ -51,9 +51,7 @@ export class InvalidInvitationAccessStatus extends Schema.TaggedError<
 >()("InvalidInvitationAccessStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status into the shared lifecycle state. */
-export const parseInvitationAccessStatus = (
-  value: string
-): Effect.Effect<InvitationAccessStatus, InvalidInvitationAccessStatus> =>
+export const parseInvitationAccessStatus = (value: string) =>
   Schema.decodeUnknownEffect(InvitationAccessStatusSchema)(value).pipe(
     Effect.mapError(() => new InvalidInvitationAccessStatus({ value }))
   );
@@ -62,7 +60,7 @@ export const parseInvitationAccessStatus = (
 export const canTransitionInvitationAccess = (
   from: InvitationAccessStatus,
   to: InvitationAccessStatus
-): boolean => {
+) => {
   const allowedStatuses: readonly InvitationAccessStatus[] =
     invitationAccessTransitionTable[from];
 
@@ -78,10 +76,7 @@ export const canTransitionInvitationAccess = (
 export const transitionInvitationAccess = (
   currentStatus: InvitationAccessStatus,
   nextStatus: InvitationAccessStatus
-): Effect.Effect<
-  InvitationAccessStatus,
-  InvitationAccessTransitionNotAllowed
-> => {
+) => {
   if (canTransitionInvitationAccess(currentStatus, nextStatus)) {
     return Effect.succeed(nextStatus);
   }

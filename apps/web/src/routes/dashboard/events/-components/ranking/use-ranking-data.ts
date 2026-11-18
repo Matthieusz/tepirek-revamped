@@ -20,7 +20,7 @@ interface RankingFilterInput {
 const sortRanking = (
   ranking: readonly RankingItem[] | undefined,
   sortBy: "points" | "bets" | "gold"
-): RankingItem[] => {
+) => {
   const descendingNumber = Order.flip(Order.Number);
 
   if (sortBy === "bets") {

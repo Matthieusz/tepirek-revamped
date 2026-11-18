@@ -1,7 +1,6 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Coins, Trophy } from "lucide-react";
 import { useCallback } from "react";
-import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,9 +34,7 @@ import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
 
-const buildRankingContent = (params: {
-  sortedRanking: RankingItem[];
-}): ReactElement => {
+const buildRankingContent = (params: { sortedRanking: RankingItem[] }) => {
   if (params.sortedRanking.length === 0) {
     return (
       <EmptyState
@@ -68,7 +65,6 @@ const RankingSortControls = ({
   readonly totalBets: ReturnType<typeof useRankingData>["totalBets"];
 }) => (
   <div className="flex items-center justify-center gap-1 sm:justify-start">
-    {/* Stats Popover */}
     {selectedHeroId !== ALL_FILTER && (
       <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
     )}
@@ -101,7 +97,6 @@ const RankingSortControls = ({
       Złoto
     </Button>
 
-    {/* Gold Distribution Button - Admin Only */}
     {isAdminUser && (
       <DistributeGoldModal
         selectedEventId={selectedEventId}
@@ -178,11 +173,8 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
         Ranking graczy
       </h1>
 
-      {/* Filters Section */}
       <div className="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:space-y-0">
-        {/* Event and Hero Selects - Stack on mobile */}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
-          {/* Event Select */}
           <Select
             onValueChange={(value) => {
               filter.selectEvent(value ?? ALL_FILTER);
@@ -205,7 +197,6 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
             </SelectContent>
           </Select>
 
-          {/* Hero Select */}
           <Select
             disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {
@@ -234,7 +225,6 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           </Select>
         </div>
 
-        {/* Sort Buttons with Gold Distribution */}
         <RankingSortControls
           currentSortBy={currentSortBy}
           selectedEventId={filter.state.eventId}
@@ -246,7 +236,6 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
         />
       </div>
 
-      {/* Ranking List */}
       {rankingQuery.isFetching && (
         <p className="text-muted-foreground text-center text-xs">
           Odświeżanie…

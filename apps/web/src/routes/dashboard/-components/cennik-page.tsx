@@ -75,15 +75,8 @@ const enemyCategoryFilterLabels = {
   hero: "Herosi",
 } as const;
 
-const parseEnemyCategory = (
-  value: string | null
-): CennikSearch["monsterType"] => {
-  if (value === "hero" || value === "elite2") {
-    return value;
-  }
-
-  return undefined;
-};
+const parseEnemyCategory = (value: string | null) =>
+  value === "hero" || value === "elite2" ? value : undefined;
 
 const SEARCH_URL_SYNC_DELAY_MS = 200;
 
@@ -93,8 +86,7 @@ const legendPriceDateFormatter = new Intl.DateTimeFormat("pl-PL", {
   timeZone: "Europe/Warsaw",
 });
 
-const formatDate = (value: Date): string =>
-  legendPriceDateFormatter.format(value);
+const formatDate = (value: Date) => legendPriceDateFormatter.format(value);
 
 const LegendPriceCard = ({
   handleUpdateCost,

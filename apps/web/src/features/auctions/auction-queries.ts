@@ -42,7 +42,7 @@ interface RemoveAuctionSignupContext {
 const hasConcurrentAuctionMutation = (
   queryClient: QueryClient,
   group: AuctionGroupInput
-): boolean =>
+) =>
   queryClient
     .getMutationCache()
     .getAll()
@@ -59,7 +59,7 @@ const invalidateAuctionGroup = async (
   queryClient: QueryClient,
   group: AuctionGroupInput,
   callbacks: AuctionMutationCallbacks
-): Promise<void> => {
+) => {
   const results = await Promise.allSettled([
     queryClient.invalidateQueries(
       { queryKey: auctionSignupsQueryKey(group) },
@@ -88,7 +88,7 @@ const invalidateAuctionGroupAfterMutation = async (
   queryClient: QueryClient,
   group: AuctionGroupInput,
   callbacks: AuctionMutationCallbacks
-): Promise<void> => {
+) => {
   if (hasConcurrentAuctionMutation(queryClient, group)) {
     return;
   }

@@ -247,7 +247,6 @@ const HistoryContent = ({
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
-          {/* Event Select */}
           <Select
             onValueChange={(value) => {
               filter.selectEvent(value ?? ALL_FILTER);
@@ -270,7 +269,6 @@ const HistoryContent = ({
             </SelectContent>
           </Select>
 
-          {/* Hero Select */}
           <Select
             disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {

@@ -7,7 +7,7 @@ import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
 const withTestQueryClient = async (
   test: (queryClient: ReturnType<typeof createQueryClient>) => Promise<void>
-): Promise<void> => {
+) => {
   const testClient = makeTestQueryClient();
 
   try {

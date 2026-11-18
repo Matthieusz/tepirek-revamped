@@ -1,4 +1,3 @@
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -17,9 +16,7 @@ export class InvalidAccountInviteTargetQuery extends Schema.TaggedError<
 >()("InvalidAccountInviteTargetQuery", { message: Schema.String }, {}) {}
 
 /** Parse and normalize an invite-target query according to the shared policy. */
-export const parseInviteTargetQuery = (
-  input: string
-): Effect<string, InvalidAccountInviteTargetQuery> => {
+export const parseInviteTargetQuery = (input: string) => {
   const trimmed = input.trim();
 
   if (trimmed.length < inviteTargetSearchPolicy.minQueryLength) {

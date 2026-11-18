@@ -59,32 +59,6 @@ type PlacementResult = Data.TaggedEnum<{
 
 const PlacementResult = Data.taggedEnum<PlacementResult>();
 
-interface SaveSquadGroupPayload {
-  readonly groupId: number;
-  readonly name: string;
-  readonly squads: readonly {
-    readonly characters: readonly {
-      readonly characterId: number;
-      readonly position: number;
-    }[];
-    readonly clientKey: string;
-    readonly name: string;
-    readonly position: number;
-    readonly squadId?: number;
-  }[];
-}
-
-interface SaveSharedSquadGroupCharactersPayload {
-  readonly groupId: number;
-  readonly squads: readonly {
-    readonly characters: readonly {
-      readonly characterId: number;
-      readonly position: number;
-    }[];
-    readonly squadId: number;
-  }[];
-}
-
 export interface CharacterAccountInfo {
   readonly accountDisplayName: string;
   readonly accountId: string | number;
@@ -93,13 +67,13 @@ export interface CharacterAccountInfo {
 const sameCharacters = (
   left: readonly DraftCharacter[],
   right: readonly DraftCharacter[]
-): boolean =>
+) =>
   left.length === right.length &&
   left.every(
     (character, index) => character.characterId === right[index]?.characterId
   );
 
-export const hydrateDraft = (detail: SquadGroupDetail): SquadGroupDraft => ({
+export const hydrateDraft = (detail: SquadGroupDetail) => ({
   groupId: detail.groupId,
   name: detail.name,
   squads: detail.squads.map((squad) => ({
@@ -112,10 +86,7 @@ export const hydrateDraft = (detail: SquadGroupDetail): SquadGroupDraft => ({
   })),
 });
 
-export const isDraftEqual = (
-  left: SquadGroupDraft,
-  right: SquadGroupDraft
-): boolean =>
+export const isDraftEqual = (left: SquadGroupDraft, right: SquadGroupDraft) =>
   left.groupId === right.groupId &&
   left.name === right.name &&
   left.squads.length === right.squads.length &&
@@ -131,15 +102,12 @@ export const isDraftEqual = (
     );
   });
 
-const getCurrentSquad = (
-  draft: SquadGroupDraft,
-  characterId: number
-): DraftSquad | undefined =>
+const getCurrentSquad = (draft: SquadGroupDraft, characterId: number) =>
   draft.squads.find((squad) =>
     squad.characters.some((character) => character.characterId === characterId)
   );
 
-const hasCharacterInSquad = (squad: DraftSquad, characterId: number): boolean =>
+const hasCharacterInSquad = (squad: DraftSquad, characterId: number) =>
   squad.characters.some((character) => character.characterId === characterId);
 
 const toPlacementSquads = (
@@ -185,47 +153,54 @@ const toPlacementSquads = (
     };
   });
 
-const policyErrorToPlacementError = (
+const policyErrorToPlacementError: (
   input: ReturnType<typeof validateSquadPlacements>,
   targetSquadName: string,
   character: CharacterAccountInfo
-): PlacementError | undefined => {
-  if (input === undefined) {
-    return undefined;
-  }
+) => PlacementError | undefined = (
+  input: ReturnType<typeof validateSquadPlacements>,
+  targetSquadName: string,
+  character: CharacterAccountInfo
+) =>
+  input === null
+    ? undefined
+    : Match.value(input).pipe(
+        Match.tag("TooManyCharactersInSquad", () =>
+          PlacementError.squadFull({ squadName: targetSquadName })
+        ),
+        Match.tag("DuplicateAccountInSquad", () =>
+          PlacementError.accountAlreadyRepresented({
+            accountDisplayName: character.accountDisplayName,
+            squadName: targetSquadName,
+          })
+        ),
+        Match.tag("DuplicateCharacterInSquad", (error) =>
+          PlacementError.duplicateCharacterInSquad({
+            characterId: error.characterId,
+            squadName: targetSquadName,
+          })
+        ),
+        Match.tag("DuplicateCharacterInSquadGroup", (error) =>
+          PlacementError.duplicateCharacterInGroup({
+            characterId: error.characterId,
+          })
+        ),
+        Match.exhaustive
+      );
 
-  return Match.value(input).pipe(
-    Match.tag("TooManyCharactersInSquad", () =>
-      PlacementError.squadFull({ squadName: targetSquadName })
-    ),
-    Match.tag("DuplicateAccountInSquad", () =>
-      PlacementError.accountAlreadyRepresented({
-        accountDisplayName: character.accountDisplayName,
-        squadName: targetSquadName,
-      })
-    ),
-    Match.tag("DuplicateCharacterInSquad", (error) =>
-      PlacementError.duplicateCharacterInSquad({
-        characterId: error.characterId,
-        squadName: targetSquadName,
-      })
-    ),
-    Match.tag("DuplicateCharacterInSquadGroup", (error) =>
-      PlacementError.duplicateCharacterInGroup({
-        characterId: error.characterId,
-      })
-    ),
-    Match.exhaustive
-  );
-};
-
-export const getPlacementError = (
+export const getPlacementError: (
   draft: SquadGroupDraft,
   characterId: number,
   squadKey: string,
   charactersById: HashMap.HashMap<number, CharacterAccountInfo>,
   canEdit: boolean
-): PlacementError | undefined => {
+) => PlacementError | undefined = (
+  draft: SquadGroupDraft,
+  characterId: number,
+  squadKey: string,
+  charactersById: HashMap.HashMap<number, CharacterAccountInfo>,
+  canEdit: boolean
+) => {
   if (!canEdit) {
     return PlacementError.readOnly();
   }
@@ -246,17 +221,21 @@ export const getPlacementError = (
 
   const currentSquad = getCurrentSquad(draft, characterId);
 
-  if (currentSquad?.clientKey === squadKey) {
-    return undefined;
-  }
-
-  return policyErrorToPlacementError(
-    validateSquadPlacements(
-      toPlacementSquads(draft, characterId, squadKey, character, charactersById)
-    ),
-    squad.name,
-    character
-  );
+  return currentSquad?.clientKey === squadKey
+    ? undefined
+    : policyErrorToPlacementError(
+        validateSquadPlacements(
+          toPlacementSquads(
+            draft,
+            characterId,
+            squadKey,
+            character,
+            charactersById
+          )
+        ),
+        squad.name,
+        character
+      );
 };
 
 export const applyPlacement = (
@@ -265,7 +244,7 @@ export const applyPlacement = (
   squadKey: string,
   charactersById: HashMap.HashMap<number, CharacterAccountInfo>,
   canEdit: boolean
-): PlacementResult => {
+) => {
   const error = getPlacementError(
     draft,
     characterId,
@@ -311,7 +290,7 @@ export const removeCharacter = (
   draft: SquadGroupDraft,
   characterId: number,
   canEdit: boolean
-): SquadGroupDraft => {
+) => {
   if (!canEdit) {
     return draft;
   }
@@ -331,9 +310,7 @@ export const removeCharacter = (
   };
 };
 
-export const projectOwnerPayload = (
-  draft: SquadGroupDraft
-): SaveSquadGroupPayload => ({
+export const projectOwnerPayload = (draft: SquadGroupDraft) => ({
   groupId: draft.groupId,
   name: draft.name.trim(),
   squads: draft.squads.map((squad, position) => {
@@ -353,9 +330,7 @@ export const projectOwnerPayload = (
   }),
 });
 
-export const projectEditorPayload = (
-  draft: SquadGroupDraft
-): SaveSharedSquadGroupCharactersPayload => ({
+export const projectEditorPayload = (draft: SquadGroupDraft) => ({
   groupId: draft.groupId,
   squads: draft.squads.flatMap((squad) =>
     squad.squadId === undefined

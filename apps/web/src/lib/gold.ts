@@ -1,18 +1,8 @@
 /**
- * Gold-value parsing and vault-earnings formatting.
- *
- * Single source of truth for two rules that were previously duplicated
- * across the vault page, the vault user card, and the distribute-gold
- * modal: rounding earnings down to whole millions for display, and
- * parsing a gold-amount string with optional million or billion shorthand.
- * React stays out; this is a pure value module.
- */
-
-/**
  * Formats a string earnings value by rounding down to whole millions,
  * using Polish locale grouping. Used by the Skarbiec (vault) workflow.
  */
-export const formatVaultEarnings = (totalEarnings: string): string => {
+export const formatVaultEarnings = (totalEarnings: string) => {
   const parsedEarnings = Number(totalEarnings);
   const earnings = Number.isFinite(parsedEarnings) ? parsedEarnings : 0;
 
@@ -33,7 +23,9 @@ const shorthandMultipliers = new Map([
  * A trailing `m` means millions and `g` means billions. Decimal values are
  * accepted only with a suffix, for example `700m` and `1.2g`.
  */
-export const tryParseGoldAmount = (value: string): number | undefined => {
+export const tryParseGoldAmount: (value: string) => number | undefined = (
+  value: string
+) => {
   const trimmed = value.trim().toLowerCase();
   const suffix = trimmed.at(-1);
 
@@ -43,20 +35,14 @@ export const tryParseGoldAmount = (value: string): number | undefined => {
   const numericText = multiplier === undefined ? trimmed : trimmed.slice(0, -1);
   const parsedAmount = Number(numericText);
 
-  if (
-    numericText.length === 0 ||
-    !Number.isFinite(parsedAmount) ||
-    (multiplier === undefined && !Number.isInteger(parsedAmount))
-  ) {
-    return undefined;
-  }
-
   const normalizedAmount =
     multiplier === undefined
       ? parsedAmount
       : Math.floor(parsedAmount * multiplier);
 
-  return Number.isSafeInteger(normalizedAmount) ? normalizedAmount : undefined;
+  return numericText.length > 0 && Number.isSafeInteger(normalizedAmount)
+    ? normalizedAmount
+    : undefined;
 };
 
 /**
@@ -64,7 +50,7 @@ export const tryParseGoldAmount = (value: string): number | undefined => {
  *
  * Values without a shorter shorthand representation remain plain integers.
  */
-export const formatGoldAmountInput = (value: number): string => {
+export const formatGoldAmountInput = (value: number) => {
   let formattedAmount = value.toString();
 
   for (const [suffix, multiplier] of shorthandMultipliers) {
@@ -90,5 +76,5 @@ export const formatGoldAmountInput = (value: number): string => {
  *
  * Unparseable input returns zero for preview and form-validation callers.
  */
-export const parseGoldAmount = (value: string): number =>
+export const parseGoldAmount = (value: string) =>
   tryParseGoldAmount(value) ?? 0;

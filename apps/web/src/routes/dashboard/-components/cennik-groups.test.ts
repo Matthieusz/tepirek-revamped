@@ -2,7 +2,6 @@ import { LegendPriceSummary } from "@tepirek-revamped/api/protocol/legend-pricin
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 import { groupLegendPricesByEnemy } from "@/routes/dashboard/-components/cennik-groups";
 
 interface EnemyFixture {
@@ -22,7 +21,7 @@ const makeLegendPrice = ({
   readonly itemId: number;
   readonly level: number;
   readonly name: string;
-}): LegendPrice =>
+}) =>
   Schema.decodeSync(LegendPriceSummary)({
     enemies: enemies.map((enemy) => ({
       ...enemy,

@@ -13,7 +13,6 @@ import {
 import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
-/** Prefix for all squad-group sharing query data. */
 const squadGroupSharingQueryKey = ["squad-group-sharing"] as const;
 
 /** Cache key for pending invitations addressed to the authenticated user. */
@@ -89,7 +88,7 @@ export const squadEditorInviteTargetsQueryOptions = (
 const invalidateSharingResources = async (
   queryClient: QueryClient,
   groupId: number
-): Promise<void> => {
+) => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: squadGroupSharingQueryKey }),
     invalidateSquadGroupResources(queryClient, groupId),

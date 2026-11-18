@@ -6,6 +6,6 @@ import { healthQueryOptions } from "@/features/health/health-queries";
 export const loadHealth = async (
   queryClient: QueryClient,
   options: ReturnType<typeof healthQueryOptions> = healthQueryOptions()
-): Promise<void> => {
+) => {
   await queryClient.query(options);
 };

@@ -30,9 +30,7 @@ export class InvalidAccountDisplayName extends Schema.TaggedError<
 
 /** Parse a user-facing account display name for storage. */
 export const parseAccountDisplayName = Effect.fn("AccountDisplayName.parse")(
-  function* parseAccountDisplayName(
-    input: string
-  ): Effect.fn.Return<AccountDisplayName, InvalidAccountDisplayName> {
+  function* parseAccountDisplayName(input: string) {
     return yield* Schema.decodeEffect(AccountDisplayName)(input).pipe(
       Effect.catchTag(
         "SchemaError",

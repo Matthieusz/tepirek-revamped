@@ -94,12 +94,7 @@ function mapAccountImportError(
 function mapAccountImportError(
   error: PreviewMargonemProfileImportError
 ): PreviewMargonemProfileImportProtocolError;
-function mapAccountImportError(
-  error: AccountImportHandlerError
-):
-  | PreviewMargonemProfileImportProtocolError
-  | SquadBuilderNotFound
-  | SquadBuilderForbidden {
+function mapAccountImportError(error: AccountImportHandlerError) {
   return Match.value(error).pipe(
     Match.tag(
       "PendingMargonemAccountImportNotFound",
@@ -150,27 +145,25 @@ function mapAccountImportError(
 
 const mapPreviewMargonemProfileImportError = (
   error: PreviewMargonemProfileImportError
-): PreviewMargonemProfileImportProtocolError => mapAccountImportError(error);
+) => mapAccountImportError(error);
 
 const mapPreviewOwnedAccountImportsError = (
   error: PreviewOwnedAccountImportsError
-): PreviewOwnedAccountImportsProtocolError => mapAccountImportError(error);
+) => mapAccountImportError(error);
 
 const mapConfirmOwnedAccountImportError = (
   error: ConfirmOwnedAccountImportError
-): ConfirmOwnedAccountImportProtocolError => mapAccountImportError(error);
+) => mapAccountImportError(error);
 
 const mapUpdateOwnedAccountDisplayNameError = (
   error: UpdateOwnedAccountDisplayNameError
-): UpdateOwnedAccountDisplayNameProtocolError => mapAccountImportError(error);
+) => mapAccountImportError(error);
 
-const mapDeleteOwnedAccountError = (
-  error: DeleteOwnedAccountError
-): DeleteOwnedAccountProtocolError => mapAccountImportError(error);
+const mapDeleteOwnedAccountError = (error: DeleteOwnedAccountError) =>
+  mapAccountImportError(error);
 
-const mapListOwnedAccountsError = (
-  error: ListOwnedAccountsError
-): SquadBuilderPersistenceUnavailable => mapAccountImportError(error);
+const mapListOwnedAccountsError = (error: ListOwnedAccountsError) =>
+  mapAccountImportError(error);
 
 export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

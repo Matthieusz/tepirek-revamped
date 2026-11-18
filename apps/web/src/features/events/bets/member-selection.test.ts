@@ -53,7 +53,6 @@ describe("getAvailableUsers", () => {
 
 describe("getSelectedUsers", () => {
   it("returns selected users in the verified-users list order", () => {
-    // Selection order is reversed; result follows the users list order.
     expect(getSelectedUsers(users, ["u3", "u1"]).map((u) => u.id)).toEqual([
       "u1",
       "u3",

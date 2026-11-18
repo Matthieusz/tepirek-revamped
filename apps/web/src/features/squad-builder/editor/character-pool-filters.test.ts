@@ -51,20 +51,19 @@ const characters: readonly CharacterPoolCharacter[] = [
   },
 ];
 
-const professionFilter = (values: readonly string[]): CharacterPoolFilter => ({
-  field: "profession",
-  values,
-});
+const professionFilter = (values: readonly string[]) =>
+  ({
+    field: "profession",
+    values,
+  }) satisfies CharacterPoolFilter;
 
-const textFilter = (
-  field: "accountName" | "characterName",
-  value: string
-): CharacterPoolFilter => ({ field, value });
+const textFilter = (field: "accountName" | "characterName", value: string) =>
+  ({ field, value }) satisfies CharacterPoolFilter;
 
-const ids = (filtered: readonly CharacterPoolCharacter[]): number[] =>
+const ids = (filtered: readonly CharacterPoolCharacter[]) =>
   filtered.map((character) => character.characterId);
 
-const getCharacter = (characterId: number): CharacterPoolCharacter => {
+const getCharacter = (characterId: number) => {
   const character = characters.find(
     (candidate) => candidate.characterId === characterId
   );

@@ -19,14 +19,10 @@ interface MutableLegendPriceGroup {
   readonly items: LegendPrice[];
 }
 
-const normalizeSearchTerm = (value: string | undefined): string =>
+const normalizeSearchTerm = (value: string | undefined) =>
   value?.trim().toLocaleLowerCase("pl") ?? "";
 
-const parseItemLevel = (value: string | undefined): number | undefined => {
-  if (value === undefined || value.trim() === "") {
-    return undefined;
-  }
-
+const parseItemLevel = (value: string | undefined) => {
   const level = Number(value);
 
   return Number.isSafeInteger(level) && level > 0 ? level : undefined;
@@ -40,7 +36,7 @@ const parseItemLevel = (value: string | undefined): number | undefined => {
 export const groupLegendPricesByEnemy = (
   prices: readonly LegendPrice[],
   filters: CennikFilters
-): readonly LegendPriceGroup[] => {
+) => {
   const itemName = normalizeSearchTerm(filters.itemName);
   const monsterName = normalizeSearchTerm(filters.monsterName);
   const itemLevel = parseItemLevel(filters.itemLevel);

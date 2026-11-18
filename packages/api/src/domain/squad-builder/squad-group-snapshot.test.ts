@@ -26,21 +26,22 @@ import {
 const character = (
   characterId: number,
   overrides: Partial<AvailableSquadCharacter> = {}
-): AvailableSquadCharacter => ({
-  accountDisplayName: AccountDisplayName.make(`account-${characterId}`),
-  accountId: MargonemAccountId.make(characterId),
-  accountOwnerUserId: AppUserId.make("owner"),
-  accountOwnerUserImage: null,
-  accountOwnerUserName: "Owner",
-  avatarUrl: null,
-  characterId,
-  level: PositiveLevel.make(100),
-  margonemCharacterId: MargonemCharacterId.make(characterId),
-  name: `Character ${characterId}`,
-  profession: "warrior",
-  world: "jaruna",
-  ...overrides,
-});
+) =>
+  ({
+    accountDisplayName: AccountDisplayName.make(`account-${characterId}`),
+    accountId: MargonemAccountId.make(characterId),
+    accountOwnerUserId: AppUserId.make("owner"),
+    accountOwnerUserImage: null,
+    accountOwnerUserName: "Owner",
+    avatarUrl: null,
+    characterId,
+    level: PositiveLevel.make(100),
+    margonemCharacterId: MargonemCharacterId.make(characterId),
+    name: `Character ${characterId}`,
+    profession: "warrior",
+    world: "jaruna",
+    ...overrides,
+  }) satisfies AvailableSquadCharacter;
 
 const squad = (
   characters: readonly {
@@ -48,7 +49,7 @@ const squad = (
     readonly position: number;
   }[],
   overrides: Partial<SaveSquadInput> = {}
-): SaveSquadInput => ({
+) => ({
   characters,
   clientKey: "squad-1",
   name: "Squad 1",
@@ -59,7 +60,7 @@ const squad = (
 const input = (
   squads: readonly SaveSquadInput[],
   availableCharacters: readonly AvailableSquadCharacter[]
-): ValidateSquadGroupSnapshotInput => ({
+) => ({
   actorUserId: AppUserId.make("owner"),
   availableCharacters,
   groupId: SquadGroupId.make(1),

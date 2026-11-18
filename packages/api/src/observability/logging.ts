@@ -31,11 +31,15 @@ const isPlainObject = (input: LogValue): input is LogObject => {
   return prototype === Object.prototype || prototype === null;
 };
 
-const flatten = (
+const flatten: (
+  input: LogObject,
+  prefix?: string,
+  seen?: WeakSet<object>
+) => (readonly [string, LogValue])[] = (
   input: LogObject,
   prefix = "",
   seen = new WeakSet<object>()
-): (readonly [string, LogValue])[] => {
+) => {
   if (seen.has(input)) {
     return [[prefix, "[Circular]"]];
   }
@@ -57,7 +61,7 @@ const flatten = (
   })(entries);
 };
 
-const formatValue = (input: LogValue): string => {
+const formatValue = (input: LogValue) => {
   const value = Predicate.isString(input) ? input : Formatter.format(input);
 
   return SIMPLE_LOG_VALUE_PATTERN.test(value) ? value : JSON.stringify(value);
@@ -102,7 +106,7 @@ const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
   Object.hasOwn(LOG_LEVELS_BY_NAME, value);
 
 /** Parse a configured minimum log level. */
-export const parseLogLevel = (value: string): LogLevel | undefined => {
+export const parseLogLevel = (value: string) => {
   const normalized = value.toUpperCase();
 
   return isLogLevelName(normalized) ? LOG_LEVELS[normalized] : undefined;

@@ -49,7 +49,7 @@ const makeHealthQueryFixture = (responses: readonly HealthResponse[]) => {
   };
 };
 
-const makeHealthResponse = (status = 200): HealthResponse => ({
+const makeHealthResponse = (status = 200) => ({
   body: "OK",
   status,
 });

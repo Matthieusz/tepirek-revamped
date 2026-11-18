@@ -1,7 +1,6 @@
 import * as HashSet from "effect/HashSet";
 import * as Predicate from "effect/Predicate";
 import { X, Copy, CopyX, Search, User } from "lucide-react";
-import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,7 +30,7 @@ interface HeroBetMemberPickerBaseProps {
   readonly selectedUserIds: string[];
   readonly onBlur?: () => void;
   readonly onChange: (userIds: string[]) => void;
-  /** Accessible id prefix for checkbox/label pairing. */
+
   readonly idPrefix?: string;
 }
 
@@ -238,7 +237,7 @@ const SelectedUsers = ({
   onChange,
   variant,
   idPrefix,
-}: SelectedUsersProps): ReactNode => {
+}: SelectedUsersProps) => {
   const label =
     variant === "edit"
       ? `Wybrani gracze (${selectedUserIds.length}):`
@@ -323,7 +322,7 @@ interface PointsPreviewProps {
   readonly preview: ReturnType<typeof getPointsPreview> | undefined;
 }
 
-const PointsPreview = ({ preview }: PointsPreviewProps): ReactNode => {
+const PointsPreview = ({ preview }: PointsPreviewProps) => {
   if (preview === undefined) {
     return null;
   }

@@ -31,9 +31,7 @@ export class BetterAuthService extends Context.Service<
 >()("@tepirek-revamped/auth/BetterAuthService") {}
 
 /** Construct a Better Auth service value around a vendor instance. */
-export const buildBetterAuthService = (
-  instance: BetterAuthInstance
-): BetterAuthServiceInterface =>
+export const buildBetterAuthService = (instance: BetterAuthInstance) =>
   BetterAuthService.of({
     getSession: Effect.fn("BetterAuthService.getSession")((headers: Headers) =>
       Effect.tryPromise({
@@ -45,7 +43,5 @@ export const buildBetterAuthService = (
   });
 
 /** Construct a Better Auth service layer around a supplied vendor instance. */
-export const buildBetterAuthServiceLayer = (
-  instance: BetterAuthInstance
-): Layer.Layer<BetterAuthService> =>
+export const buildBetterAuthServiceLayer = (instance: BetterAuthInstance) =>
   Layer.succeed(BetterAuthService, buildBetterAuthService(instance));

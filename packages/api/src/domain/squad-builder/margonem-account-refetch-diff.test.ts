@@ -27,9 +27,7 @@ type StoredCharacterFixtureInput = Omit<
   readonly name: string;
 };
 
-const storedCharacter = (
-  input: StoredCharacterFixtureInput
-): StoredMargonemCharacterSnapshot => ({
+const storedCharacter = (input: StoredCharacterFixtureInput) => ({
   affectedSquadCount: input.affectedSquadCount ?? 0,
   avatarUrl: input.avatarUrl ?? null,
   databaseCharacterId: input.databaseCharacterId,
@@ -49,9 +47,7 @@ type LatestCharacterFixtureInput = Omit<
   readonly name: string;
 };
 
-const latestCharacter = (
-  input: LatestCharacterFixtureInput
-): MargonemCharacterPreview => ({
+const latestCharacter = (input: LatestCharacterFixtureInput) => ({
   avatarUrl: input.avatarUrl ?? null,
   characterId: MargonemCharacterId.make(input.characterId),
   level: PositiveLevel.make(input.level ?? 100),

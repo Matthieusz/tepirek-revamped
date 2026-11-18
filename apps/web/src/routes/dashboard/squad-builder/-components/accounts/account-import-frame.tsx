@@ -444,7 +444,7 @@ export const AccountImportFrame = () => {
     (state) => state.isSubmitting
   );
 
-  const clearImport = (): void => {
+  const clearImport = () => {
     form.reset();
     setSubmissionFailure(undefined);
     setPreviewItems([]);

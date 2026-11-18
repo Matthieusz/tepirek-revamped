@@ -20,19 +20,19 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pl-PL", {
   year: "numeric",
 });
 
-const toValidDate = (date: Date | string | number): Date | undefined => {
+const toValidDate = (date: Date | string | number) => {
   const value = Predicate.isDate(date) ? date : new Date(date);
 
   return isValidDate(value) ? value : undefined;
 };
 
-export const formatDate = (date: Date | string | number): string => {
+export const formatDate = (date: Date | string | number) => {
   const value = toValidDate(date);
 
   return value ? dateFormatter.format(value).replaceAll(".", "-") : "";
 };
 
-export const formatDateTime = (date: Date | string | number): string => {
+export const formatDateTime = (date: Date | string | number) => {
   const value = toValidDate(date);
 
   return value ? dateTimeFormatter.format(value).replace(", ", " ") : "";

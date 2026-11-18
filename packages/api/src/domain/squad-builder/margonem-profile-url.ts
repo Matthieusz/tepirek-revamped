@@ -36,9 +36,7 @@ const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
 
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
 export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(
-  function* parseMargonemProfileUrl(
-    input: string
-  ): Effect.fn.Return<MargonemProfileId, ParseMargonemProfileUrlError> {
+  function* parseMargonemProfileUrl(input: string) {
     const url = yield* decodeUrl(input).pipe(
       Effect.mapError(
         () =>
@@ -85,5 +83,5 @@ export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(
 );
 
 /** Build the canonical Margonem profile URL used for Firecrawl and outbound links. */
-export const toMargonemProfileUrl = (profileId: MargonemProfileId): string =>
+export const toMargonemProfileUrl = (profileId: MargonemProfileId) =>
   `https://www.margonem.pl/profile/view,${profileId}`;

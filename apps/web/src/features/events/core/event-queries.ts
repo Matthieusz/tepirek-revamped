@@ -31,7 +31,7 @@ interface ToggleEventContext {
   readonly previousEvent: Event | undefined;
 }
 
-const hasConcurrentEventMutation = (queryClient: QueryClient): boolean =>
+const hasConcurrentEventMutation = (queryClient: QueryClient) =>
   queryClient
     .getMutationCache()
     .getAll()
@@ -44,7 +44,7 @@ const hasConcurrentEventMutation = (queryClient: QueryClient): boolean =>
 const invalidateEvents = async (
   queryClient: QueryClient,
   callbacks: EventMutationCallbacks
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries(
       { queryKey: eventsQueryKey },
@@ -60,7 +60,7 @@ const invalidateEvents = async (
 const invalidateEventsAfterMutation = async (
   queryClient: QueryClient,
   callbacks: EventMutationCallbacks
-): Promise<void> => {
+) => {
   if (!hasConcurrentEventMutation(queryClient)) {
     await invalidateEvents(queryClient, callbacks);
   }

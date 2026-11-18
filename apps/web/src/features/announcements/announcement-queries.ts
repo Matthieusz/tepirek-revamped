@@ -30,7 +30,7 @@ interface DeleteAnnouncementContext {
 const invalidateAnnouncements = async (
   queryClient: QueryClient,
   callbacks: AnnouncementMutationCallbacks
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries(
       { queryKey: announcementsQueryKey },
@@ -43,7 +43,7 @@ const invalidateAnnouncements = async (
   }
 };
 
-const hasConcurrentAnnouncementMutation = (queryClient: QueryClient): boolean =>
+const hasConcurrentAnnouncementMutation = (queryClient: QueryClient) =>
   queryClient
     .getMutationCache()
     .getAll()
@@ -56,7 +56,7 @@ const hasConcurrentAnnouncementMutation = (queryClient: QueryClient): boolean =>
 const invalidateAnnouncementsAfterMutation = async (
   queryClient: QueryClient,
   callbacks: AnnouncementMutationCallbacks
-): Promise<void> => {
+) => {
   if (hasConcurrentAnnouncementMutation(queryClient)) {
     return;
   }

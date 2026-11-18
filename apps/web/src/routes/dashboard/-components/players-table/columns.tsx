@@ -302,5 +302,6 @@ export type PlayerColumnDef =
   | (typeof baseColumns)[number]
   | ReturnType<typeof actionsColumn>;
 
-export const buildPlayerColumns = (isAdmin: boolean): PlayerColumnDef[] =>
-  isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
+export const buildPlayerColumns: (isAdmin: boolean) => PlayerColumnDef[] = (
+  isAdmin
+) => (isAdmin ? [...baseColumns, actionsColumn()] : baseColumns);

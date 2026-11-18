@@ -60,11 +60,11 @@ const isApiError = Schema.is(HttpApiError);
 /** Values accepted at the JavaScript exception boundary and narrowed below. */
 export type CaughtError = Parameters<typeof isApiError>[0];
 
-const publicMessage = (message: string, fallback: string): string =>
+const publicMessage = (message: string, fallback: string) =>
   message.length > 0 ? message : fallback;
 
 /** Maps a decoded HTTP API error to semantic Polish UI copy. */
-export const getApiErrorMessage = (error: HttpApiErrorType): string => {
+export const getApiErrorMessage = (error: HttpApiErrorType) => {
   if (isUnauthorizedApiError(error)) {
     return unauthorizedMessage;
   }
@@ -101,9 +101,7 @@ export const getApiErrorMessage = (error: HttpApiErrorType): string => {
 };
 
 /** Maps typed line failures returned inside a squad-builder success payload. */
-export const getSquadBuilderLineErrorMessage = (
-  error: SquadBuilderLineError
-): string =>
+export const getSquadBuilderLineErrorMessage = (error: SquadBuilderLineError) =>
   Match.value(error).pipe(
     Match.tag(
       "DuplicateProfileInBatch",
@@ -171,7 +169,7 @@ export const getSquadBuilderLineErrorMessage = (
 export const getErrorMessage = (
   error: CaughtError,
   fallback = fallbackErrorMessage
-): string => {
+) => {
   const failure: unknown =
     error instanceof EffectQueryFailure ? error.failure : error;
 

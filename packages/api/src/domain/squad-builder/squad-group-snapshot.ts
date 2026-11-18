@@ -24,7 +24,6 @@ import {
   SquadCharacterNotJaruna,
   TooManyCharactersInSquad,
 } from "./squad-group-validation-errors.ts";
-import type { SquadGroupValidationError } from "./squad-group-validation-errors.ts";
 import type { SquadId } from "./squad-id.ts";
 import { parseSquadGroupName, parseSquadName } from "./squad-name.ts";
 import type { SquadGroupName, SquadName } from "./squad-name.ts";
@@ -34,7 +33,6 @@ import {
 } from "./squad-placement.ts";
 import type { SquadPlacementValidationError } from "./squad-placement.ts";
 
-/** Position of a squad inside a group snapshot. */
 const Position = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
@@ -154,7 +152,7 @@ export const parseCharacterPosition = (input: number) =>
 
 const toSnapshotValidationError = (
   input: SquadPlacementValidationError<MargonemAccountId>
-): SquadGroupValidationError =>
+) =>
   Match.value(input).pipe(
     Match.tag(
       "TooManyCharactersInSquad",
@@ -192,9 +190,7 @@ const toSnapshotValidationError = (
 
 /** Parse names, positions, and snapshot structure without consulting access state. */
 export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
-  function* parseSquadGroupSnapshot(
-    input: ParseSquadGroupSnapshotInput
-  ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+  function* parseSquadGroupSnapshot(input: ParseSquadGroupSnapshotInput) {
     const parsedName = yield* parseSquadGroupName(input.name);
     const parsedSquads: SquadDraftSnapshot[] = [];
     let squadIds = HashSet.empty<number>();
@@ -261,7 +257,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
   "SquadGroupSnapshot.validateParsed"
 )(function* validateParsedSquadGroupSnapshot(
   input: ValidateParsedSquadGroupSnapshotInput
-): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+) {
   const { availableCharacters, snapshot } = input;
 
   const availableByCharacterId = HashMap.fromIterable(
@@ -309,7 +305,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
 
   const placementError = validateSquadPlacements(placementSquads);
 
-  if (placementError !== undefined) {
+  if (placementError !== null) {
     return yield* toSnapshotValidationError(placementError);
   }
 
@@ -319,9 +315,7 @@ export const validateParsedSquadGroupSnapshot = Effect.fn(
 /** Validate a full squad group snapshot against accessible Jaruna characters and group rules. */
 export const validateSquadGroupSnapshot = Effect.fn(
   "SquadGroupSnapshot.validate"
-)(function* validateSquadGroupSnapshot(
-  input: ValidateSquadGroupSnapshotInput
-): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+)(function* validateSquadGroupSnapshot(input: ValidateSquadGroupSnapshotInput) {
   const snapshot = yield* parseSquadGroupSnapshot(input);
 
   return yield* validateParsedSquadGroupSnapshot({

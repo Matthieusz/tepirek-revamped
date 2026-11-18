@@ -1,4 +1,3 @@
-import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import {
   SquadBuilderForbidden,
@@ -19,5 +18,4 @@ const { requireVerifiedSession } = buildAuthorizationPolicy({
 export const requireSquadBuilderSession = requireVerifiedSession;
 
 /** Extract the AppUserId from an authenticated session. */
-export const sessionAppUserId = (session: RequestSession): AppUserId =>
-  session.user.id;
+export const sessionAppUserId = (session: RequestSession) => session.user.id;

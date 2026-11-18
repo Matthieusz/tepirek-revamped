@@ -14,7 +14,7 @@ import {
 
 const notifications: string[] = [];
 
-const notifySuccess = (message: string): void => {
+const notifySuccess = (message: string) => {
   notifications.push(message);
 };
 

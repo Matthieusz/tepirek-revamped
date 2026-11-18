@@ -26,7 +26,7 @@ interface Deferred<A> {
   readonly resolve: (value: A) => void;
 }
 
-const deferred = <A>(): Deferred<A> => {
+const deferred = <A>() => {
   let resolvePromise: (value: A) => void;
 
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
@@ -39,7 +39,7 @@ const deferred = <A>(): Deferred<A> => {
     resolve: (value) => {
       resolvePromise(value);
     },
-  };
+  } satisfies Deferred<A>;
 };
 
 const sessionBody = (userId: string, name: string) => ({
@@ -63,11 +63,6 @@ const sessionBody = (userId: string, name: string) => ({
   },
 });
 
-interface UserTransport {
-  readonly calls: Record<string, number>;
-  readonly effectQuery: ReturnType<typeof makeTestAppEffectQuery>;
-}
-
 type PlannedResponse = Response | Promise<Response>;
 
 type UserOperation =
@@ -89,7 +84,7 @@ const makeUserTransport = (plans: {
   readonly users?: PlannedResponse[];
   readonly verified?: PlannedResponse[];
   readonly verifyDiscord?: PlannedResponse[];
-}): UserTransport => {
+}) => {
   const queues = {
     delete: [...(plans.delete ?? [])],
     profile: [...(plans.profile ?? [])],
@@ -168,10 +163,10 @@ type JsonBody =
   | readonly JsonBody[]
   | { readonly [key: string]: JsonBody };
 
-const jsonResponse = (body: JsonBody, status = 200): Response =>
+const jsonResponse = (body: JsonBody, status = 200) =>
   Response.json(body, { status });
 
-const voidUserResponse = (): Response => jsonResponse(null);
+const voidUserResponse = () => jsonResponse(null);
 
 describe("user queries", () => {
   it("loads a session for the active QueryClient", async () => {

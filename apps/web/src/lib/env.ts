@@ -1,4 +1,4 @@
-const requireViteEnv = (key: "VITE_SERVER_URL"): string => {
+const requireViteEnv = (key: "VITE_SERVER_URL") => {
   const value = import.meta.env[key];
 
   if (value === undefined || value === "") {

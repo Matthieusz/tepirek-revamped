@@ -66,9 +66,7 @@ const isKnownProfession = (profession: string): profession is KnownProfession =>
   Object.hasOwn(PROFESSION_PRESENTATIONS, profession);
 
 /** Returns shared icon, color, and localized label metadata for a profession. */
-export const getProfessionPresentation = (
-  profession: string
-): ProfessionPresentation => {
+export const getProfessionPresentation = (profession: string) => {
   if (isKnownProfession(profession)) {
     return PROFESSION_PRESENTATIONS[profession];
   }
@@ -83,5 +81,5 @@ export const getProfessionPresentation = (
 };
 
 /** Returns the localized label while preserving unknown API values. */
-export const formatProfession = (profession: string): string =>
+export const formatProfession = (profession: string) =>
   getProfessionPresentation(profession).label;

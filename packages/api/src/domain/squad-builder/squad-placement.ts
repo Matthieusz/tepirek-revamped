@@ -57,7 +57,7 @@ export type SquadPlacementCapacityError = Data.TaggedEnum.Value<
 export const validateSquadPlacementCount = (
   squadClientKey: string,
   characterCount: number
-): SquadPlacementCapacityError | undefined =>
+) =>
   characterCount > MAX_SQUAD_CHARACTERS
     ? SquadPlacementValidationError.TooManyCharactersInSquad({
         maxCharacters: MAX_SQUAD_CHARACTERS,
@@ -69,11 +69,15 @@ export const validateSquadPlacementCount = (
  * Validate squad capacity, character uniqueness, and account uniqueness.
  * Returns the first policy failure in squad and character order.
  */
-export const validateSquadPlacements = <
+export const validateSquadPlacements: <
   AccountId extends SquadPlacementAccountId,
 >(
   squads: readonly SquadPlacementSquad<AccountId>[]
-): SquadPlacementValidationError<AccountId> | undefined => {
+) => SquadPlacementValidationError<AccountId> | null = <
+  AccountId extends SquadPlacementAccountId,
+>(
+  squads: readonly SquadPlacementSquad<AccountId>[]
+) => {
   const groupCharacterIds = new Set<number>();
 
   for (const squad of squads) {
@@ -121,5 +125,5 @@ export const validateSquadPlacements = <
     }
   }
 
-  return undefined;
+  return null;
 };

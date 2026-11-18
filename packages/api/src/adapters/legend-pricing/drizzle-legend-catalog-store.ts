@@ -44,28 +44,27 @@ const persistenceQuery = buildDirectPersistenceQuery<
     })
 );
 
-const duplicateValue = <Value>(values: readonly Value[]): Value | undefined => {
+const duplicateValue = <Value>(values: readonly Value[]) => {
   const seen = new Set<Value>();
 
-  for (const value of values) {
-    if (seen.has(value)) {
-      return value;
-    }
-
+  return values.find((value) => {
+    const alreadySeen = seen.has(value);
     seen.add(value);
-  }
 
-  return undefined;
+    return alreadySeen;
+  });
 };
 
 const enemySourceKey = (input: {
   readonly category: string;
   readonly sourceIconKey: string;
-}): string => `${input.category}:${input.sourceIconKey}`;
+}) => `${input.category}:${input.sourceIconKey}`;
 
-const validateSnapshot = (
+const validateSnapshot: (
   input: ReconcileLegendCatalogInput
-): LegendCatalogSnapshotInvalid | undefined => {
+) => LegendCatalogSnapshotInvalid | undefined = (
+  input: ReconcileLegendCatalogInput
+) => {
   if (
     Number.isNaN(input.startedAt.getTime()) ||
     Number.isNaN(input.synchronizedAt.getTime()) ||
@@ -160,19 +159,12 @@ const validateSnapshot = (
     droppedItemKeys.add(drop.itemSourceIconKey);
   }
 
-  if (droppedItemKeys.size !== itemKeys.size) {
-    return new LegendCatalogSnapshotInvalid({
-      reason: "every catalog item must have a current drop source",
-    });
-  }
-
-  return undefined;
+  return droppedItemKeys.size === itemKeys.size
+    ? undefined
+    : new LegendCatalogSnapshotInvalid({
+        reason: "every catalog item must have a current drop source",
+      });
 };
-
-interface ActivityTransitions {
-  readonly activated: number;
-  readonly deactivated: number;
-}
 
 const countActivityTransitions = (
   before: readonly {
@@ -183,7 +175,7 @@ const countActivityTransitions = (
     readonly active: boolean;
     readonly sourceKey: string;
   }[]
-): ActivityTransitions => {
+) => {
   const previousActivityByKey = new Map(
     before.map((record) => [record.sourceKey, record.active] as const)
   );
@@ -508,7 +500,6 @@ const recordFailureWithDatabase = (database: EffectPgDatabase) =>
     );
   });
 
-/** Provide atomic legend-catalog reconciliation with its Drizzle implementation. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleLegendCatalogStoreServiceLayer: Layer.Layer<

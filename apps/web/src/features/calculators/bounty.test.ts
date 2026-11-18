@@ -24,12 +24,10 @@ describe("bounty calculator", () => {
 
   describe("wouldReceivePenalty", () => {
     it("is true when the level difference meets the minimum", () => {
-      // attacker 200, minDiff 36 → victim 164 gives diff 36
       expect(wouldReceivePenalty(200, 164)).toBe(true);
     });
 
     it("is false just below the minimum difference", () => {
-      // diff 35 < minDiff 36
       expect(wouldReceivePenalty(200, 165)).toBe(false);
     });
   });

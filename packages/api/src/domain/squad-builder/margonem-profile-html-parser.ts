@@ -56,11 +56,6 @@ export type ParseMargonemProfileHtmlError =
   | MargonemCharacterRowsNotFound
   | MargonemCharacterRowInvalid;
 
-/**
- * Values read from the DOM are untrusted even though the DOM implementation
- * gives them string types. Keep missing attributes explicit until validation
- * decides whether a row is supported.
- */
 const RawMargonemCharacterRow = Schema.Struct({
   avatarUrl: Schema.NullOr(Schema.String),
   characterId: Schema.NullOr(Schema.String),
@@ -80,17 +75,12 @@ const decodeText = Schema.decodeUnknownEffect(Schema.String);
 
 const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
 
-// linkedom turns invalid/out-of-range numeric entities into either literal text
-// or U+FFFD. They must not be accepted as character data by the import flow.
 const numericHtmlEntityPattern = /&#(?:[^;]*);/u;
 
-const isMalformedHtmlText = (value: string): boolean =>
+const isMalformedHtmlText = (value: string) =>
   value.includes("\uFFFD") || numericHtmlEntityPattern.test(value);
 
-const decodeHtmlText = <Error>(
-  value: string,
-  onInvalidText: () => Error
-): Effect.Effect<string, Error> =>
+const decodeHtmlText = <Error>(value: string, onInvalidText: () => Error) =>
   Effect.gen(function* decodeTextValue() {
     const text = yield* decodeText(value).pipe(Effect.mapError(onInvalidText));
 
@@ -116,12 +106,9 @@ interface HtmlElement {
 
 type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
-const decodeCssTextWithHtmlParser = (value: string): string => {
+const decodeCssTextWithHtmlParser = (value: string) => {
   let decoded = value;
 
-  // Firecrawl sometimes returns entities encoded twice in inline styles.
-  // Parsing a text node, rather than replacing entity names, handles both
-  // that input and the full entity set supported by the HTML parser.
   for (let pass = 0; pass < 2; pass += 1) {
     const parsed = parseHTML(`<span>${decoded}</span>`).document;
     const next = parsed.querySelector("span")?.textContent;
@@ -136,7 +123,7 @@ const decodeCssTextWithHtmlParser = (value: string): string => {
   return decoded;
 };
 
-const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
+const extractBackgroundImageUrl = (row: HtmlElement) => {
   const image = row.querySelector(".cimg");
   const style = image?.getAttribute("style");
 
@@ -149,7 +136,6 @@ const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
     return null;
   }
 
-  // Let the DOM implementation parse the CSS declaration as well as the HTML.
   image.setAttribute("style", decodeCssTextWithHtmlParser(style));
   const backgroundImage = image.style?.getPropertyValue("background-image");
 
@@ -172,7 +158,7 @@ const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
   return url.length === 0 ? null : url;
 };
 
-const readRawCharacterRow = (row: HtmlElement): RawMargonemCharacterRow => ({
+const readRawCharacterRow = (row: HtmlElement) => ({
   avatarUrl: extractBackgroundImageUrl(row),
   characterId: row.dataset?.id ?? null,
   level: row.dataset?.lvl ?? null,
@@ -184,7 +170,7 @@ const readRawCharacterRow = (row: HtmlElement): RawMargonemCharacterRow => ({
 const extractProfileName = (
   document: ParsedDocument,
   profileId: MargonemProfileId
-): Effect.Effect<string | null, MargonemProfileNameNotFound> =>
+) =>
   Effect.gen(function* findProfileName() {
     const name = document
       .querySelector(".profile-header__name span")
@@ -204,10 +190,7 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
   function* parseJarunaCharacterRow(
     profileId: MargonemProfileId,
     row: HtmlElement
-  ): Effect.fn.Return<
-    MargonemCharacterPreview | null,
-    ParseMargonemProfileHtmlError
-  > {
+  ) {
     const raw = yield* decodeRawCharacterRow(readRawCharacterRow(row)).pipe(
       Effect.mapError(
         () =>
@@ -218,9 +201,6 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
       )
     );
 
-    // Other worlds are valid records, but are intentionally not part of the
-    // Jaruna-only import. Keeping this branch after schema decoding prevents
-    // malformed/unknown records from being mistaken for valid characters.
     if (raw.world !== "#jaruna") {
       return null;
     }
@@ -296,10 +276,7 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
   function* parseMargonemProfileHtml({
     html,
     profileId,
-  }: ParseMargonemProfileHtmlInput): Effect.fn.Return<
-    ParsedMargonemProfile,
-    ParseMargonemProfileHtmlError
-  > {
+  }: ParseMargonemProfileHtmlInput) {
     const { document } = parseHTML(html);
     const suggestedAccountName = yield* extractProfileName(document, profileId);
 

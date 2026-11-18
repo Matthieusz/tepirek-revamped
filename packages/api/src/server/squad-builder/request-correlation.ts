@@ -4,7 +4,7 @@ import type { HttpServerRequest } from "effect/http/HttpServerRequest";
 export const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> => {
+) => {
   const requestId = request.headers["x-request-id"];
 
   if (requestId === undefined || requestId.length === 0) {

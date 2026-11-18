@@ -17,7 +17,6 @@ import {
   searchInviteTargetsWithDatabase,
 } from "./account-sharing-queries.ts";
 
-/** Provide account sharing persistence through the Drizzle database adapter. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleAccountSharingStoreServiceLayer = Layer.effect(

@@ -11,7 +11,7 @@ interface ElementProps {
   readonly suppressHydrationWarning?: boolean;
 }
 
-const asElement = (node: ReactNode): ReactElement<ElementProps> => {
+const asElement = (node: ReactNode) => {
   if (!isValidElement<ElementProps>(node)) {
     throw new Error("Expected a React element");
   }
@@ -23,7 +23,7 @@ const isNodeArray = (
   value: ReactNode | undefined
 ): value is readonly ReactNode[] => Array.isArray(value);
 
-const getChildren = (element: ReactElement<ElementProps>): ReactNode[] => {
+const getChildren = (element: ReactElement<ElementProps>) => {
   const { children } = element.props;
 
   if (!isNodeArray(children)) {

@@ -29,7 +29,6 @@ import {
   BetPersistenceUnavailable,
 } from "../../services/bet/bet-errors.ts";
 import type {
-  BetServiceInterface,
   CreateBetInput,
   EditBetInput,
   GetPaginatedBetsInput,
@@ -842,7 +841,7 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
     };
   });
 
-const makeService = (database: EffectPgDatabase): BetServiceInterface => ({
+const makeService = (database: EffectPgDatabase) => ({
   createBet: Effect.fn("BetService.createBet")(createBetWithDatabase(database)),
   deleteBet: Effect.fn("BetService.deleteBet")(deleteBetWithDatabase(database)),
   editBet: Effect.fn("BetService.editBet")(editBetWithDatabase(database)),

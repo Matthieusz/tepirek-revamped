@@ -5,5 +5,5 @@ export const POINTS_PER_HERO = 20;
 export const MIN_EARNINGS = 100_000_000;
 
 /** Calculate guild points per hero-bet member, floored to two decimals. */
-export const calculatePointsPerMember = (memberCount: number): number =>
+export const calculatePointsPerMember = (memberCount: number) =>
   Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;

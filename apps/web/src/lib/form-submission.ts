@@ -46,9 +46,7 @@ export const formSubmission = <A>(promise: () => Promise<A>) =>
   });
 
 /** Runs a mutation and returns expected failures as values for TanStack submit handlers. */
-export const runFormSubmission = async <A>(
-  promise: () => Promise<A>
-): Promise<FormSubmissionResult<A>> => {
+export const runFormSubmission = async <A>(promise: () => Promise<A>) => {
   try {
     return FormSubmissionResult.success({
       value: await Effect.runPromise(formSubmission(promise)),

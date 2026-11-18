@@ -131,30 +131,21 @@ const MARGONEM_CDN_HOST = "micc.garmory-cdn.cloud";
 
 const duplicateSlashPattern = /\/{2,}/gu;
 
-const normalizeCdnPath = (value: string): string | undefined => {
-  let parsedUrl: URL;
+const normalizeCdnPath = (value: string) => {
+  const url = URL.parse(value.startsWith("//") ? `https:${value}` : value);
 
-  try {
-    parsedUrl = new URL(value.startsWith("//") ? `https:${value}` : value);
-  } catch {
-    return undefined;
-  }
+  const valid =
+    url !== null &&
+    url.protocol === "https:" &&
+    url.hostname === MARGONEM_CDN_HOST &&
+    url.username === "" &&
+    url.password === "" &&
+    url.port === "" &&
+    !url.pathname.includes("..");
 
-  if (
-    parsedUrl.protocol !== "https:" ||
-    parsedUrl.hostname !== MARGONEM_CDN_HOST ||
-    parsedUrl.username !== "" ||
-    parsedUrl.password !== "" ||
-    parsedUrl.port !== ""
-  ) {
-    return undefined;
-  }
-
-  if (parsedUrl.pathname.includes("..")) {
-    return undefined;
-  }
-
-  return parsedUrl.pathname.replaceAll(duplicateSlashPattern, "/");
+  return valid
+    ? url.pathname.replaceAll(duplicateSlashPattern, "/")
+    : undefined;
 };
 
 /**
@@ -162,9 +153,11 @@ const normalizeCdnPath = (value: string): string | undefined => {
  *
  * Non-CDN URLs and paths outside `/obrazki/itemy/` are rejected.
  */
-export const normalizeLegendaryItemIcon = (
+export const normalizeLegendaryItemIcon: (
   value: string
-): Option.Option<NormalizedMargonemCdnIcon<LegendaryItemSourceKey>> => {
+) => Option.Option<NormalizedMargonemCdnIcon<LegendaryItemSourceKey>> = (
+  value
+) => {
   const path = normalizeCdnPath(value);
 
   if (path === undefined || !path.startsWith("/obrazki/itemy/")) {
@@ -186,9 +179,11 @@ export const normalizeLegendaryItemIcon = (
  *
  * Non-CDN URLs and paths outside `/obrazki/npc/` are rejected.
  */
-export const normalizeLegendaryEnemyIcon = (
+export const normalizeLegendaryEnemyIcon: (
   value: string
-): Option.Option<NormalizedMargonemCdnIcon<LegendaryEnemySourceKey>> => {
+) => Option.Option<NormalizedMargonemCdnIcon<LegendaryEnemySourceKey>> = (
+  value
+) => {
   const path = normalizeCdnPath(value);
 
   if (path === undefined || !path.startsWith("/obrazki/npc/")) {
@@ -250,7 +245,7 @@ export const classifyLegendaryEquipment = ({
   itemClass,
   rarity,
   statKeys,
-}: LegendaryEquipmentClassificationInput): Option.Option<LegendaryEquipmentType> => {
+}: LegendaryEquipmentClassificationInput) => {
   if (
     rarity !== "legendary" ||
     iconSourceKey.startsWith("/obrazki/itemy/out/")
@@ -272,11 +267,10 @@ export const buildLegendaryItemFingerprint = (input: {
   readonly equipmentType: LegendaryEquipmentType;
   readonly level: LegendaryItemLevel;
   readonly name: string;
-}): string =>
-  JSON.stringify([input.name.trim(), input.level, input.equipmentType]);
+}) => JSON.stringify([input.name.trim(), input.level, input.equipmentType]);
 
 /** Build the persisted diagnostic fingerprint for enemy source drift checks. */
 export const buildLegendaryEnemyFingerprint = (input: {
   readonly level: LegendaryEnemyLevel;
   readonly name: string;
-}): string => JSON.stringify([input.name.trim(), input.level]);
+}) => JSON.stringify([input.name.trim(), input.level]);

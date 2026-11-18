@@ -16,9 +16,7 @@ export const EVENT_ICON_MAP = {
   sun: Sun,
 } satisfies Record<EventIconId, LucideIcon>;
 
-const getNormalizedEventIconId = (
-  iconName: string | null | undefined
-): EventIconId => {
+const getNormalizedEventIconId = (iconName: string | null | undefined) => {
   if (iconName !== undefined && iconName !== null && isEventIconId(iconName)) {
     return iconName;
   }
@@ -27,5 +25,5 @@ const getNormalizedEventIconId = (
 };
 
 /** Get an event icon component by name, with a calendar fallback. */
-export const getEventIcon = (iconName?: string | null): LucideIcon =>
+export const getEventIcon = (iconName?: string | null) =>
   EVENT_ICON_MAP[getNormalizedEventIconId(iconName)];

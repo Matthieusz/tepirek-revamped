@@ -43,7 +43,7 @@ const getSaveStatus = (
   isViewer: boolean,
   isSaving: boolean,
   isDirty: boolean
-): string => {
+) => {
   if (isViewer) {
     return "Możesz przeglądać zapisane składy.";
   }

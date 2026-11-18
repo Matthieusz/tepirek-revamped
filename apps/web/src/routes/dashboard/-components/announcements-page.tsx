@@ -105,7 +105,6 @@ const DashboardHomeContent = ({
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Ogłoszenia

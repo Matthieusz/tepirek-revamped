@@ -87,8 +87,7 @@ const hasProfessionLabel = (
 ): label is keyof typeof professionLabels =>
   Object.hasOwn(professionLabels, label);
 
-const cleanProfessionLabel = (label: string): string =>
-  label.replace(/,$/u, "").trim();
+const cleanProfessionLabel = (label: string) => label.replace(/,$/u, "").trim();
 
 /** Normalize a Polish Margonem profession label into the app domain value. */
 export const parseMargonemProfession = Effect.fn("MargonemProfession.parse")(

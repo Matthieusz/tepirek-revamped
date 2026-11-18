@@ -9,7 +9,6 @@ import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import type * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
-import type * as Schema from "effect/Schema";
 
 import { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
 import { DiscordGuildVerifier } from "../../services/user/discord-guild-verifier.ts";
@@ -28,9 +27,7 @@ const DISCORD_RETRY_BASE_DELAY_MILLISECONDS = 100;
 
 const MILLISECONDS_PER_SECOND = 1000;
 
-const parseRetryAfterMilliseconds = (
-  error: HttpClientError.HttpClientError
-): Effect.Effect<number | undefined> =>
+const parseRetryAfterMilliseconds = (error: HttpClientError.HttpClientError) =>
   Effect.gen(function* parseRetryAfter() {
     let retryAfterMilliseconds: number | undefined;
 
@@ -82,15 +79,14 @@ const discordRetrySchedule: Schedule.Schedule<
   )
 );
 
-const isAcceptedDiscordStatus = (status: number): boolean =>
+const isAcceptedDiscordStatus = (status: number) =>
   (status >= 200 && status < 300) || status === 401 || status === 403;
 
 const makeDiscordClient = (client: HttpClient.HttpClient) =>
   client.pipe(
     HttpClient.mapRequest(HttpClientRequest.prependUrl(DISCORD_API_BASE_URL)),
     HttpClient.filterStatus(isAcceptedDiscordStatus),
-    // withRateLimiter retries 429 responses independently and could exceed this
-    // verifier's fixed three-attempt bound, so the bounded client retry owns it.
+
     HttpClient.retryTransient({
       retryOn: "errors-only",
       schedule: discordRetrySchedule,
@@ -100,10 +96,7 @@ const makeDiscordClient = (client: HttpClient.HttpClient) =>
 const fetchDiscordGuilds = (
   client: HttpClient.HttpClient,
   accessToken: Redacted.Redacted
-): Effect.Effect<
-  DiscordGuilds | false,
-  HttpClientError.HttpClientError | Schema.SchemaError
-> => {
+) => {
   const request = HttpClientRequest.get(DISCORD_GUILDS_PATH).pipe(
     HttpClientRequest.acceptJson,
     HttpClientRequest.bearerToken(accessToken)

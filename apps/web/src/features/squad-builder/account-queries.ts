@@ -25,7 +25,6 @@ import { sharedSquadGroupsQueryKey } from "@/features/squad-builder/squad-group-
 import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
-/** Prefix for all account-import and account-sharing data. */
 const accountQueryKey = ["squad-builder", "accounts"] as const;
 
 /** Cache key for accounts owned by the authenticated user. */
@@ -125,9 +124,7 @@ export const accountInviteTargetsQueryOptions = (
 };
 
 /** Invalidates account data and all squad resources affected by account access. */
-export const invalidateAccountResources = async (
-  queryClient: QueryClient
-): Promise<void> => {
+export const invalidateAccountResources = async (queryClient: QueryClient) => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: accountQueryKey }),
     queryClient.invalidateQueries({ queryKey: sharedSquadGroupsQueryKey }),

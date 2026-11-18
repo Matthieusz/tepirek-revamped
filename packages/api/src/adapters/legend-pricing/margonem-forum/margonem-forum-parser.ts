@@ -65,7 +65,7 @@ const itemClassPattern = /^\d+$/u;
 const getNonEmptyMatchGroup = (
   match: RegExpExecArray | null,
   group: string
-): string | undefined => {
+) => {
   const value = match?.groups?.[group];
 
   return value === undefined || value.length === 0 ? undefined : value;
@@ -84,7 +84,7 @@ interface MargonemForumItemStat {
 }
 
 /** Legendary equipment metadata parsed from an official forum guide. */
-export interface MargonemForumLegendaryItem {
+interface MargonemForumLegendaryItem {
   readonly equipmentType: LegendaryEquipmentType;
   readonly iconUrl: MargonemCdnIconUrl;
   readonly legendaryBonus: LegendaryBonus | null;
@@ -158,11 +158,6 @@ interface EnemyMarker {
   readonly start: number;
 }
 
-interface IndirectLoot {
-  readonly items: readonly MargonemForumLegendaryItem[];
-  readonly sourceEnemyName: string;
-}
-
 interface CatalogAccumulator {
   readonly dropKeys: Set<string>;
   readonly drops: MargonemForumDrop[];
@@ -194,12 +189,12 @@ const parseError = (
   category: LegendaryEnemyCategory,
   reason: string,
   postId?: MargonemForumPostId
-): MargonemForumGuideNotParseable =>
+) =>
   postId === undefined
     ? new MargonemForumGuideNotParseable({ category, reason })
     : new MargonemForumGuideNotParseable({ category, postId, reason });
 
-const splitPostContainers = (html: string): readonly PostContainer[] => {
+const splitPostContainers = (html: string) => {
   const starts = [...html.matchAll(postStartPattern)];
   const posts: PostContainer[] = [];
   const seenPostIds = new Set<number>();
@@ -229,10 +224,10 @@ const splitPostContainers = (html: string): readonly PostContainer[] => {
   return posts;
 };
 
-const extractPostContent = (postHtml: string): string | undefined =>
+const extractPostContent = (postHtml: string) =>
   postContentPattern.exec(postHtml)?.groups?.content;
 
-const isOfficialPost = (postHtml: string): boolean => {
+const isOfficialPost = (postHtml: string) => {
   const profileId = Number(profilePattern.exec(postHtml)?.groups?.id);
   const authorHtml = officialAuthorPattern.exec(postHtml)?.groups?.author;
 
@@ -247,7 +242,7 @@ const isOfficialPost = (postHtml: string): boolean => {
   );
 };
 
-const parseEnemyHeading = (value: string): EnemyHeading | undefined => {
+const parseEnemyHeading = (value: string) => {
   const normalized = value.replaceAll(/\s+/gu, " ").trim();
   const withProfession = headingWithProfessionPattern.exec(normalized);
   const withProfessionName = getNonEmptyMatchGroup(withProfession, "name");
@@ -288,10 +283,13 @@ const parseEnemyHeading = (value: string): EnemyHeading | undefined => {
     : undefined;
 };
 
-const nearestHeading = (
+const nearestHeading: (
   content: string,
   imageStart: number
-): { readonly heading: EnemyHeading; readonly start: number } | undefined => {
+) => { readonly heading: EnemyHeading; readonly start: number } | undefined = (
+  content: string,
+  imageStart: number
+) => {
   const contentBeforeImage = content.slice(0, imageStart);
 
   const blockquoteStart = contentBeforeImage
@@ -320,15 +318,14 @@ const nearestHeading = (
 
   const lastBold = boldMatches.at(-1);
 
-  if (lastBold?.index === undefined) {
-    return undefined;
-  }
+  const heading =
+    lastBold === undefined
+      ? undefined
+      : parseEnemyHeading(
+          extractMargonemForumText(lastBold.groups?.text ?? "")
+        );
 
-  const heading = parseEnemyHeading(
-    extractMargonemForumText(lastBold.groups?.text ?? "")
-  );
-
-  return heading === undefined
+  return heading === undefined || lastBold?.index === undefined
     ? undefined
     : {
         heading,
@@ -336,7 +333,7 @@ const nearestHeading = (
       };
 };
 
-const findEnemyMarkers = (content: string): readonly EnemyMarker[] => {
+const findEnemyMarkers = (content: string) => {
   const markers: EnemyMarker[] = [];
   const seenStarts = new Set<number>();
 
@@ -378,14 +375,7 @@ const parseStats = (
   value: string,
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId
-): Effect.Effect<
-  {
-    readonly attributes: readonly MargonemForumItemStat[];
-    readonly itemClass: number;
-    readonly name: string;
-  },
-  MargonemForumGuideNotParseable
-> => {
+) => {
   const parts = decodeMargonemForumHtmlEntities(value).split("||");
 
   if (parts.length !== 4) {
@@ -445,20 +435,14 @@ const parseStats = (
   return Effect.succeed({ attributes, itemClass, name });
 };
 
-const findStat = (
-  attributes: readonly MargonemForumItemStat[],
-  key: string
-): string | null =>
+const findStat = (attributes: readonly MargonemForumItemStat[], key: string) =>
   attributes.find((attribute) => attribute.key === key)?.value ?? null;
 
 const parseProfessions = (
   value: string | null,
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId
-): Effect.Effect<
-  readonly LegendaryProfession[],
-  MargonemForumGuideNotParseable
-> => {
+) => {
   if (value === null || value.length === 0) {
     return Effect.succeed([]);
   }
@@ -488,10 +472,7 @@ const parseItemImage = Effect.fnUntraced(function* parseItemImage(
   imageHtml: string,
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId
-): Effect.fn.Return<
-  MargonemForumLegendaryItem | null,
-  MargonemForumGuideNotParseable
-> {
+) {
   const source = extractMargonemForumAttribute(imageHtml, "src");
   const statsValue = extractMargonemForumAttribute(imageHtml, "stats");
 
@@ -569,10 +550,7 @@ const parseItemSequence = Effect.fnUntraced(function* parseItemSequence(
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId,
   emptyReason: string
-): Effect.fn.Return<
-  readonly MargonemForumLegendaryItem[],
-  MargonemForumGuideNotParseable
-> {
+) {
   let cursor = 0;
   let parsedItemCount = 0;
   const legendaryItems: MargonemForumLegendaryItem[] = [];
@@ -619,10 +597,7 @@ const parseLootTemplate = Effect.fnUntraced(function* parseLootTemplate(
   blockHtml: string,
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId
-): Effect.fn.Return<
-  readonly MargonemForumLegendaryItem[],
-  MargonemForumGuideNotParseable
-> {
+) {
   const template = itemTemplatePattern.exec(blockHtml);
 
   if (template?.index === undefined) {
@@ -641,7 +616,7 @@ const parseIndirectLoot = Effect.fnUntraced(function* parseIndirectLoot(
   blockHtml: string,
   category: LegendaryEnemyCategory,
   postId: MargonemForumPostId
-): Effect.fn.Return<IndirectLoot | null, MargonemForumGuideNotParseable> {
+) {
   const sectionMatch = indirectLootPattern.exec(blockHtml);
   const sourceHtml = sectionMatch?.groups?.source;
 
@@ -672,7 +647,7 @@ const parseIndirectLoot = Effect.fnUntraced(function* parseIndirectLoot(
 const sameItemMetadata = (
   left: MargonemForumLegendaryItem,
   right: MargonemForumLegendaryItem
-): boolean =>
+) =>
   left.name === right.name &&
   left.level === right.level &&
   left.equipmentType === right.equipmentType;
@@ -683,7 +658,7 @@ const recordEnemyItems = Effect.fnUntraced(function* recordEnemyItems(
   enemySourceIconKey: LegendaryEnemySourceKey,
   items: readonly MargonemForumLegendaryItem[],
   postId: MargonemForumPostId
-): Effect.fn.Return<void, MargonemForumGuideNotParseable> {
+) {
   const enemyKey = `${category}:${enemySourceIconKey}`;
 
   for (const item of items) {
@@ -715,16 +690,18 @@ const recordEnemyItems = Effect.fnUntraced(function* recordEnemyItems(
 });
 
 /** Parse one complete forum topic into current official enemies and legendary equipment. */
-export const parseMargonemForumTopic = Effect.fn("MargonemForumTopic.parse")(
+export const parseMargonemForumTopic: (
+  page: MargonemForumTopicPage
+) => Effect.Effect<
+  MargonemForumCatalogSnapshot,
+  MargonemForumGuideNotParseable
+> = Effect.fn("MargonemForumTopic.parse")(
   // eslint-disable-next-line complexity -- one parser owns the complete topic safety boundary.
   function* parseMargonemForumTopic({
     category,
     html,
     url,
-  }: MargonemForumTopicPage): Effect.fn.Return<
-    MargonemForumCatalogSnapshot,
-    MargonemForumGuideNotParseable
-  > {
+  }: MargonemForumTopicPage) {
     const posts = splitPostContainers(html);
     const officialPosts = posts.filter((post) => isOfficialPost(post.html));
 

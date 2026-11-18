@@ -89,7 +89,7 @@ const createSignedInUser = async (name: string, verified = true) => {
 const jsonPost = (
   body: Parameters<typeof JSON.stringify>[0],
   cookie?: string
-): RequestInit => {
+) => {
   const headers = new Headers({ "Content-Type": "application/json" });
 
   if (cookie !== undefined) {

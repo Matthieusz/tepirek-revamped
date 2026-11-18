@@ -31,7 +31,7 @@ interface UserMutationCallbacks {
   readonly onRouteContextRefresh?: () => Promise<void>;
 }
 
-const reportRefreshError = (callbacks: UserMutationCallbacks): void => {
+const reportRefreshError = (callbacks: UserMutationCallbacks) => {
   callbacks.onRefreshError?.();
 };
 
@@ -39,7 +39,7 @@ const refreshUserData = async (
   queryClient: QueryClient,
   callbacks: UserMutationCallbacks,
   queryKey: readonly unknown[] = usersQueryKey
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries({ queryKey }, { throwOnError: true });
   } catch {
@@ -169,9 +169,7 @@ export const verifyDiscordGuildMembershipMutationOptions = (
   });
 
 /** Cancels in-flight reads and removes all private data from one router cache. */
-export const clearPrivateQueryCache = async (
-  queryClient: QueryClient
-): Promise<void> => {
+export const clearPrivateQueryCache = async (queryClient: QueryClient) => {
   await queryClient.cancelQueries();
   queryClient.clear();
 };

@@ -26,10 +26,6 @@ interface RarityFactor {
   upgradeGoldFactor: number;
 }
 
-/**
- * Game constants for upgrade calculations
- * Values are derived from game mechanics
- */
 const GAME_CONSTANTS = {
   DEFAULT_ITEM_LEVEL: 280,
   ENHANCED_BASE_COST: 27_000,
@@ -46,7 +42,6 @@ const rarityFactors = {
   zwykły: { upgradeGoldFactor: 1, upgradeRarityFactor: 1 },
 } satisfies Record<UlepaRarity, RarityFactor>;
 
-/** Multipliers for each upgrade level (1-5). */
 const UPGRADE_LEVEL_FACTORS = [
   1, 2.1, 3.4, 5, 7,
 ] as const satisfies readonly number[];
@@ -61,7 +56,7 @@ const GOLD_COST_LEVEL_ADDEND = 1300;
 
 const EXTRACTION_GOLD_PER_POINT = 60;
 
-const clampLevel = (n: number): number => {
+const clampLevel = (n: number) => {
   const v = Math.trunc(n);
 
   if (Number.isNaN(v)) {
@@ -74,7 +69,7 @@ const clampLevel = (n: number): number => {
 /**
  * Formats gold amount in compact notation
  */
-export const formatGold = (amount: number): string => {
+export const formatGold = (amount: number) => {
   const value = Math.floor(amount);
 
   if (value >= 1_000_000_000) {
@@ -92,10 +87,7 @@ export const formatGold = (amount: number): string => {
   return value.toLocaleString("pl-PL");
 };
 
-export const calculateUpgradePoints = (
-  lvl: number,
-  rarity: UlepaRarity
-): number[] => {
+export const calculateUpgradePoints = (lvl: number, rarity: UlepaRarity) => {
   const level = clampLevel(lvl);
   const factors = rarityFactors[rarity];
 
@@ -113,7 +105,7 @@ export const calculateUpgradePoints = (
   });
 };
 
-export const calculateDifferentialCosts = (upgradeCosts: number[]): number[] =>
+export const calculateDifferentialCosts = (upgradeCosts: number[]) =>
   upgradeCosts.map((cost, index) => cost - (upgradeCosts[index - 1] ?? 0));
 
 /** Result of calculating upgrade and extraction costs for an item. */
@@ -126,10 +118,10 @@ export interface UlepaUpgradeSummary {
   readonly extractionGoldCost: number;
 }
 
-export const calculateUpgradeSummary = (
+export const calculateUpgradeSummary: (
   level: number,
   rarity: UlepaRarity
-): UlepaUpgradeSummary => {
+) => UlepaUpgradeSummary = (level, rarity) => {
   const cumulativeCosts = calculateUpgradePoints(level, rarity);
   const differentialCosts = calculateDifferentialCosts(cumulativeCosts);
 

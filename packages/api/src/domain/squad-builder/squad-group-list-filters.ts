@@ -14,7 +14,7 @@ export const squadGroupListFilterPolicy = {
   nameQueryMinLength: 2,
 } as const;
 
-const normalizeNameQuery = (value: string): string =>
+const normalizeNameQuery = (value: string) =>
   value.trim().replaceAll(/\s+/gu, " ");
 
 /** Normalized text query for browsing squad groups. */
@@ -117,7 +117,7 @@ const ParsedNameQuery = Data.taggedEnum<ParsedNameQuery>();
 
 const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   value: string | null | undefined
-): Effect.fn.Return<ParsedNameQuery, InvalidSquadGroupNameQuery> {
+) {
   if (value === undefined || value === null) {
     return ParsedNameQuery.Absent();
   }
@@ -153,7 +153,7 @@ const ParsedLevelBound = Data.taggedEnum<ParsedLevelBound>();
 const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
   value: number | null | undefined,
   fieldName: "minLevel" | "maxLevel"
-): Effect.fn.Return<ParsedLevelBound, InvalidSquadGroupLevelRange> {
+) {
   if (value === undefined || value === null) {
     return ParsedLevelBound.Absent();
   }

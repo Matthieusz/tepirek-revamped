@@ -26,9 +26,7 @@ export class InvalidAccountAccessStatus extends Schema.TaggedError<
 >()("InvalidAccountAccessStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status string into the domain status. */
-export const parseAccountAccessStatus = (
-  value: string
-): Effect.Effect<AccountAccessStatus, InvalidAccountAccessStatus> =>
+export const parseAccountAccessStatus = (value: string) =>
   parseInvitationAccessStatus(value).pipe(
     Effect.mapError(() => new InvalidAccountAccessStatus({ value }))
   );

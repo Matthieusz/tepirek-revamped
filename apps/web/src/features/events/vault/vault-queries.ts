@@ -25,7 +25,6 @@ export const vaultQueryKey = ["vault"] as const;
 /** Cache key for vault rows aggregated across all events. */
 export const allVaultQueryKey = [...vaultQueryKey, "all"] as const;
 
-/** Cache key prefix for event-specific vault rows. */
 const vaultByEventQueryKeyPrefix = [...vaultQueryKey, "by-event"] as const;
 
 /** Cache key for vault rows belonging to one event. */
@@ -44,7 +43,7 @@ interface TogglePaidOutContext {
 const invalidateVaultRelatedData = async (
   queryClient: QueryClient,
   callbacks: VaultMutationCallbacks
-): Promise<void> => {
+) => {
   const results = await Promise.allSettled(
     [
       vaultQueryKey,

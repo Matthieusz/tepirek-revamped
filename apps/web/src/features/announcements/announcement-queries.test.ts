@@ -3,7 +3,6 @@ import { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import type { Announcement } from "@/features/announcements/announcement-api";
 import {
   announcementsQueryKey,
   announcementsQueryOptions,
@@ -17,10 +16,7 @@ import {
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 
-const makeAnnouncement = (
-  id: number,
-  title = `Announcement ${id}`
-): Announcement =>
+const makeAnnouncement = (id: number, title = `Announcement ${id}`) =>
   Schema.decodeSync(AnnouncementSummary)({
     createdAt: "2026-01-01T00:00:00.000Z",
     description: `Description ${id}`,
@@ -37,7 +33,7 @@ interface Deferred<A> {
   readonly resolve: (value: A) => void;
 }
 
-const deferred = <A>(): Deferred<A> => {
+const deferred = <A>() => {
   let resolvePromise: (value: A) => void;
 
   // oxlint-disable-next-line promise/avoid-new -- tests need a manually controlled response
@@ -50,7 +46,7 @@ const deferred = <A>(): Deferred<A> => {
     resolve: (value) => {
       resolvePromise(value);
     },
-  };
+  } satisfies Deferred<A>;
 };
 
 describe("announcement queries and mutations", () => {

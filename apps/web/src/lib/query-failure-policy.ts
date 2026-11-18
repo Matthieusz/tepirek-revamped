@@ -34,15 +34,8 @@ const isRateLimited = Schema.is(HttpApiRateLimitedError);
 
 const maximumRetryDelay = 2_147_483_647;
 
-const retryAfterDelay = (
-  guidance: ResponseGuidance | undefined
-): number | undefined => {
-  const retryAfter = guidance?.retryAfter?.trim();
-
-  if (retryAfter === undefined || retryAfter.length === 0) {
-    return undefined;
-  }
-
+const retryAfterDelay = (guidance: ResponseGuidance | undefined) => {
+  const retryAfter = guidance?.retryAfter?.trim() ?? "";
   const delay = deltaSecondsPattern.test(retryAfter)
     ? Number(retryAfter) * 1000
     : Date.parse(retryAfter) - Date.now();
@@ -56,7 +49,7 @@ const retryAfterDelay = (
 export const rememberFailureResponse = (
   failure: HttpApiFailure,
   headers: Readonly<Record<string, string>>
-): void => {
+) => {
   const requestId = headers["x-request-id"];
   const retryAfter = headers["retry-after"]?.trim();
   responseGuidance.set(failure, {
@@ -68,10 +61,12 @@ export const rememberFailureResponse = (
   });
 };
 
-const failureValue = (error: CaughtError): CaughtError =>
+const failureValue: (error: CaughtError) => CaughtError = (error) =>
   error instanceof EffectQueryFailure ? error.failure : error;
 
-const guidanceFor = (failure: CaughtError): ResponseGuidance | undefined => {
+const guidanceFor: (failure: CaughtError) => ResponseGuidance | undefined = (
+  failure: CaughtError
+) => {
   if (isHttpClientError(failure)) {
     const headers = failure.response?.headers;
 
@@ -94,10 +89,7 @@ const guidanceFor = (failure: CaughtError): ResponseGuidance | undefined => {
 };
 
 /** Allows one TanStack-owned retry only for positively identified transient read failures. */
-export const shouldRetryQuery = (
-  failureCount: number,
-  error: CaughtError
-): boolean => {
+export const shouldRetryQuery = (failureCount: number, error: CaughtError) => {
   if (failureCount >= 1) {
     return false;
   }
@@ -105,7 +97,6 @@ export const shouldRetryQuery = (
   const failure = failureValue(error);
   const guidance = guidanceFor(failure);
 
-  // Do not retry earlier than unschedulable or invalid server guidance.
   if (
     guidance?.retryAfter !== undefined &&
     retryAfterDelay(guidance) === undefined
@@ -117,7 +108,6 @@ export const shouldRetryQuery = (
     return true;
   }
 
-  // Protocol rate limits can represent monthly budgets, not transient throttling.
   if (isRateLimited(failure)) {
     return retryAfterDelay(guidance) !== undefined;
   }
@@ -143,10 +133,10 @@ export const shouldRetryQuery = (
 };
 
 /** Uses Retry-After seconds or HTTP dates when present; otherwise uses bounded backoff. */
-export const queryRetryDelay = (attempt: number, error: CaughtError): number =>
+export const queryRetryDelay = (attempt: number, error: CaughtError) =>
   retryAfterDelay(guidanceFor(failureValue(error))) ??
   Math.min(1000 * 2 ** attempt, 30_000);
 
 /** Returns a validated server request ID, if the transport supplied one. */
-export const failureCorrelationId = (error: CaughtError): string | undefined =>
+export const failureCorrelationId = (error: CaughtError) =>
   guidanceFor(failureValue(error))?.correlationId;

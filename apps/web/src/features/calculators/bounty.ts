@@ -1,34 +1,13 @@
-/**
- * Bounty / wanted-list penalty calculator.
- *
- * Pure formula logic shared by the bounty calculator page. Owns the
- * single-combat and group-combat penalty rules and the level-list parser.
- * React, icons, and zod schemas stay in the page; this module is the
- * single source of truth for the penalty math.
- */
-
 const MIN_LEVEL = 1;
 
 const MAX_LEVEL = 500;
 
-/**
- * Base level difference threshold before scaling
- */
 const LEVEL_DIFFERENCE_BASE = 16;
 
-/**
- * Level at which scaling starts
- */
 const LEVEL_DIFFERENCE_SCALING_START = 100;
 
-/**
- * Scaling divisor for level difference
- */
 const LEVEL_DIFFERENCE_SCALING_DIVISOR = 5;
 
-/**
- * Group attack formula constants
- */
 const GROUP_ATTACK_STRENGTH_MULTIPLIER = 0.5;
 
 const GROUP_ATTACK_THRESHOLD_BASE = 15;
@@ -66,7 +45,7 @@ export interface GroupPenaltyResult extends GroupAttackPenaltyResult {
  * Calculates minimum level difference required to avoid penalty points
  * Formula: min_lvl_difference = 16 + max(0, (lvl_player - 100) / 5)
  */
-export const calculateMinLevelDifference = (attackerLevel: number): number =>
+export const calculateMinLevelDifference = (attackerLevel: number) =>
   LEVEL_DIFFERENCE_BASE +
   Math.max(
     0,
@@ -80,7 +59,7 @@ export const calculateMinLevelDifference = (attackerLevel: number): number =>
 export const wouldReceivePenalty = (
   attackerLevel: number,
   victimLevel: number
-): boolean => {
+) => {
   const minDiff = calculateMinLevelDifference(attackerLevel);
   const actualDiff = attackerLevel - victimLevel;
 
@@ -90,9 +69,7 @@ export const wouldReceivePenalty = (
 /**
  * Calculates the minimum victim level that would give penalty points
  */
-export const calculateMinVictimLevelForPenalty = (
-  attackerLevel: number
-): number => {
+export const calculateMinVictimLevelForPenalty = (attackerLevel: number) => {
   const minDiff = calculateMinLevelDifference(attackerLevel);
 
   return Math.ceil(attackerLevel - minDiff);
@@ -103,10 +80,7 @@ export const calculateMinVictimLevelForPenalty = (
  */
 export const calculateMaxAttackerLevelWithoutPenalty = (
   victimLevel: number
-): number => {
-  // We need to find max attackerLevel where:
-  // attackerLevel - victimLevel < 16 + max(0, (attackerLevel - 100) / 5)
-  // This requires solving iteratively since attackerLevel appears on both sides
+) => {
   let maxLevel = victimLevel;
 
   for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl += 1) {
@@ -129,7 +103,7 @@ export const calculateMaxAttackerLevelWithoutPenalty = (
 export const calculateGroupAttackPenalty = (
   attackerLevels: number[],
   defenderLevels: number[]
-): GroupAttackPenaltyResult => {
+) => {
   const maxAttackerLevel = Math.max(...attackerLevels);
 
   const avgAttackerLevel =
@@ -140,13 +114,11 @@ export const calculateGroupAttackPenalty = (
     defenderLevels.reduce((sum, level) => sum + level, 0) /
     defenderLevels.length;
 
-  // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
   const attackerStrength = maxAttackerLevel + avgAttackerLevel;
 
   const difference =
     GROUP_ATTACK_STRENGTH_MULTIPLIER * attackerStrength - avgDefenderLevel;
 
-  // Right side of inequality: 15 + max(0, 0.1 * (max + avg_attackers) - 20)
   const threshold =
     GROUP_ATTACK_THRESHOLD_BASE +
     Math.max(
@@ -169,7 +141,7 @@ export const calculateGroupAttackPenalty = (
 /**
  * Parse comma-separated levels string into array of numbers
  */
-export const parseLevels = (input: string): number[] =>
+export const parseLevels = (input: string) =>
   input.split(",").flatMap((value) => {
     const level = Number(value.trim());
 

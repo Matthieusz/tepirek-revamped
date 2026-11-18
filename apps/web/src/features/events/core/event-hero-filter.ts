@@ -60,9 +60,7 @@ export interface EventHeroFilterState {
   heroId: FilterSelection;
 }
 
-type EventHeroFilterUpdate = EventHeroFilterSearch;
-
-const isAllFilter = (value: FilterSelection): boolean => value === ALL_FILTER;
+const isAllFilter = (value: FilterSelection) => value === ALL_FILTER;
 
 /**
  * Normalize validated URL search into an Event/Hero filter state. Missing
@@ -72,7 +70,7 @@ const isAllFilter = (value: FilterSelection): boolean => value === ALL_FILTER;
 export const normalizeEventHeroFilter = (input: {
   urlEventId: string | undefined;
   urlHeroId: string | undefined;
-}): EventHeroFilterState => {
+}) => {
   const resolvedEventId = input.urlEventId ?? ALL_FILTER;
   const resolvedHeroId = input.urlHeroId ?? ALL_FILTER;
 
@@ -80,7 +78,6 @@ export const normalizeEventHeroFilter = (input: {
     ? ALL_FILTER
     : resolvedEventId;
 
-  // Choosing all Events clears Hero: there is no Hero without an Event.
   let heroId: FilterSelection = ALL_FILTER;
 
   if (!isAllFilter(eventId) && !isAllFilter(resolvedHeroId)) {
@@ -95,17 +92,12 @@ export const normalizeEventHeroFilter = (input: {
  * `undefined` for the all sentinel, otherwise a positive integer. Invalid
  * ID strings fall back to `undefined`.
  */
-export const toQueryInput = (
-  selection: FilterSelection | undefined
-): number | undefined => {
-  if (selection === undefined || isAllFilter(selection)) {
-    return undefined;
-  }
+export const toQueryInput = (selection: FilterSelection | undefined) =>
+  selection === undefined || isAllFilter(selection)
+    ? undefined
+    : Option.getOrUndefined(decodePositiveIntegerId(selection));
 
-  return Option.getOrUndefined(decodePositiveIntegerId(selection));
-};
-
-const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
+const toEventTimestamp = (eventEndTime: Date | string | undefined) => {
   if (eventEndTime === undefined) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -120,7 +112,7 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
  */
 export const sortEventsByEndTimeDesc = (
   events?: readonly EventSelectOption[]
-): EventSelectOption[] =>
+) =>
   Arr.sortWith(
     events ?? [],
     (event) => toEventTimestamp(event.endTime),
@@ -130,25 +122,21 @@ export const sortEventsByEndTimeDesc = (
 /**
  * Sort heroes by level ascending.
  */
-export const sortHeroesByLevel = (
-  heroes?: readonly HeroSelectOption[]
-): HeroSelectOption[] =>
+export const sortHeroesByLevel = (heroes?: readonly HeroSelectOption[]) =>
   Arr.sortWith(heroes ?? [], (hero) => hero.level ?? 0, Order.Number);
 
 /**
  * Decide whether the Hero query should be enabled: only when a specific
  * Event is selected.
  */
-export const isHeroQueryEnabled = (state: EventHeroFilterState): boolean =>
+export const isHeroQueryEnabled = (state: EventHeroFilterState) =>
   !isAllFilter(state.eventId);
 
 /**
  * Build the URL search update for choosing an Event. Selecting all Events
  * (or clearing the Event) always clears Hero.
  */
-export const selectEventUpdate = (
-  eventId: FilterSelection
-): EventHeroFilterUpdate => ({
+export const selectEventUpdate = (eventId: FilterSelection) => ({
   eventId: isAllFilter(eventId) ? undefined : eventId,
   heroId: undefined,
 });
@@ -160,7 +148,7 @@ export const selectEventUpdate = (
 export const selectHeroUpdate = (
   state: EventHeroFilterState,
   heroId: FilterSelection
-): EventHeroFilterUpdate => {
+) => {
   if (isAllFilter(state.eventId)) {
     return { heroId: undefined };
   }

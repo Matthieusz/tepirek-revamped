@@ -54,7 +54,7 @@ interface AvailableCharacterPoolProps {
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }
 
-const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
+const toMetadata = (character: AvailableCharacter) => ({
   accountDisplayName: character.accountDisplayName,
   accountId: character.accountId,
   accountOwnerUserId: character.accountOwnerUserId,
@@ -67,9 +67,7 @@ const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
   profession: character.profession,
 });
 
-const getProfessionFilterValues = (
-  filters: readonly CharacterPoolFilter[]
-): string[] =>
+const getProfessionFilterValues = (filters: readonly CharacterPoolFilter[]) =>
   filters.flatMap((filter) =>
     filter.field === "profession" ? filter.values : []
   );
@@ -78,7 +76,7 @@ const placementErrorMessage = (
   error: PlacementError,
   characterName: string,
   fallbackSquadName?: string
-): string =>
+) =>
   PlacementError.$match(error, {
     accountAlreadyRepresented: ({ squadName }) =>
       `${characterName} nie może trafić do składu ${squadName}.`,
@@ -97,7 +95,7 @@ const placementErrorMessage = (
 
 const getAccountInfoMap = (
   characterById: HashMap.HashMap<number, SquadCharacterMetadata>
-): HashMap.HashMap<number, CharacterAccountInfo> =>
+) =>
   HashMap.map<CharacterAccountInfo, SquadCharacterMetadata, number>(
     (character) => ({
       accountDisplayName: character.accountDisplayName,
@@ -135,7 +133,7 @@ const initialCharacterPoolState: CharacterPoolState = {
 const characterPoolReducer = (
   state: CharacterPoolState,
   action: CharacterPoolAction
-): CharacterPoolState => {
+) => {
   switch (action.type) {
     case "clear-filters": {
       return {

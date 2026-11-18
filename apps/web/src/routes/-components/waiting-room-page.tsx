@@ -88,7 +88,6 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-6">
-        {/* Waiting Card */}
         <Card className="from-primary/15 via-primary/5 border-none bg-linear-to-br to-transparent text-center">
           <CardHeader>
             <div className="bg-primary/10 ring-primary/5 mx-auto mb-4 flex size-16 items-center justify-center rounded-full ring-4">
@@ -118,7 +117,6 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
           </CardContent>
         </Card>
 
-        {/* User Info Card */}
         <Card>
           <CardContent className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">

@@ -60,12 +60,12 @@ export const AUCTION_SLOT_COLUMNS = {
 export const getAuctionSlotColumns = (
   profession: AuctionProfession,
   type: AuctionType
-): readonly string[] => AUCTION_SLOT_COLUMNS[profession][type];
+) => AUCTION_SLOT_COLUMNS[profession][type];
 
 export const getAuctionSlotColumnCount = (
   profession: AuctionProfession,
   type: AuctionType
-): number => AUCTION_SLOT_COLUMNS[profession][type].length;
+) => AUCTION_SLOT_COLUMNS[profession][type].length;
 
 export interface AuctionSlotCoordinate {
   profession: AuctionProfession;
@@ -75,12 +75,10 @@ export interface AuctionSlotCoordinate {
   column: number;
 }
 
-const isPositiveInteger = (value: number): boolean =>
+const isPositiveInteger = (value: number) =>
   Number.isInteger(value) && value > 0;
 
-export const isLegalAuctionSlot = (
-  coordinate: AuctionSlotCoordinate
-): boolean => {
+export const isLegalAuctionSlot = (coordinate: AuctionSlotCoordinate) => {
   if (
     !isPositiveInteger(coordinate.level) ||
     !isPositiveInteger(coordinate.round) ||

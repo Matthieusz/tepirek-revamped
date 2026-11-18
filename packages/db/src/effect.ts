@@ -61,7 +61,7 @@ export class EffectDatabase extends Context.Service<
 /** Acquire and validate Better Auth's scoped node-postgres pool. */
 export const makeBetterAuthPostgresPoolLayer = (
   databaseUrl: Redacted.Redacted
-): Layer.Layer<BetterAuthPostgresPool, SqlError> =>
+) =>
   Layer.effect(
     BetterAuthPostgresPool,
     Effect.acquireRelease(
@@ -71,8 +71,9 @@ export const makeBetterAuthPostgresPoolLayer = (
           max: DATABASE_POOL_MAX_CONNECTIONS,
         });
 
+        // WARNING: Without an error listener, a dropped idle connection can crash the process.
         pool.on("error", () => {
-          // The listener prevents pg from treating idle connection errors as uncaught.
+          // WARNING: node-postgres already removes the failed idle client from the pool.
         });
 
         yield* Effect.tryPromise({
@@ -148,9 +149,7 @@ export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
  * Effect SQL owns the native pool; Better Auth owns a node-postgres pool.
  * Both pools close with the server scope, with at most 20 total connections.
  */
-export const makeDatabaseLayer = (
-  databaseUrl: Redacted.Redacted
-): Layer.Layer<EffectDatabase | BetterAuthDatabaseService, SqlError> => {
+export const makeDatabaseLayer = (databaseUrl: Redacted.Redacted) => {
   const effectDatabaseLayer = EffectDatabaseLayer.pipe(
     Layer.provide(makePgClientLayer(databaseUrl))
   );

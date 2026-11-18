@@ -63,7 +63,7 @@ const PositiveLevelFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isGreaterThan(0))
 );
 
-const decodeOptionalLevel = (value: string): number | null =>
+const decodeOptionalLevel = (value: string) =>
   Option.getOrNull(Schema.decodeOption(PositiveLevelFromString)(value));
 
 const SquadFilterFormSchema = Schema.Struct({
@@ -82,7 +82,7 @@ const SquadFilterFormValidator = Schema.toStandardSchemaV1(
   SquadFilterFormSchema
 );
 
-const hasActiveFilters = (filters: SquadGroupListFilterFormState): boolean =>
+const hasActiveFilters = (filters: SquadGroupListFilterFormState) =>
   filters.nameQuery.length > 0 ||
   filters.minLevel.length > 0 ||
   filters.maxLevel.length > 0;

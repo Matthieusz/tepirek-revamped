@@ -35,16 +35,13 @@ export class FirecrawlConfigService extends Context.Service<
 /** Parse a number into a Firecrawl credit count. */
 export const parseFirecrawlCreditCount = EffectRuntime.fn(
   "FirecrawlConfig.parseCreditCount"
-)(
-  (
-    input: number
-  ): EffectRuntime.Effect<FirecrawlCreditCount, ParseFirecrawlConfigError> =>
-    Schema.decodeEffect(FirecrawlCreditCount)(input).pipe(
-      EffectRuntime.mapError(
-        () =>
-          new ParseFirecrawlConfigError({
-            message: "Firecrawl credits used must be a non-negative integer",
-          })
-      )
+)((input: number) =>
+  Schema.decodeEffect(FirecrawlCreditCount)(input).pipe(
+    EffectRuntime.mapError(
+      () =>
+        new ParseFirecrawlConfigError({
+          message: "Firecrawl credits used must be a non-negative integer",
+        })
     )
+  )
 );

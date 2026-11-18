@@ -11,13 +11,11 @@ import type { DeleteHeroInput, Hero } from "@/features/events/heroes/hero-api";
 import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
-/** Cache key prefix for all hero queries. */
 const heroesQueryKey = ["heroes"] as const;
 
 /** Cache key for all heroes. */
 export const heroesListQueryKey = [...heroesQueryKey, "list"] as const;
 
-/** Cache key prefix for event-specific hero lists. */
 const heroesByEventQueryKeyPrefix = [...heroesQueryKey, "by-event"] as const;
 
 /** Cache key for heroes assigned to one event. */
@@ -39,7 +37,7 @@ interface DeleteHeroContext {
   readonly snapshots: readonly HeroCacheSnapshot[];
 }
 
-const hasConcurrentHeroMutation = (queryClient: QueryClient): boolean =>
+const hasConcurrentHeroMutation = (queryClient: QueryClient) =>
   queryClient
     .getMutationCache()
     .getAll()
@@ -52,7 +50,7 @@ const hasConcurrentHeroMutation = (queryClient: QueryClient): boolean =>
 const invalidateHeroes = async (
   queryClient: QueryClient,
   callbacks: HeroMutationCallbacks
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries(
       { queryKey: heroesQueryKey },
@@ -68,7 +66,7 @@ const invalidateHeroes = async (
 const invalidateHeroesAfterMutation = async (
   queryClient: QueryClient,
   callbacks: HeroMutationCallbacks
-): Promise<void> => {
+) => {
   if (!hasConcurrentHeroMutation(queryClient)) {
     await invalidateHeroes(queryClient, callbacks);
   }

@@ -29,7 +29,7 @@ type AccountAccessGrant = AccountAccessGrantSummarySchema;
 
 type AccountInviteTarget = AccountInviteTargetSchema;
 
-const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
+const useDebouncedValue = <T,>(value: T, delayMs: number) => {
   const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {
@@ -45,16 +45,13 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
   return debounced;
 };
 
-const useActorUserId = (): string => {
+const useActorUserId = () => {
   const sessionQuery = useQuery(sessionQueryOptions());
 
   return sessionQuery.data?.user.id ?? "";
 };
 
-const getSearchStatus = (
-  queryLength: number,
-  hasLoaded: boolean
-): string | undefined => {
+const getSearchStatus = (queryLength: number, hasLoaded: boolean) => {
   if (queryLength < 2) {
     return "Wpisz co najmniej 2 znaki";
   }
@@ -66,7 +63,7 @@ const getSearchAnnouncement = (
   queryLength: number,
   hasLoaded: boolean,
   resultCount: number
-): string => {
+) => {
   if (queryLength < 2) {
     return "";
   }

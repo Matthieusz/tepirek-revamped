@@ -14,7 +14,7 @@ export interface TestQueryClient {
  * Call `cleanup` when the test ends. It clears query and mutation caches and
  * cancels the client's cache timers.
  */
-export const makeTestQueryClient = (): TestQueryClient => {
+export const makeTestQueryClient: () => TestQueryClient = () => {
   const queryClient = createQueryClient();
 
   return {

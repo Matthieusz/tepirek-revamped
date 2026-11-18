@@ -55,7 +55,7 @@ type StandardSchemaInput = Parameters<
 const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
   schema: S,
   value: StandardSchemaInput
-): S["Type"] => {
+) => {
   const result = Schema.decodeUnknownExit(schema)(value);
   expect(Exit.isSuccess(result)).toBe(true);
 
@@ -69,7 +69,7 @@ const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
 const fails = (
   schema: Schema.ConstraintDecoder<unknown>,
   value: StandardSchemaInput
-): void => {
+) => {
   expect(Exit.isFailure(Schema.decodeUnknownExit(schema)(value))).toBe(true);
 };
 

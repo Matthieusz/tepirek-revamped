@@ -21,7 +21,6 @@ import {
 import type {
   GetRankingInput,
   RankingRow,
-  RankingServiceInterface,
 } from "../../services/ranking/ranking-service.ts";
 import { RankingService } from "../../services/ranking/ranking-service.ts";
 import {
@@ -69,7 +68,7 @@ const decodePointWorth = (operation: string) => {
 const buildUserStatsWhere = (input: {
   readonly eventId?: number | undefined;
   readonly heroId?: number | undefined;
-}): SQL | undefined => {
+}) => {
   const conditions: SQL[] = [];
 
   if (input.eventId !== undefined) {
@@ -276,7 +275,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
     };
   });
 
-const makeService = (database: EffectPgDatabase): RankingServiceInterface => ({
+const makeService = (database: EffectPgDatabase) => ({
   getHeroStats: Effect.fn("RankingService.getHeroStats")((heroId: number) =>
     getHeroStatsWithDatabase(database)(heroId)
   ),

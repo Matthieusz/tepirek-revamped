@@ -523,7 +523,6 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
 
         for (const existingSquad of existingSquads) {
           if (submittedSquadIds.has(existingSquad.id)) {
-            // Clear existing positions first so reordering satisfies the unique index.
             yield* tx
               .update(squad)
               .set({ position: -existingSquad.id })
@@ -693,7 +692,6 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
     return { groupId, updatedAt: updated.updatedAt, visibility };
   });
 
-/** Provide the squad-group aggregate store with its Drizzle implementation. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleSquadGroupAggregateStoreServiceLayer: Layer.Layer<

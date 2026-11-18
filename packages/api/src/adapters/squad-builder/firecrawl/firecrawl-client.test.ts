@@ -32,31 +32,31 @@ type ClientStep = (
   HttpClientError.HttpClientError
 >;
 
-const jsonResponse =
-  (body: Parameters<typeof Response.json>[0], status = 200): ClientStep =>
-  (request) =>
+const jsonResponse = (
+  body: Parameters<typeof Response.json>[0],
+  status = 200
+) =>
+  ((request) =>
     Effect.succeed(
       HttpClientResponse.fromWeb(request, Response.json(body, { status }))
-    );
+    )) satisfies ClientStep;
 
-const textResponse =
-  (body: string, status = 200): ClientStep =>
-  (request) =>
+const textResponse = (body: string, status = 200) =>
+  ((request) =>
     Effect.succeed(
       HttpClientResponse.fromWeb(request, new Response(body, { status }))
-    );
+    )) satisfies ClientStep;
 
-const emptyResponse =
-  (status: number): ClientStep =>
-  (request) =>
+const emptyResponse = (status: number) =>
+  ((request) =>
     Effect.succeed(
       HttpClientResponse.fromWeb(request, new Response(null, { status }))
-    );
+    )) satisfies ClientStep;
 
 const makeSequenceClient = (
   steps: readonly ClientStep[],
   requests: HttpClientRequest.HttpClientRequest[] = []
-): HttpClient.HttpClient => {
+) => {
   let attempt = 0;
 
   return HttpClient.make((request) =>

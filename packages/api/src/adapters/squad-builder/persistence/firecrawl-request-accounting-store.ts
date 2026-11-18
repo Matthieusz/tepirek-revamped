@@ -14,7 +14,6 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   ReserveFirecrawlRequestInput,
 } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   FirecrawlMonthlyBudgetExhausted,
   FirecrawlUserMonthlyBudgetExhausted,
@@ -140,10 +139,7 @@ const markRequestSucceededWithDatabase =
     creditsUsed,
     firecrawlStatusCode,
     requestId,
-  }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
-    void,
-    SquadBuilderPersistenceUnavailable
-  > =>
+  }: MarkFirecrawlRequestSucceededInput) =>
     persistenceQuery(
       "markRequestSucceeded",
       database
@@ -160,14 +156,7 @@ const markRequestSucceededWithDatabase =
 
 const markRequestFailedWithDatabase =
   (database: EffectPgDatabase) =>
-  ({
-    completedAt,
-    errorTag,
-    requestId,
-  }: MarkFirecrawlRequestFailedInput): Effect.Effect<
-    void,
-    SquadBuilderPersistenceUnavailable
-  > =>
+  ({ completedAt, errorTag, requestId }: MarkFirecrawlRequestFailedInput) =>
     persistenceQuery(
       "markRequestFailed",
       database
@@ -176,7 +165,6 @@ const markRequestFailedWithDatabase =
         .where(eq(firecrawlProfileScrapeRequest.id, requestId))
     ).pipe(Effect.asVoid);
 
-/** Drizzle implementation of transactional Firecrawl request accounting. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleFirecrawlRequestAccountingStoreServiceLayer: Layer.Layer<

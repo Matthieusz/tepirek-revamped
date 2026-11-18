@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Link2, LogIn, UserPlus } from "lucide-react";
-import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -30,7 +29,6 @@ const HomeContent = ({
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center overflow-hidden">
       <main className="relative z-10 flex flex-col items-center gap-10 px-6 text-center">
-        {/* Title */}
         <div className="flex flex-col items-center gap-3">
           <h1
             className="text-foreground font-serif font-bold tracking-tight"
@@ -47,7 +45,6 @@ const HomeContent = ({
           </p>
         </div>
 
-        {/* Auth actions */}
         <div className="flex w-full max-w-[18rem] flex-col gap-3">
           <Button
             render={
@@ -78,7 +75,6 @@ const HomeContent = ({
           />
         </div>
 
-        {/* Status indicator */}
         <div className="flex items-center gap-2.5 text-sm">
           <span className="relative flex size-2">
             {healthCheckIsLoading && (
@@ -108,7 +104,7 @@ const HomeContent = ({
   );
 };
 
-const HomePage = (): ReactNode => {
+const HomePage = () => {
   const healthQuery = useQuery(healthQueryOptions());
 
   if (healthQuery.isPending) {

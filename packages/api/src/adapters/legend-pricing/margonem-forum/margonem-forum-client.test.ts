@@ -18,7 +18,7 @@ import {
   MargonemForumClientService,
 } from "./margonem-forum-client.ts";
 
-const readFixture = (name: string): string =>
+const readFixture = (name: string) =>
   readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf-8");
 
 interface AccountingEvents {

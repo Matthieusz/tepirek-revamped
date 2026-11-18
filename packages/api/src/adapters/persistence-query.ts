@@ -18,7 +18,7 @@ function projectPersistenceError<E, PersistenceError, Operation extends string>(
   operation: Operation,
   error: E,
   makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
-): E | PersistenceError {
+) {
   return error instanceof EffectDrizzleQueryError || isSqlError(error)
     ? makeError({ cause: error, operation })
     : error;
@@ -29,14 +29,7 @@ export const buildDirectPersistenceQuery =
   <PersistenceError, Operation extends string>(
     makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
   ) =>
-  <A, E, R>(
-    operation: Operation,
-    self: Effect.Effect<A, E, R>
-  ): Effect.Effect<
-    A,
-    Exclude<E, EffectDrizzleQueryError | SqlError> | PersistenceError,
-    R
-  > =>
+  <A, E, R>(operation: Operation, self: Effect.Effect<A, E, R>) =>
     // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect.mapError is not Promise.catch.
     Effect.mapError(self, (error) =>
       projectPersistenceError(operation, error, makeError)

@@ -258,13 +258,12 @@ const VaultUnpaidUsers = ({
           key={player.userId}
         >
           <div className="flex items-center gap-4 px-4 py-3">
-            {/* Position */}
             <div className="flex w-8 shrink-0 items-center justify-center">
               <span className="text-muted-foreground font-medium">
                 {index + 2}
               </span>
             </div>
-            {/* Avatar */}
+
             <Avatar className="border-border size-10 shrink-0 border">
               <AvatarImage
                 alt={player.userName ?? ""}
@@ -274,11 +273,11 @@ const VaultUnpaidUsers = ({
                 <User aria-hidden="true" className="size-5" />
               </AvatarFallback>
             </Avatar>
-            {/* Name */}
+
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{player.userName}</p>
             </div>
-            {/* Earnings */}
+
             <div className="flex items-center gap-2">
               <Coins
                 aria-hidden="true"
@@ -288,7 +287,7 @@ const VaultUnpaidUsers = ({
                 {formatVaultEarnings(player.totalEarnings)}
               </p>
             </div>
-            {/* Checkbox for admin */}
+
             <VaultPayoutCheckbox
               player={player}
               canTogglePaidOut={canTogglePaidOut}
@@ -384,7 +383,6 @@ const VaultContent = ({
         Skarbiec
       </h1>
 
-      {/* Event Filter */}
       <div className="flex justify-center">
         <Select
           onValueChange={(value) => {
@@ -423,7 +421,6 @@ const VaultContent = ({
           </p>
         )}
 
-        {/* Next to receive payment - highlighted */}
         {Option.isSome(nextToPay) && (
           <NextPaymentCard
             player={nextToPay.value}
@@ -432,7 +429,6 @@ const VaultContent = ({
           />
         )}
 
-        {/* Empty state */}
         {vault.length === 0 && (
           <EmptyState
             icon={<VaultIcon aria-hidden="true" />}
@@ -440,14 +436,12 @@ const VaultContent = ({
           />
         )}
 
-        {/* Unpaid users list */}
         <VaultUnpaidUsers
           unpaidUsers={unpaidUsers}
           canTogglePaidOut={canTogglePaidOut}
           toggleMutation={toggleMutation}
         />
 
-        {/* Paid users list */}
         {paidUsers.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">

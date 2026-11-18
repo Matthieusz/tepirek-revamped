@@ -101,9 +101,7 @@ function mapSquadGroupSharingError(
 function mapSquadGroupSharingError(
   error: SendSquadGroupEditorInviteError
 ): SendSquadGroupEditorInviteProtocolError;
-function mapSquadGroupSharingError(
-  error: SquadGroupSharingHandlerError
-): SendSquadGroupEditorInviteProtocolError {
+function mapSquadGroupSharingError(error: SquadGroupSharingHandlerError) {
   return Match.value(error).pipe(
     Match.tag(
       "SquadGroupNotFound",
@@ -139,36 +137,33 @@ function mapSquadGroupSharingError(
 
 const mapSearchSquadEditorInviteTargetsError = (
   error: SearchSquadEditorInviteTargetsError
-): SearchSquadEditorInviteTargetsProtocolError =>
-  mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
 const mapSendSquadGroupEditorInviteError = (
   error: SendSquadGroupEditorInviteError
-): SendSquadGroupEditorInviteProtocolError => mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
 const mapRespondToSquadGroupInviteError = (
   error: RespondToSquadGroupInviteError
-): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
-const mapRevokeSquadGroupEditorError = (
-  error: RevokeSquadGroupEditorError
-): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+const mapRevokeSquadGroupEditorError = (error: RevokeSquadGroupEditorError) =>
+  mapSquadGroupSharingError(error);
 
 const mapListIncomingSquadGroupInvitesError = (
   error: ListIncomingSquadGroupInvitesError
-): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
-const mapListSharedSquadGroupsError = (
-  error: ListSharedSquadGroupsError
-): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+const mapListSharedSquadGroupsError = (error: ListSharedSquadGroupsError) =>
+  mapSquadGroupSharingError(error);
 
 const mapListSquadGroupEditorGrantsError = (
   error: ListSquadGroupEditorGrantsError
-): ListSquadGroupEditorGrantsProtocolError => mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
 const mapCountPendingSquadGroupInvitesError = (
   error: CountPendingSquadGroupInvitesError
-): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+) => mapSquadGroupSharingError(error);
 
 export const SquadBuilderSquadGroupSharingHttpApiHandlers =
   HttpApiBuilder.group(

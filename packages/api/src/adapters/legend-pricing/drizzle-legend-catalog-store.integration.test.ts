@@ -43,79 +43,84 @@ const enemyLevel = (value: number) => LegendaryEnemyLevel.make(value);
 
 const itemLevel = (value: number) => LegendaryItemLevel.make(value);
 
-const makeInitialSnapshot = (): ReconcileLegendCatalogInput => ({
-  drops: [
-    {
-      enemyCategory: "hero",
-      enemySourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
-      itemSourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
-    },
-    {
-      enemyCategory: "elite2",
-      enemySourceIconKey: enemyKey("/obrazki/npc/e2/elite.gif"),
-      itemSourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
-    },
-    {
-      enemyCategory: "hero",
-      enemySourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
-      itemSourceIconKey: itemKey("/obrazki/itemy/hel/helmet.gif"),
-    },
-  ],
-  enemies: [
-    {
-      category: "hero",
-      iconUrl: icon("https://micc.garmory-cdn.cloud/obrazki/npc/her/hero.gif"),
-      level: enemyLevel(21),
-      name: "Current Hero",
-      profession: "warrior",
-      sourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
-      sourcePostId: postId(101),
-      sourceUrl: "https://forum.margonem.pl/?id=514740&ps=0",
-    },
-    {
-      category: "elite2",
-      iconUrl: icon("https://micc.garmory-cdn.cloud/obrazki/npc/e2/elite.gif"),
-      level: enemyLevel(30),
-      name: "Current Elite II",
-      profession: "mage",
-      sourceIconKey: enemyKey("/obrazki/npc/e2/elite.gif"),
-      sourcePostId: postId(102),
-      sourceUrl: "https://forum.margonem.pl/?id=514805&ps=0",
-    },
-  ],
-  items: [
-    {
-      equipmentType: "ring",
-      iconUrl: icon(
-        "https://micc.garmory-cdn.cloud/obrazki/itemy/pie/shared.gif"
-      ),
-      legendaryBonus: LegendaryBonus.make("lastheal,100"),
-      level: itemLevel(100),
-      name: "Shared Ring",
-      professions: ["mage", "paladin"],
-      sourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
-    },
-    {
-      equipmentType: "helmet",
-      iconUrl: icon(
-        "https://micc.garmory-cdn.cloud/obrazki/itemy/hel/helmet.gif"
-      ),
-      legendaryBonus: LegendaryBonus.make("verycrit,10"),
-      level: itemLevel(90),
-      name: "Old Helmet",
-      professions: ["warrior"],
-      sourceIconKey: itemKey("/obrazki/itemy/hel/helmet.gif"),
-    },
-  ],
-  sourcePosts: [
-    { category: "hero", editedAt: null, postId: postId(101) },
-    { category: "elite2", editedAt: null, postId: postId(102) },
-  ],
-  startedAt,
-  synchronizedAt: firstSynchronizedAt,
-});
+const makeInitialSnapshot = () =>
+  ({
+    drops: [
+      {
+        enemyCategory: "hero",
+        enemySourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
+        itemSourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
+      },
+      {
+        enemyCategory: "elite2",
+        enemySourceIconKey: enemyKey("/obrazki/npc/e2/elite.gif"),
+        itemSourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
+      },
+      {
+        enemyCategory: "hero",
+        enemySourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
+        itemSourceIconKey: itemKey("/obrazki/itemy/hel/helmet.gif"),
+      },
+    ],
+    enemies: [
+      {
+        category: "hero",
+        iconUrl: icon(
+          "https://micc.garmory-cdn.cloud/obrazki/npc/her/hero.gif"
+        ),
+        level: enemyLevel(21),
+        name: "Current Hero",
+        profession: "warrior",
+        sourceIconKey: enemyKey("/obrazki/npc/her/hero.gif"),
+        sourcePostId: postId(101),
+        sourceUrl: "https://forum.margonem.pl/?id=514740&ps=0",
+      },
+      {
+        category: "elite2",
+        iconUrl: icon(
+          "https://micc.garmory-cdn.cloud/obrazki/npc/e2/elite.gif"
+        ),
+        level: enemyLevel(30),
+        name: "Current Elite II",
+        profession: "mage",
+        sourceIconKey: enemyKey("/obrazki/npc/e2/elite.gif"),
+        sourcePostId: postId(102),
+        sourceUrl: "https://forum.margonem.pl/?id=514805&ps=0",
+      },
+    ],
+    items: [
+      {
+        equipmentType: "ring",
+        iconUrl: icon(
+          "https://micc.garmory-cdn.cloud/obrazki/itemy/pie/shared.gif"
+        ),
+        legendaryBonus: LegendaryBonus.make("lastheal,100"),
+        level: itemLevel(100),
+        name: "Shared Ring",
+        professions: ["mage", "paladin"],
+        sourceIconKey: itemKey("/obrazki/itemy/pie/shared.gif"),
+      },
+      {
+        equipmentType: "helmet",
+        iconUrl: icon(
+          "https://micc.garmory-cdn.cloud/obrazki/itemy/hel/helmet.gif"
+        ),
+        legendaryBonus: LegendaryBonus.make("verycrit,10"),
+        level: itemLevel(90),
+        name: "Old Helmet",
+        professions: ["warrior"],
+        sourceIconKey: itemKey("/obrazki/itemy/hel/helmet.gif"),
+      },
+    ],
+    sourcePosts: [
+      { category: "hero", editedAt: null, postId: postId(101) },
+      { category: "elite2", editedAt: null, postId: postId(102) },
+    ],
+    startedAt,
+    synchronizedAt: firstSynchronizedAt,
+  }) satisfies ReconcileLegendCatalogInput;
 
-const makeReducedSnapshot = (): ReconcileLegendCatalogInput => {
+const makeReducedSnapshot: () => ReconcileLegendCatalogInput = () => {
   const initial = makeInitialSnapshot();
   const [originalHero, elite] = initial.enemies;
   const [sharedItem] = initial.items;

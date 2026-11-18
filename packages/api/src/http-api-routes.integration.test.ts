@@ -192,13 +192,13 @@ const createSignedInAdmin = async (name: string) => {
 const jsonPost = (
   body: Parameters<typeof JSON.stringify>[0],
   cookie: string
-): RequestInit => ({
+) => ({
   body: JSON.stringify(body),
   headers: { "Content-Type": "application/json", Cookie: cookie },
   method: "POST",
 });
 
-const authenticatedGet = (cookie: string): RequestInit => ({
+const authenticatedGet = (cookie: string) => ({
   headers: { Cookie: cookie },
   method: "GET",
 });

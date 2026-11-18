@@ -185,7 +185,6 @@ const EventsListContent = ({
         )}
       </div>
 
-      {/* Table */}
       <div className="border-border bg-card rounded-xl border">
         <div className="border-border flex items-center gap-2 border-b p-4">
           <Calendar aria-hidden="true" className="size-4" />

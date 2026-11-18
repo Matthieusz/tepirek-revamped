@@ -69,19 +69,21 @@ export const BulkAccountRefetchWorkflow = ({
           (account, index) =>
             previewAccountRefetch({ accountId: account.accountId }).pipe(
               Effect.matchCause({
-                onFailure: (cause): PreviewResult => ({
-                  account,
-                  message: getErrorMessage(
-                    Cause.squash(cause),
-                    "Nie udało się przygotować odświeżenia."
-                  ),
-                  status: "failed",
-                }),
-                onSuccess: (preview): PreviewResult => ({
-                  account,
-                  preview,
-                  status: "ready",
-                }),
+                onFailure: (cause) =>
+                  ({
+                    account,
+                    message: getErrorMessage(
+                      Cause.squash(cause),
+                      "Nie udało się przygotować odświeżenia."
+                    ),
+                    status: "failed",
+                  }) satisfies PreviewResult,
+                onSuccess: (preview) =>
+                  ({
+                    account,
+                    preview,
+                    status: "ready",
+                  }) satisfies PreviewResult,
               }),
               Effect.tap(() =>
                 Effect.sync(() => {
@@ -106,19 +108,21 @@ export const BulkAccountRefetchWorkflow = ({
               refetchPreviewId: entry.preview.refetchPreviewId,
             }).pipe(
               Effect.matchCause({
-                onFailure: (cause): ApplyResult => ({
-                  account: entry.account,
-                  message: getErrorMessage(
-                    Cause.squash(cause),
-                    "Nie udało się zastosować zmian."
-                  ),
-                  status: "failed",
-                }),
-                onSuccess: (response): ApplyResult => ({
-                  account: entry.account,
-                  message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
-                  status: "success",
-                }),
+                onFailure: (cause) =>
+                  ({
+                    account: entry.account,
+                    message: getErrorMessage(
+                      Cause.squash(cause),
+                      "Nie udało się zastosować zmian."
+                    ),
+                    status: "failed",
+                  }) satisfies ApplyResult,
+                onSuccess: (response) =>
+                  ({
+                    account: entry.account,
+                    message: `Odświeżono. Usunięte wpisy ze składów: ${response.removedSquadCharacterCount}.`,
+                    status: "success",
+                  }) satisfies ApplyResult,
               }),
               Effect.tap(() =>
                 Effect.sync(() => {

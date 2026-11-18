@@ -24,33 +24,38 @@ type ClientStep = (
   HttpClientError.HttpClientError
 >;
 
-const jsonResponse =
-  (body: Parameters<typeof Response.json>[0], status = 200): ClientStep =>
-  (request) =>
+const jsonResponse = (
+  body: Parameters<typeof Response.json>[0],
+  status = 200
+) =>
+  ((request) =>
     Effect.succeed(
       HttpClientResponse.fromWeb(request, Response.json(body, { status }))
-    );
+    )) satisfies ClientStep;
 
-const textResponse =
-  (body: string): ClientStep =>
-  (request) =>
-    Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body)));
+const textResponse = (body: string) =>
+  ((request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(request, new Response(body))
+    )) satisfies ClientStep;
 
-const emptyResponse =
-  (status: number, headers?: Readonly<Record<string, string>>): ClientStep =>
-  (request) => {
+const emptyResponse = (
+  status: number,
+  headers?: Readonly<Record<string, string>>
+) =>
+  ((request) => {
     const responseInit =
       headers === undefined ? { status } : { headers, status };
 
     return Effect.succeed(
       HttpClientResponse.fromWeb(request, new Response(null, responseInit))
     );
-  };
+  }) satisfies ClientStep;
 
 const makeSequenceClient = (
   steps: readonly ClientStep[],
   requests: HttpClientRequest.HttpClientRequest[] = []
-): HttpClient.HttpClient => {
+) => {
   let attempt = 0;
 
   return HttpClient.make((request) =>

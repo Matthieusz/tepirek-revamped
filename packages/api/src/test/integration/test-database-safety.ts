@@ -23,7 +23,7 @@ const canonicalizeSearch = (url: URL) => {
 export const parseDatabaseUrl = (
   value: string,
   environmentKey: "DATABASE_URL" | "TEST_DATABASE_URL"
-): DatabaseUrlMetadata => {
+) => {
   try {
     const url = Schema.decodeSync(Schema.URLFromString)(value);
 

@@ -37,14 +37,11 @@ import {
 } from "@/features/squad-builder/squad-group-queries";
 import { getErrorMessage } from "@/lib/errors";
 
-// Kept as a named alias so route resource states and child props share one source type.
 type SquadGroupDetail = SquadGroupDetailSchema;
 
-const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
+const makeClientKey = () => `new-${crypto.randomUUID()}`;
 
-const detailCharacters = (
-  detail: SquadGroupDetail
-): HashMap.HashMap<number, SquadCharacterMetadata> =>
+const detailCharacters = (detail: SquadGroupDetail) =>
   HashMap.fromIterable(
     detail.squads.flatMap((squad) =>
       squad.characters.map(
@@ -68,9 +65,7 @@ const detailCharacters = (
     )
   );
 
-const availableCharacterMetadata = (
-  character: AvailableSquadCharacter
-): SquadCharacterMetadata => ({
+const availableCharacterMetadata = (character: AvailableSquadCharacter) => ({
   accountDisplayName: character.accountDisplayName,
   accountId: character.accountId,
   accountOwnerUserId: character.accountOwnerUserId,

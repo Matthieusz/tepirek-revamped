@@ -39,97 +39,99 @@ export type ScrapeProfileError =
 const currentDate = DateTime.nowAsDate;
 
 /** Reserve and account one profile scrape. Only the reserved lifecycle has interruption cleanup. */
-export const scrapeProfile = EffectRuntime.fn(
-  "FirecrawlScrapeRequest.scrapeProfile"
-)(function* scrapeProfileEffect(
+export const scrapeProfile: (
   input: ScrapeProfileInput
-): EffectRuntime.fn.Return<
+) => EffectRuntime.Effect<
   ScrapeProfileOutput,
   ScrapeProfileError,
   | FirecrawlClientService
   | FirecrawlConfigService
   | FirecrawlRequestAccountingStoreService
-> {
-  const requestAccounting = yield* FirecrawlRequestAccountingStoreService;
-  const config = yield* FirecrawlConfigService;
-  const firecrawl = yield* FirecrawlClientService;
-  const { profileId } = input;
-  const requestTime = yield* DateTime.nowAsDate;
-  const yearMonth = firecrawlYearMonthFromDate(requestTime);
+> = EffectRuntime.fn("FirecrawlScrapeRequest.scrapeProfile")(
+  function* scrapeProfileEffect(input: ScrapeProfileInput) {
+    const requestAccounting = yield* FirecrawlRequestAccountingStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    const { profileId } = input;
+    const requestTime = yield* DateTime.nowAsDate;
+    const yearMonth = firecrawlYearMonthFromDate(requestTime);
 
-  const reservedRequest = yield* requestAccounting.reserveRequest({
-    monthlyRequestBudget: config.monthlyRequestBudget,
-    perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
-    profileId,
-    requestedByUserId: input.actorUserId,
-    yearMonth,
-  });
+    const reservedRequest = yield* requestAccounting.reserveRequest({
+      monthlyRequestBudget: config.monthlyRequestBudget,
+      perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
+      profileId,
+      requestedByUserId: input.actorUserId,
+      yearMonth,
+    });
 
-  const finalizedRequest = yield* EffectRuntime.gen(
-    function* finalizeReservedRequest() {
-      const scrapedProfile = yield* firecrawl.scrapeProfileHtml(profileId).pipe(
-        EffectRuntime.catch((error) =>
-          EffectRuntime.gen(function* markRequestFailed() {
-            const completedAt = yield* currentDate;
-            yield* requestAccounting.markRequestFailed({
-              completedAt,
-              errorTag: error._tag,
-              requestId: reservedRequest.requestId,
-            });
+    const finalizedRequest = yield* EffectRuntime.gen(
+      function* finalizeReservedRequest() {
+        const scrapedProfile = yield* firecrawl
+          .scrapeProfileHtml(profileId)
+          .pipe(
+            EffectRuntime.catch((error) =>
+              EffectRuntime.gen(function* markRequestFailed() {
+                const completedAt = yield* currentDate;
+                yield* requestAccounting.markRequestFailed({
+                  completedAt,
+                  errorTag: error._tag,
+                  requestId: reservedRequest.requestId,
+                });
 
-            return yield* error;
-          })
-        )
-      );
+                return yield* error;
+              })
+            )
+          );
 
-      const creditsUsed = yield* parseFirecrawlCreditCount(
-        scrapedProfile.metadata.creditsUsed ?? 1
-      ).pipe(
-        EffectRuntime.catch(() =>
-          EffectRuntime.gen(function* markInvalidResponseFailed() {
-            const completedAt = yield* currentDate;
-            yield* requestAccounting.markRequestFailed({
-              completedAt,
-              errorTag: "FirecrawlResponseNotParseable",
-              requestId: reservedRequest.requestId,
-            });
+        const creditsUsed = yield* parseFirecrawlCreditCount(
+          scrapedProfile.metadata.creditsUsed ?? 1
+        ).pipe(
+          EffectRuntime.catch(() =>
+            EffectRuntime.gen(function* markInvalidResponseFailed() {
+              const completedAt = yield* currentDate;
+              yield* requestAccounting.markRequestFailed({
+                completedAt,
+                errorTag: "FirecrawlResponseNotParseable",
+                requestId: reservedRequest.requestId,
+              });
 
-            return yield* new FirecrawlResponseNotParseable({
-              cause: new Error("Invalid Firecrawl creditsUsed"),
-              profileId,
-            });
-          })
-        )
-      );
+              return yield* new FirecrawlResponseNotParseable({
+                cause: new Error("Invalid Firecrawl creditsUsed"),
+                profileId,
+              });
+            })
+          )
+        );
 
-      const completedAt = yield* currentDate;
-      yield* requestAccounting.markRequestSucceeded({
-        cacheState: scrapedProfile.metadata.cacheState ?? null,
-        completedAt,
-        creditsUsed,
-        firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
-        requestId: reservedRequest.requestId,
-      });
-
-      return { creditsUsed, scrapedProfile };
-    }
-  ).pipe(
-    EffectRuntime.onInterrupt(() =>
-      EffectRuntime.gen(function* markInterruptedRequestFailed() {
         const completedAt = yield* currentDate;
-        yield* requestAccounting.markRequestFailed({
+        yield* requestAccounting.markRequestSucceeded({
+          cacheState: scrapedProfile.metadata.cacheState ?? null,
           completedAt,
-          errorTag: "Interrupted",
+          creditsUsed,
+          firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
           requestId: reservedRequest.requestId,
         });
-      })
-    )
-  );
 
-  const { creditsUsed, scrapedProfile } = finalizedRequest;
+        return { creditsUsed, scrapedProfile };
+      }
+    ).pipe(
+      EffectRuntime.onInterrupt(() =>
+        EffectRuntime.gen(function* markInterruptedRequestFailed() {
+          const completedAt = yield* currentDate;
+          yield* requestAccounting.markRequestFailed({
+            completedAt,
+            errorTag: "Interrupted",
+            requestId: reservedRequest.requestId,
+          });
+        })
+      )
+    );
 
-  return {
-    creditsUsed,
-    html: scrapedProfile.html,
-  };
-});
+    const { creditsUsed, scrapedProfile } = finalizedRequest;
+
+    return {
+      creditsUsed,
+      html: scrapedProfile.html,
+    };
+  }
+);

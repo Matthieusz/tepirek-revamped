@@ -337,10 +337,8 @@ const TasksContent = ({
           </div>
         )}
 
-        {/* Stats */}
         <TaskStats completedCount={completedCount} totalCount={totalCount} />
 
-        {/* Add Task */}
         <div className="border-border bg-card rounded-xl border p-6">
           <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
             <Plus aria-hidden="true" className="size-4" />
@@ -374,7 +372,6 @@ const TasksContent = ({
           </form.AppForm>
         </div>
 
-        {/* Task List */}
         <TaskList
           todosData={todosData}
           handleToggleTodo={handleToggleTodo}

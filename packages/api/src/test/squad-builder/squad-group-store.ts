@@ -11,9 +11,9 @@ const missingStoreOperation = (serviceName: string, operation: string) => () =>
   Effect.die(new Error(`Unexpected ${serviceName}.${operation} call`));
 
 /** Build a directory store test service with explicit operation overrides. */
-export const makeSquadGroupDirectoryStoreServiceTestService = (
+export const makeSquadGroupDirectoryStoreServiceTestService: (
   overrides: Partial<typeof SquadGroupDirectoryStoreService.Service>
-): typeof SquadGroupDirectoryStoreService.Service => ({
+) => typeof SquadGroupDirectoryStoreService.Service = (overrides) => ({
   findVerifiedSquadEditorInviteTarget: missingStoreOperation(
     "SquadGroupDirectoryStoreService",
     "findVerifiedSquadEditorInviteTarget"
@@ -34,9 +34,9 @@ export const makeSquadGroupDirectoryStoreServiceTestService = (
 });
 
 /** Build a sharing store test service with explicit operation overrides. */
-export const makeSquadGroupSharingStoreServiceTestService = (
+export const makeSquadGroupSharingStoreServiceTestService: (
   overrides: Partial<typeof SquadGroupSharingStoreService.Service>
-): typeof SquadGroupSharingStoreService.Service => ({
+) => typeof SquadGroupSharingStoreService.Service = (overrides) => ({
   authorizeSquadGroupOwner: missingStoreOperation(
     "SquadGroupSharingStoreService",
     "authorizeSquadGroupOwner"
@@ -77,9 +77,9 @@ export const makeSquadGroupSharingStoreServiceTestService = (
 });
 
 /** Build an account-import store test service with explicit operation overrides. */
-export const makeAccountImportStoreServiceTestService = (
+export const makeAccountImportStoreServiceTestService: (
   overrides: Partial<typeof AccountImportStoreService.Service>
-): typeof AccountImportStoreService.Service => ({
+) => typeof AccountImportStoreService.Service = (overrides) => ({
   confirmPendingImport: missingStoreOperation(
     "AccountImportStoreService",
     "confirmPendingImport"
@@ -108,9 +108,9 @@ export const makeAccountImportStoreServiceTestService = (
 });
 
 /** Build an account-refetch store test service with explicit operation overrides. */
-export const makeAccountRefetchStoreServiceTestService = (
+export const makeAccountRefetchStoreServiceTestService: (
   overrides: Partial<typeof AccountRefetchStoreService.Service>
-): typeof AccountRefetchStoreService.Service => ({
+) => typeof AccountRefetchStoreService.Service = (overrides) => ({
   applyPendingRefetch: missingStoreOperation(
     "AccountRefetchStoreService",
     "applyPendingRefetch"
@@ -127,9 +127,9 @@ export const makeAccountRefetchStoreServiceTestService = (
 });
 
 /** Build a Firecrawl request-accounting test service with explicit operation overrides. */
-export const makeFirecrawlRequestAccountingStoreServiceTestService = (
+export const makeFirecrawlRequestAccountingStoreServiceTestService: (
   overrides: Partial<typeof FirecrawlRequestAccountingStoreService.Service>
-): typeof FirecrawlRequestAccountingStoreService.Service => ({
+) => typeof FirecrawlRequestAccountingStoreService.Service = (overrides) => ({
   markRequestFailed: missingStoreOperation(
     "FirecrawlRequestAccountingStoreService",
     "markRequestFailed"
@@ -146,9 +146,9 @@ export const makeFirecrawlRequestAccountingStoreServiceTestService = (
 });
 
 /** Build an account-sharing store test service with explicit operation overrides. */
-export const makeAccountSharingStoreServiceTestService = (
+export const makeAccountSharingStoreServiceTestService: (
   overrides: Partial<typeof AccountSharingStoreService.Service>
-): typeof AccountSharingStoreService.Service => ({
+) => typeof AccountSharingStoreService.Service = (overrides) => ({
   findAccountOwnerUserId: missingStoreOperation(
     "AccountSharingStoreService",
     "findAccountOwnerUserId"

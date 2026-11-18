@@ -26,12 +26,7 @@ export class InvalidSquadGroupInvitationStatus extends Schema.TaggedError<
 >()("InvalidSquadGroupInvitationStatus", { value: Schema.String }) {}
 
 /** Parse a persisted status string into the domain status. */
-export const parseSquadGroupInvitationStatus = (
-  value: string
-): Effect.Effect<
-  SquadGroupInvitationStatus,
-  InvalidSquadGroupInvitationStatus
-> =>
+export const parseSquadGroupInvitationStatus = (value: string) =>
   parseInvitationAccessStatus(value).pipe(
     Effect.mapError(() => new InvalidSquadGroupInvitationStatus({ value }))
   );

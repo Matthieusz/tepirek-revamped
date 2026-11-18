@@ -4,7 +4,7 @@ import type { AuthSession, UserSession } from "@/types/route";
 
 type GetUser = () => Promise<UserSession>;
 
-const requireAuth = async (getUser: GetUser): Promise<AuthSession> => {
+const requireAuth = async (getUser: GetUser) => {
   const session = await getUser();
 
   if (!session?.user) {
@@ -20,9 +20,7 @@ const requireAuth = async (getUser: GetUser): Promise<AuthSession> => {
  * Redirects to /login if not authenticated.
  * Redirects to /waiting-room if not verified.
  */
-export const requireVerified = async (
-  getUser: GetUser
-): Promise<AuthSession> => {
+export const requireVerified = async (getUser: GetUser) => {
   const session = await requireAuth(getUser);
 
   if (!session.user.verified) {
@@ -39,9 +37,7 @@ export const requireVerified = async (
  * Redirects to /login if not authenticated.
  * Redirects to /dashboard if already verified.
  */
-export const requireUnverified = async (
-  getUser: GetUser
-): Promise<AuthSession> => {
+export const requireUnverified = async (getUser: GetUser) => {
   const session = await requireAuth(getUser);
 
   if (session.user.verified) {
@@ -52,5 +48,4 @@ export const requireUnverified = async (
   return session;
 };
 
-export const isAdmin = (session: AuthSession): boolean =>
-  session.user.role === "admin";
+export const isAdmin = (session: AuthSession) => session.user.role === "admin";

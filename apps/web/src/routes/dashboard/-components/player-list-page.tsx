@@ -75,7 +75,6 @@ const PlayerListContent = ({
 
   type Player = (typeof playersData)[number];
 
-  // Filter players by search query
   const filteredPlayers = playersData.filter((player: Player) =>
     player.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -88,7 +87,6 @@ const PlayerListContent = ({
     (player: Player) => !player.verified
   );
 
-  // Stats based on all players (not filtered)
   const totalVerified = playersData.filter((p: Player) => p.verified).length;
 
   const totalNotVerified = playersData.filter(
@@ -132,7 +130,6 @@ const PlayerListContent = ({
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
@@ -167,7 +164,6 @@ const PlayerListContent = ({
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="relative">
         <Search
           aria-hidden="true"
@@ -185,7 +181,6 @@ const PlayerListContent = ({
         />
       </div>
 
-      {/* Tables */}
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border flex items-center gap-2 border-b p-4">

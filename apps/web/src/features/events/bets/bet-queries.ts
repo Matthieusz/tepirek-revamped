@@ -22,7 +22,6 @@ import { vaultQueryKey } from "@/features/events/vault/vault-queries";
 import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { appEffectQuery } from "@/lib/http-api-client-runtime";
 
-/** Cache key prefix for all bet data. */
 const betsQueryKey = ["bets"] as const;
 
 /** Cache key prefix for all paginated bet results. */
@@ -54,7 +53,7 @@ interface BetMutationCallbacks {
 const invalidateQueries = async (
   queryClient: QueryClient,
   callbacks: BetMutationCallbacks
-): Promise<void> => {
+) => {
   const results = await Promise.allSettled(
     [
       paginatedBetsQueryKeyPrefix,
@@ -84,7 +83,7 @@ const invalidateQueries = async (
 const invalidateAfterMutation = async (
   queryClient: QueryClient,
   callbacks: BetMutationCallbacks
-): Promise<void> => {
+) => {
   await invalidateQueries(queryClient, callbacks);
 };
 

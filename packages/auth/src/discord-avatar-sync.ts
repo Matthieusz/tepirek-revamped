@@ -37,24 +37,24 @@ type UserUpdateResultData = UserUpdateResult["data"];
 export const syncDiscordAvatar = async (
   user: UserUpdate,
   context: UserUpdateContext | null
-): ReturnType<UserUpdateHook> => {
+) => {
+  let update: UserUpdateResult | undefined;
+
   if (
-    context?.path !== BETTER_AUTH_CALLBACK_PATH ||
-    context.params?.id !== DISCORD_PROVIDER_ID ||
-    user.image === undefined
+    context?.path === BETTER_AUTH_CALLBACK_PATH &&
+    context.params?.id === DISCORD_PROVIDER_ID &&
+    user.image !== undefined
   ) {
-    await Promise.resolve();
+    const data: UserUpdateResultData = { image: user.image };
 
-    return;
-  }
-
-  const data: UserUpdateResultData = { image: user.image };
-
-  for (const key of Object.keys(user)) {
-    if (key !== "image") {
-      data[key] = undefined;
+    for (const key of Object.keys(user)) {
+      if (key !== "image") {
+        data[key] = undefined;
+      }
     }
+
+    update = { data };
   }
 
-  return await Promise.resolve({ data });
+  return await Promise.resolve(update);
 };

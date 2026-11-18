@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { AuthSession } from "@/types/route";
-
 import { isAdmin } from "./route-helpers";
 
-const createSession = (role: "admin" | "user"): AuthSession => ({
+const createSession = (role: "admin" | "user") => ({
   session: {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     expiresAt: new Date("2026-01-02T00:00:00.000Z"),

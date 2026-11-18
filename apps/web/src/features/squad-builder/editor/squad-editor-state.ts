@@ -86,7 +86,9 @@ export const initialSquadEditorState: SquadEditorState = {
   visibilityRequest: "idle",
 };
 
-const hydrateState = (detail: SquadGroupDetail): CleanEditorState => {
+const hydrateState: (detail: SquadGroupDetail) => CleanEditorState = (
+  detail: SquadGroupDetail
+) => {
   const draft = hydrateDraft(detail);
 
   return {
@@ -100,10 +102,13 @@ const hydrateState = (detail: SquadGroupDetail): CleanEditorState => {
   };
 };
 
-const stateAfterDraftChange = (
+const stateAfterDraftChange: (
   state: HydratedSquadEditorState,
   draft: SquadGroupDraft
-): CleanEditorState | DirtyEditorState => {
+) => CleanEditorState | DirtyEditorState = (
+  state: HydratedSquadEditorState,
+  draft: SquadGroupDraft
+) => {
   if (isDraftEqual(draft, state.savedSnapshot)) {
     return {
       ...state,
@@ -121,10 +126,10 @@ const stateAfterDraftChange = (
   };
 };
 
-const handleDetailLoaded = (
+const handleDetailLoaded: (
   state: SquadEditorState,
   detail: SquadGroupDetail
-): SquadEditorState => {
+) => SquadEditorState = (state: SquadEditorState, detail: SquadGroupDetail) => {
   if (state.phase !== "loading" && state.draft.groupId !== detail.groupId) {
     return hydrateState(detail);
   }
@@ -143,10 +148,10 @@ const handleDetailLoaded = (
   return hydrateState(detail);
 };
 
-const handleSaveStarted = (
+const handleSaveStarted: (
   state: SquadEditorState,
   draft: SquadGroupDraft
-): SquadEditorState => {
+) => SquadEditorState = (state: SquadEditorState, draft: SquadGroupDraft) => {
   if (
     state.phase === "loading" ||
     state.phase === "clean" ||
@@ -159,17 +164,24 @@ const handleSaveStarted = (
   return { ...state, draft, phase: "saving", saveError: null };
 };
 
-const handleSaveResult = (
+const handleSaveResult: (
   state: SquadEditorState,
   phase: "error" | "conflict",
   message: string
-): SquadEditorState =>
+) => SquadEditorState = (
+  state: SquadEditorState,
+  phase: "error" | "conflict",
+  message: string
+) =>
   state.phase === "saving" ? { ...state, phase, saveError: message } : state;
 
-const handleVisibilityEvent = (
+const handleVisibilityEvent: (
   state: SquadEditorState,
   event: SquadEditorVisibilityEvent
-): SquadEditorState => {
+) => SquadEditorState = (
+  state: SquadEditorState,
+  event: SquadEditorVisibilityEvent
+) => {
   if (state.phase === "loading" || state.phase === "saving") {
     return state;
   }
@@ -197,10 +209,10 @@ const handleVisibilityEvent = (
   }
 };
 
-export const squadEditorReducer = (
+export const squadEditorReducer: (
   state: SquadEditorState,
   event: SquadEditorEvent
-): SquadEditorState => {
+) => SquadEditorState = (state: SquadEditorState, event: SquadEditorEvent) => {
   switch (event.type) {
     case "detailLoaded": {
       return handleDetailLoaded(state, event.detail);

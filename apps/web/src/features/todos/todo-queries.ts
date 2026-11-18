@@ -37,7 +37,7 @@ const hasConcurrentTodoMutation = (queryClient: QueryClient) =>
 const invalidateTodos = async (
   queryClient: QueryClient,
   callbacks: TodoMutationCallbacks
-): Promise<void> => {
+) => {
   try {
     await queryClient.invalidateQueries(
       { queryKey: todosQueryKey },
@@ -54,7 +54,7 @@ const invalidateTodos = async (
 const invalidateTodosAfterMutation = async (
   queryClient: QueryClient,
   callbacks: TodoMutationCallbacks
-): Promise<void> => {
+) => {
   if (hasConcurrentTodoMutation(queryClient)) {
     return;
   }
@@ -66,8 +66,7 @@ const replaceTodo = (
   todos: readonly Todo[] | undefined,
   input: TodoIdInput,
   replacement: Todo
-): readonly Todo[] | undefined =>
-  todos?.map((todo) => (todo.id === input.id ? replacement : todo));
+) => todos?.map((todo) => (todo.id === input.id ? replacement : todo));
 
 /** Returns the Query options for the current user's todos. */
 export const todosQueryOptions = (

@@ -43,10 +43,7 @@ import {
 } from "@/routes/dashboard/events/-components/ranking/gold-distribution-preview";
 import { HeroStatsPreviewSlot } from "@/routes/dashboard/events/-components/ranking/hero-stats-preview";
 import { getHeroStatsPreviewState } from "@/routes/dashboard/events/-components/ranking/hero-stats-preview-utils";
-import type {
-  HeroStats,
-  HeroStatsPreviewState,
-} from "@/routes/dashboard/events/-components/ranking/hero-stats-preview-utils";
+import type { HeroStatsPreviewState } from "@/routes/dashboard/events/-components/ranking/hero-stats-preview-utils";
 
 const GoldFormSchema = Schema.Struct({
   eventId: RequiredSelectionSchema("Wybierz event"),
@@ -73,13 +70,13 @@ const filterHeroesForEvent = (
     Order.Number
   );
 
-const getHeroStats = (state: HeroStatsPreviewState): HeroStats | undefined =>
+const getHeroStats = (state: HeroStatsPreviewState) =>
   Predicate.isTagged("success")(state) ? state.heroStats : undefined;
 
 const getSubmitLabel = (params: {
   readonly dependentDataLoading: boolean;
   readonly isSubmitting: boolean;
-}): string => {
+}) => {
   if (params.isSubmitting) {
     return "Rozdzielanie...";
   }
@@ -171,7 +168,7 @@ const DistributeGoldModalContent = ({
 
   const canDiscard = useCanCloseForm(isSubmitting);
 
-  const handleOpenChange = (nextOpen: boolean): void => {
+  const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;

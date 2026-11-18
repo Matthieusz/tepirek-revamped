@@ -24,7 +24,6 @@ import {
   removeAuctionSignupMutationOptions,
   toggleAuctionSignupMutationOptions,
 } from "@/features/auctions/auction-queries";
-import type { AppEffectQuery } from "@/lib/http-api-client-runtime";
 import { AppHttpApiClient } from "@/lib/http-api-client-runtime";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
@@ -34,7 +33,7 @@ interface Deferred<A> {
   readonly resolve: (value: A) => void;
 }
 
-const deferred = <A>(): Deferred<A> => {
+const deferred = <A>() => {
   let resolvePromise: (value: A) => void;
 
   // oxlint-disable-next-line promise/avoid-new -- tests need manually controlled responses
@@ -47,27 +46,17 @@ const deferred = <A>(): Deferred<A> => {
     resolve: (value) => {
       resolvePromise(value);
     },
-  };
+  } satisfies Deferred<A>;
 };
 
 type PlannedResponse = Response | Promise<Response>;
 
 type AuctionOperation = "remove" | "signups" | "stats" | "toggle";
 
-interface AuctionTransport {
-  readonly calls: {
-    readonly remove: number;
-    readonly signups: ReadonlyMap<string, number>;
-    readonly stats: ReadonlyMap<string, number>;
-    readonly toggle: number;
-  };
-  readonly effectQuery: AppEffectQuery;
-}
-
-const groupKey = (group: AuctionGroupInput): string =>
+const groupKey = (group: AuctionGroupInput) =>
   `${group.type}:${group.profession}`;
 
-const decodeGroup = (bodyBytes: Uint8Array): string =>
+const decodeGroup = (bodyBytes: Uint8Array) =>
   groupKey(
     Schema.decodeUnknownSync(AuctionGroupPayload)(
       JSON.parse(new TextDecoder().decode(bodyBytes))
@@ -78,7 +67,7 @@ const takeResponse = (
   queue: PlannedResponse[] | undefined,
   operation: AuctionOperation,
   key?: string
-): PlannedResponse => {
+) => {
   const response = queue?.shift();
 
   if (response === undefined) {
@@ -87,7 +76,7 @@ const takeResponse = (
     );
   }
 
-  return response;
+  return { response };
 };
 
 const makeAuctionTransport = (plans: {
@@ -95,7 +84,7 @@ const makeAuctionTransport = (plans: {
   readonly signups?: Readonly<Record<string, readonly PlannedResponse[]>>;
   readonly stats?: Readonly<Record<string, readonly PlannedResponse[]>>;
   readonly toggle?: readonly PlannedResponse[];
-}): AuctionTransport => {
+}) => {
   const signupQueues = new Map<string, PlannedResponse[]>();
 
   for (const [key, responses] of Object.entries(plans.signups ?? {})) {
@@ -165,17 +154,17 @@ const makeAuctionTransport = (plans: {
         throw new Error("Expected an auction group key");
       }
 
-      planned = takeResponse(signupQueues.get(key), operation, key);
+      planned = takeResponse(signupQueues.get(key), operation, key).response;
     } else if (operation === "stats") {
       if (key === undefined) {
         throw new Error("Expected an auction group key");
       }
 
-      planned = takeResponse(statsQueues.get(key), operation, key);
+      planned = takeResponse(statsQueues.get(key), operation, key).response;
     } else if (operation === "remove") {
-      planned = takeResponse(removeQueue, operation);
+      planned = takeResponse(removeQueue, operation).response;
     } else {
-      planned = takeResponse(toggleQueue, operation);
+      planned = takeResponse(toggleQueue, operation).response;
     }
 
     if (planned instanceof Promise) {
@@ -207,10 +196,10 @@ type JsonResponseValue =
   | readonly JsonResponseValue[]
   | { readonly [key: string]: JsonResponseValue };
 
-const jsonResponse = (body: JsonResponseValue, status = 200): Response =>
+const jsonResponse = (body: JsonResponseValue, status = 200) =>
   Response.json(body, { status });
 
-const makeSignup = (id: number, userId = `user-${id}`): AuctionSignup =>
+const makeSignup = (id: number, userId = `user-${id}`) =>
   Schema.decodeSync(AuctionSignupSummary)({
     column: 1,
     createdAt: "2026-01-01T00:00:00.000Z",

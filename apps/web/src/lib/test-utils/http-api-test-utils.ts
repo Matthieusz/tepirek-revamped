@@ -16,7 +16,6 @@ type FixtureResponseValue =
   | readonly FixtureResponseValue[]
   | { readonly [key: string]: FixtureResponseValue };
 
-/** A decoded request recorded by the HttpApi test transport. */
 interface HttpApiTestCall {
   readonly args: HttpJsonBody;
   readonly group: string;
@@ -251,13 +250,11 @@ const responseBodies = {
 const hasResponseBody = (key: string): key is keyof typeof responseBodies =>
   Object.hasOwn(responseBodies, key);
 
-const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
+const makeEndpointLookup = () => {
   const endpoints = new Map<string, EndpointIdentity>();
 
   for (const [groupName, group] of Object.entries(AppHttpApi.groups)) {
     for (const [method, endpoint] of Object.entries(group.endpoints)) {
-      // SAFETY: Effect HttpApi exposes its runtime group and endpoint objects
-      // through an untyped reflection API. The contract supplies string paths.
       // oxlint-disable-next-line typescript/no-unsafe-argument, typescript/no-unsafe-member-access
       endpoints.set(`${endpoint.method} ${endpoint.path}`, {
         group: groupName,
@@ -285,10 +282,10 @@ const JsonDateSchema = Schema.DateFromString;
 
 const decodeJsonDate = Schema.decodeUnknownOption(JsonDateSchema);
 
-const decodeJsonValue = (_key: string, value: HttpJsonBody): HttpJsonBody =>
+const decodeJsonValue = (_key: string, value: HttpJsonBody) =>
   Option.getOrElse(decodeJsonDate(value), () => value);
 
-const decodePayload = (body: Uint8Array): HttpJsonBody =>
+const decodePayload = (body: Uint8Array) =>
   Schema.decodeUnknownSync(HttpJsonBodySchema)(
     JSON.parse(new TextDecoder().decode(body), decodeJsonValue)
   );

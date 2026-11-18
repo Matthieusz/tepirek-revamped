@@ -40,7 +40,7 @@ const createTestUser = async ({
   name = "Test User",
   role = "user",
   verified = false,
-}: CreateTestUserOptions = {}): Promise<TestUser> => {
+}: CreateTestUserOptions = {}) => {
   const now = new Date();
 
   const testUser = {

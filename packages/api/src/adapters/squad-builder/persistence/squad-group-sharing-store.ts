@@ -17,7 +17,6 @@ import {
   listSquadGroupEditorGrantsWithDatabase,
 } from "./squad-group-sharing-queries.ts";
 
-/** Provide the squad-group sharing store with its Drizzle implementation. */
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 export const DrizzleSquadGroupSharingStoreServiceLayer = Layer.effect(

@@ -61,15 +61,10 @@ interface CharacterAccountGroup<T extends CharacterPoolCharacter> {
   readonly characters: readonly T[];
 }
 
-const normalizeText = (value: string): string =>
+const normalizeText = (value: string) =>
   value.trim().normalize("NFC").toLocaleLowerCase("pl-PL");
 
-interface ParsedLevelInput {
-  readonly invalid: boolean;
-  readonly value: number | null;
-}
-
-const parseLevelInput = (rawValue: string): ParsedLevelInput => {
+const parseLevelInput = (rawValue: string) => {
   const value = rawValue.trim();
 
   if (value.length === 0) {
@@ -89,7 +84,7 @@ const parseLevelInput = (rawValue: string): ParsedLevelInput => {
 const getTextFilterValue = (
   filters: readonly CharacterPoolFilter[],
   field: "accountName" | "characterName"
-): string => {
+) => {
   const filter = Arr.findFirst(
     filters,
     (candidate): candidate is CharacterPoolTextFilter =>
@@ -109,7 +104,7 @@ export const parseCharacterPoolFilters = (
   filters: readonly CharacterPoolFilter[],
   levelFromInput: string,
   levelToInput: string
-): CharacterPoolFilters => {
+) => {
   const professionValues = Arr.dedupe(
     Arr.flatMap((filter: CharacterPoolFilter) =>
       filter.field === "profession" ? Arr.map(normalizeText)(filter.values) : []
@@ -138,7 +133,7 @@ export const getAssignedCharacterIds = (
   squads: readonly {
     readonly characters: readonly { readonly characterId: number }[];
   }[]
-): HashSet.HashSet<number> =>
+) =>
   HashSet.fromIterable(
     Arr.flatMap((squad: (typeof squads)[number]) =>
       Arr.map(
@@ -147,13 +142,10 @@ export const getAssignedCharacterIds = (
     )(squads)
   );
 
-const matchesText = (value: string, query: string): boolean =>
+const matchesText = (value: string, query: string) =>
   query.length === 0 || normalizeText(value).includes(query);
 
-const matchesLevel = (
-  level: number,
-  filters: CharacterPoolFilters
-): boolean => {
+const matchesLevel = (level: number, filters: CharacterPoolFilters) => {
   if (filters.hasReversedLevelRange) {
     return true;
   }
@@ -172,7 +164,7 @@ const matchesLevel = (
 const matchesCharacter = (
   character: CharacterPoolCharacter,
   filters: CharacterPoolFilters
-): boolean => {
+) => {
   const professionMatches =
     filters.professions.length === 0 ||
     Arr.some<string>(
@@ -192,7 +184,7 @@ export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
   characters: readonly T[],
   assignedCharacterIds: Iterable<number>,
   filters: CharacterPoolFilters
-): readonly T[] => {
+) => {
   const assignedCharacterIdSet = HashSet.fromIterable(assignedCharacterIds);
 
   return Arr.filter<T>(
@@ -202,7 +194,7 @@ export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
   )(characters);
 };
 
-const comparePolishText = (left: string, right: string): number =>
+const comparePolishText = (left: string, right: string) =>
   left.localeCompare(right, "pl-PL", { sensitivity: "base" });
 
 const polishTextOrder = Order.make<string>((left, right) => {
@@ -236,7 +228,7 @@ const accountGroupOrder = Order.combine(
 /** Groups and sorts pool characters for the account-oriented tile layout. */
 export const groupCharactersByAccount = <T extends CharacterPoolCharacter>(
   characters: readonly T[]
-): readonly CharacterAccountGroup<T>[] => {
+) => {
   const groups = Arr.groupBy(characters, (character) =>
     String(character.accountId)
   );
