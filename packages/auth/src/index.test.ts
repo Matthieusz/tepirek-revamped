@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { makeTestBetterAuthDatabase } from "@tepirek-revamped/db/test";
+import { makeSignature } from "better-auth/crypto";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Redacted from "effect/Redacted";
-import { vi } from "vite-plus/test";
 
 import {
   AuthConfig,
@@ -38,16 +38,19 @@ describe("Better Auth service", () => {
   it.effect(
     "projects rejected vendor session calls into a typed failure",
     () => {
-      const cause = new Error("session store unavailable");
+      const secret = "test-secret-at-least-32-characters";
+      const token = "fixture-session-token";
 
       return Effect.gen(function* rejectedSessionCall() {
-        const database = yield* makeTestBetterAuthDatabase(
-          "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
+        const database = yield* Effect.scoped(
+          makeTestBetterAuthDatabase(
+            "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
+          )
         );
 
         const instance = createAuth(
           {
-            betterAuthSecret: Redacted.make("test-secret"),
+            betterAuthSecret: Redacted.make(secret),
             betterAuthUrl: new URL("http://localhost:3000"),
             corsOrigin: new URL("http://localhost:3001"),
             discordClientId: "test-discord-client-id",
@@ -57,16 +60,26 @@ describe("Better Auth service", () => {
           database
         );
 
-        vi.spyOn(instance.api, "getSession").mockRejectedValue(cause);
+        const context = yield* Effect.promise(
+          async () => await instance.$context
+        );
+        const signature = yield* Effect.promise(
+          async () => await makeSignature(token, secret)
+        );
+        const headers = new Headers({
+          cookie: `${context.authCookies.sessionToken.name}=${encodeURIComponent(`${token}.${signature}`)}`,
+        });
 
         const failure = yield* Effect.gen(function* inspectRejectedSession() {
           const auth = yield* BetterAuthService;
 
-          return yield* auth.getSession(new Headers()).pipe(Effect.flip);
+          return yield* auth.getSession(headers).pipe(Effect.flip);
         }).pipe(Effect.provide(buildBetterAuthServiceLayer(instance)));
 
         expect(failure._tag).toBe("BetterAuthUnavailable");
-        expect(failure.cause).toBe(cause);
+        expect(failure.cause).toMatchObject({
+          body: { code: "FAILED_TO_GET_SESSION" },
+        });
       });
     }
   );

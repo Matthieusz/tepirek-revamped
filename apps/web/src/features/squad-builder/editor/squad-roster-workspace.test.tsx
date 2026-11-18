@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import * as HashMap from "effect/HashMap";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vite-plus/test";
@@ -14,7 +12,7 @@ const character = (
   characterId: number,
   ownerId: string,
   accountId = characterId
-): SquadCharacterMetadata => ({
+) => ({
   accountDisplayName: `Konto ${accountId}`,
   accountId,
   accountOwnerUserId: ownerId,

@@ -5,7 +5,9 @@ import { TodoForbidden } from "@tepirek-revamped/api/protocol/todo/http-api-cont
 import { Deferred, Effect, Layer } from "effect";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { http, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
+import { describe, expect, it } from "vite-plus/test";
 
 import { healthQueryOptions } from "@/features/health/health-queries";
 import { listTodos } from "@/features/todos/todo-api";
@@ -30,21 +32,22 @@ const makeAppLayer = (response: Response) =>
     })
   );
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
 describe("Effect Query integration", () => {
   it("decodes live responses, sends cookies, and projects wrapped protocol errors safely", async () => {
-    const fetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(Response.json([]))
-      .mockResolvedValue(
-        Response.json(
-          new TodoForbidden({ message: "internal permission details" }),
-          { status: 403 }
-        )
-      );
+    const credentials: (RequestCredentials | undefined)[] = [];
+    const server = setupServer(
+      http.get("http://localhost:3000/todos", ({ request }) => {
+        credentials.push(request.credentials);
+
+        return credentials.length === 1
+          ? HttpResponse.json([])
+          : HttpResponse.json(
+              new TodoForbidden({ message: "internal permission details" }),
+              { status: 403 }
+            );
+      })
+    );
+    server.listen({ onUnhandledRequest: "error" });
 
     const eq = makeTestAppEffectQuery(AppHttpApiClient.layer);
     const client = makeTestQueryClient();
@@ -76,9 +79,10 @@ describe("Effect Query integration", () => {
       expect(getErrorMessage(error)).toBe(
         "Nie masz uprawnień do wykonania tej akcji."
       );
-      expect(fetch.mock.calls[0]?.[1]?.credentials).toBe("include");
+      expect(credentials).toEqual(["include", "include"]);
     } finally {
       client.cleanup();
+      server.close();
     }
   });
 
@@ -206,7 +210,9 @@ describe("Effect Query integration", () => {
   it("aborts the live fetch signal when Query cancels a read", async () => {
     const started = Deferred.makeUnsafe<AbortSignal>();
 
-    const fetch = vi.fn<typeof globalThis.fetch>(async (_input, init) => {
+    let fetchCount = 0;
+    const fetch: typeof globalThis.fetch = async (_input, init) => {
+      fetchCount += 1;
       const signal = init?.signal;
 
       if (signal === undefined || signal === null) {
@@ -216,7 +222,7 @@ describe("Effect Query integration", () => {
       Effect.runSync(Deferred.succeed(started, signal));
 
       return await Effect.runPromise(Effect.never, { signal });
-    });
+    };
 
     const eq = makeTestAppEffectQuery(
       AppHttpApiClient.layer.pipe(
@@ -242,7 +248,7 @@ describe("Effect Query integration", () => {
       await client.queryClient.cancelQueries({ queryKey: ["fetch-abort"] });
       await cancelled;
       expect(signal.aborted).toBe(true);
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetchCount).toBe(1);
       expect(
         client.queryClient.getQueryState(["fetch-abort"])?.error
       ).toBeNull();
@@ -342,7 +348,6 @@ describe("Effect Query integration", () => {
         })
       );
 
-      // Runtime interruption is a bridge defect; only Query cancellation produces CancelledError.
       const interrupted =
         expect(request).rejects.toBeInstanceOf(EffectQueryDefect);
 

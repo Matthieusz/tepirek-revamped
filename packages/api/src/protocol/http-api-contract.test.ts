@@ -3,10 +3,10 @@ import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";
-import { HeroSummary } from "./protocol/heroes/http-api-contract.ts";
-import { AppHttpApi } from "./protocol/http-api-contract.ts";
-import { LegendPriceSummary } from "./protocol/legend-pricing/http-api-contract.ts";
+import { HealthHttpApi } from "./health/http-api-contract.ts";
+import { HeroSummary } from "./heroes/http-api-contract.ts";
+import { AppHttpApi } from "./http-api-contract.ts";
+import { LegendPriceSummary } from "./legend-pricing/http-api-contract.ts";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
 

@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Schema from "effect/Schema";
 import { act } from "react";

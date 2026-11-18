@@ -1,5 +1,3 @@
-// @vitest-environment node
-
 import { dehydrate } from "@tanstack/react-query";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";

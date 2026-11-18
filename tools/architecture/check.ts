@@ -20,18 +20,16 @@ const api = "packages/api/src/";
 
 const web = "apps/web/src/";
 
-// Existing debt only; see docs/architecture-dependencies.md. Never allow whole directories.
 const exceptions = new Set([
   `${api}protocol/auth/current-session.ts -> packages/auth/src/index.ts`,
   `${api}services/legend-pricing/legend-catalog-sync.ts -> ${api}adapters/legend-pricing/margonem-forum/margonem-forum-client.ts`,
   `${api}services/legend-pricing/legend-catalog-sync.ts -> ${api}adapters/legend-pricing/margonem-forum/margonem-forum-parser.ts`,
 ]);
 
-/** Determines the forbidden dependency for each protected production root. */
-const forbiddenDependency = (
+const forbiddenDependency: (
   origin: string,
   target: string
-): string | undefined => {
+) => string | undefined = (origin: string, target: string) => {
   const serverOnly =
     [`${api}server/`, `${api}adapters/`, "packages/db/", "packages/auth/"].some(
       (prefix) => target.startsWith(prefix)
@@ -74,20 +72,14 @@ const forbiddenDependency = (
     return "web cannot reach API server implementation";
   }
 
-  if (
-    origin.startsWith(`${web}features/`) &&
+  return origin.startsWith(`${web}features/`) &&
     target.startsWith(`${web}routes/`)
-  ) {
-    return "features cannot depend on route implementation";
-  }
-
-  return undefined;
+    ? "features cannot depend on route implementation"
+    : undefined;
 };
 
 /** Checks all reachable edges, retaining the import chain in diagnostics. */
-export const checkGraph = (
-  graph: ReadonlyMap<string, readonly string[]>
-): string[] => {
+export const checkGraph = (graph: ReadonlyMap<string, readonly string[]>) => {
   const failures: string[] = [];
 
   for (const origin of graph.keys()) {
@@ -129,7 +121,7 @@ export const checkGraph = (
   return failures;
 };
 
-const sourcePaths = (directory: string): string[] =>
+const sourcePaths: (directory: string) => string[] = (directory: string) =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = resolve(directory, entry.name);
 
@@ -140,7 +132,7 @@ const sourcePaths = (directory: string): string[] =>
     return sourceFile.test(path) ? [path] : [];
   });
 
-const moduleSpecifiers = (path: string): string[] => {
+const moduleSpecifiers = (path: string) => {
   const parsed = parseSync(path, readFileSync(path, "utf-8"));
 
   const [error] = parsed.errors;
@@ -152,8 +144,6 @@ const moduleSpecifiers = (path: string): string[] => {
   const imports: string[] = [];
 
   const add = (node: Node | null | undefined) => {
-    // The parser exposes a union of literal values; module requests must be strings.
-    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Narrow the parser's literal union at its boundary.
     if (node?.type === "Literal" && typeof node.value === "string") {
       imports.push(node.value);
     }
@@ -186,9 +176,7 @@ const moduleSpecifiers = (path: string): string[] => {
 };
 
 /** Builds the repository graph, resolving workspace exports and tsconfig aliases. */
-export const repositoryGraph = (
-  projectRoot: string = root
-): Map<string, string[]> => {
+export const repositoryGraph = (projectRoot: string = root) => {
   const graph = new Map<string, string[]>();
 
   for (const parent of ["apps", "packages"]) {

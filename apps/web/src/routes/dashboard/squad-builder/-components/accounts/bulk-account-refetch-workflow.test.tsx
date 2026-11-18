@@ -1,8 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-// @vitest-environment happy-dom
+import { Deferred, Effect } from "effect";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 
 import { ownedAccountsQueryKey } from "@/features/squad-builder/account-queries";
 import { makeTestAppEffectQuery } from "@/lib/test-utils/effect-query-test-utils";
@@ -29,6 +29,22 @@ describe("BulkAccountRefetchWorkflow", () => {
     document.body.append(container);
     const root = createRoot(container);
     client.queryClient.setQueryData(ownedAccountsQueryKey, []);
+    const previewFinished = Deferred.makeUnsafe<boolean>();
+    const applyFinished = Deferred.makeUnsafe<boolean>();
+    let finished = 0;
+    const unsubscribe = client.queryClient
+      .getMutationCache()
+      .subscribe((event) => {
+        if (event.type === "updated" && event.action.type === "success") {
+          finished += 1;
+          Effect.runSync(
+            Deferred.succeed(
+              finished === 1 ? previewFinished : applyFinished,
+              true
+            )
+          );
+        }
+      });
 
     try {
       act(() => {
@@ -44,13 +60,9 @@ describe("BulkAccountRefetchWorkflow", () => {
           </QueryClientProvider>
         );
       });
-      act(() => {
-        clickButton("Odśwież wszystkie");
-      });
       await act(async () => {
-        await vi.waitFor(() => {
-          expect(calls).toHaveLength(2);
-        });
+        clickButton("Odśwież wszystkie");
+        await Effect.runPromise(Deferred.await(previewFinished));
       });
       expect(calls.map((call) => call.method)).toEqual([
         "previewAccountRefetch",
@@ -62,14 +74,11 @@ describe("BulkAccountRefetchWorkflow", () => {
       ]);
       expect(document.body.textContent).toContain("Pierwsze");
       expect(document.body.textContent).toContain("Drugie");
-      act(() => {
-        clickButton("Zastosuj zmiany");
-      });
       await act(async () => {
-        await vi.waitFor(() => {
-          expect(calls).toHaveLength(4);
-        });
+        clickButton("Zastosuj zmiany");
+        await Effect.runPromise(Deferred.await(applyFinished));
       });
+      expect(calls).toHaveLength(4);
       expect(
         calls.filter((call) => call.method === "applyAccountRefetch")
       ).toHaveLength(2);
@@ -78,6 +87,7 @@ describe("BulkAccountRefetchWorkflow", () => {
         client.queryClient.getQueryState(ownedAccountsQueryKey)?.isInvalidated
       ).toBe(true);
     } finally {
+      unsubscribe();
       act(() => {
         root.unmount();
       });

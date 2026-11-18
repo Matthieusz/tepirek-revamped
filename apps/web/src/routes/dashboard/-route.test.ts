@@ -1,17 +1,12 @@
-// @vitest-environment happy-dom
-
 import { isRedirect } from "@tanstack/react-router";
-import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { CaughtError } from "@/lib/errors";
-import type { RouterAppContext } from "@/routes/__root";
 import { loadDashboardSession } from "@/routes/dashboard/-load-dashboard-session";
 import { Route } from "@/routes/dashboard/route";
 import type { UserSession } from "@/types/route";
 
-const getUser = vi.fn<RouterAppContext["getUser"]>();
-
-const makeSession = (verified: boolean): Exclude<UserSession, null> => ({
+const makeSession = (verified: boolean) => ({
   session: {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     expiresAt: new Date("2026-01-02T00:00:00.000Z"),
@@ -35,21 +30,16 @@ const makeSession = (verified: boolean): Exclude<UserSession, null> => ({
   },
 });
 
-const runDashboardGuard = async () => await loadDashboardSession(getUser);
+const runDashboardGuard = async (session: UserSession) =>
+  await loadDashboardSession(async () => await Promise.resolve(session));
 
 describe("dashboard authentication", () => {
-  beforeEach(() => {
-    getUser.mockReset();
-  });
-
   it("disables SSR for the authenticated route branch", () => {
     expect(Route.options.ssr).toBe(false);
   });
 
   it("redirects an unauthenticated visitor to login", async () => {
-    getUser.mockResolvedValue(null);
-
-    const error = await runDashboardGuard().catch(
+    const error = await runDashboardGuard(null).catch(
       (caughtError: CaughtError) => caughtError
     );
 
@@ -58,9 +48,7 @@ describe("dashboard authentication", () => {
   });
 
   it("redirects an unverified member to the waiting room", async () => {
-    getUser.mockResolvedValue(makeSession(false));
-
-    const error = await runDashboardGuard().catch(
+    const error = await runDashboardGuard(makeSession(false)).catch(
       (caughtError: CaughtError) => caughtError
     );
 
@@ -70,8 +58,6 @@ describe("dashboard authentication", () => {
 
   it("exposes a verified member session through route context", async () => {
     const session = makeSession(true);
-    getUser.mockResolvedValue(session);
-
-    await expect(runDashboardGuard()).resolves.toEqual({ session });
+    await expect(runDashboardGuard(session)).resolves.toEqual({ session });
   });
 });

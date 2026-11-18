@@ -8,13 +8,12 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
-import type { ReactElement } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import type { getUser as getUserDependency } from "@/functions/get-user";
 import { getErrorMessage } from "@/lib/errors";
+import type { UserSession } from "@/types/route";
 
 import appCss from "@/index.css?url";
 
@@ -56,7 +55,7 @@ export const RootErrorBoundary = ({
 }: {
   error: unknown;
   reset: () => void;
-}): ReactElement => (
+}) => (
   <html lang="pl" suppressHydrationWarning>
     <head>
       <HeadContent />
@@ -73,7 +72,7 @@ export const RootErrorBoundary = ({
 );
 
 export interface RouterAppContext {
-  readonly getUser: typeof getUserDependency;
+  readonly getUser: () => Promise<UserSession>;
   readonly queryClient: QueryClient;
 }
 

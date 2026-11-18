@@ -3,13 +3,10 @@
 - Source repository: https://github.com/dmmulroy/anti-slop
 - Source commit: `c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b`
 - Source path: `skills/install-anti-slop/assets/anti-slop/`
-- Installed path: `tools/oxlint/anti-slop/`
-- Installed assets: generic rules, Effect rules, shared helpers, and the vendored `eslint-stylistic` implementation and license.
+- Installed assets: the Effect plugin and its helpers in `tools/oxlint/anti-slop/effect/`.
 
 ## Local integration
 
-- Oxlint loads the generic and Effect plugins directly from the installed TypeScript entry points.
-- `@oxlint/plugins` is pinned to the installed Oxlint version (`1.82.0`).
-- All generic and Effect rules from this snapshot are enabled at error severity. `no-runtime-typeof` preserves Ultracite's prior `allowInTypeGuards` option.
-- Local deviation: `no-module-mocking` recognizes `vi` imported from `vite-plus/test` as well as `vitest`, preserving enforcement after the Vite+ import migration.
-- Other source assets are unchanged from the recorded snapshot. Local configuration additionally ignores repository agent metadata and the vendored plugin path.
+- Oxlint loads the Effect plugin directly from its TypeScript entry point. Its five rules remain enabled at error severity.
+- The generic vendored plugin was replaced by the 12 `quality` rules from [`@nkzw/oxlint-config@3.0.0`](https://github.com/nkzw-tech/oxlint-config), without adopting the broader preset or its sorting rules.
+- The recommended testing and structure rules from [`@interfere/landmines@0.1.0`](https://github.com/interfere-inc/landmines) are enabled at error severity. `landmines-testing/no-test-doubles` covers module mocking, which previously had a dedicated rule.

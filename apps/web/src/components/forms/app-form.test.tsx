@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import type { AnyFormApi } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { act, useEffect } from "react";

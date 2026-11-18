@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
@@ -22,11 +20,10 @@ import {
   vi,
 } from "vite-plus/test";
 
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 import { CennikContent } from "@/routes/dashboard/-components/cennik-page";
 
-const makeLegendPrice = (index: number): LegendPrice =>
+const makeLegendPrice = (index: number) =>
   Schema.decodeSync(LegendPriceSummary)({
     enemies: [
       {
@@ -94,7 +91,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const setNativeInputValue = (input: HTMLInputElement, value: string): void => {
+const setNativeInputValue = (input: HTMLInputElement, value: string) => {
   const descriptor = Object.getOwnPropertyDescriptor(
     HTMLInputElement.prototype,
     "value"

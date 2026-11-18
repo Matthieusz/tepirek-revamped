@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   esbuild: true
   msgpackr-extract: true
+  msw: false
 
 catalog:
   better-auth: ^1.7.25
@@ -22,22 +23,17 @@ catalog:
   linkedom: ^0.18.15
 
 minimumReleaseAgeExclude:
-  - "@effect/platform-node-shared@4.1.0"
-  - "@effect/platform-node@4.1.0"
-  - "@effect/sql-pg@4.1.0"
-  - "@effect/vitest@4.1.0"
+  - "@effect/platform-node-shared@4.0.0 || 4.1.0"
+  - "@effect/platform-node@4.0.0 || 4.1.0"
+  - "@effect/sql-pg@4.0.0 || 4.1.0"
+  - "@effect/vitest@4.0.0 || 4.1.0"
   - "@types/node@26.6.6"
-  - effect@4.1.0
+  - effect@4.0.0 || 4.1.0
   - lucide-react@1.64.0
   - cn@0.2.4
   - "@vitest/mocker@5.0.0"
   - "@vitest/spy@5.0.0"
   - vitest@5.0.0
-  - "@effect/platform-node-shared@4.0.0"
-  - "@effect/platform-node@4.0.0"
-  - "@effect/sql-pg@4.0.0"
-  - "@effect/vitest@4.0.0"
-  - effect@4.0.0
   - "@voidzero-dev/vite-plus-core@1.2.0"
   - "@voidzero-dev/vite-plus-darwin-arm64@1.2.0"
   - "@voidzero-dev/vite-plus-darwin-x64@1.2.0"
@@ -62,6 +58,8 @@ minimumReleaseAgeExclude:
   - "@tsrs/linux-arm64-musl@0.18.0-ts7.1.0-dev.20260929"
   - "@tsrs/linux-x64-gnu@0.18.0-ts7.1.0-dev.20260929"
   - "@tsrs/linux-x64-musl@0.18.0-ts7.1.0-dev.20260929"
+  - "@interfere/landmines@0.1.0"
+  - "@nkzw/oxlint-config@3.0.0"
 
 onlyBuiltDependencies:
   - esbuild

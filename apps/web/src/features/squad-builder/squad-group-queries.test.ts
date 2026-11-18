@@ -1,5 +1,6 @@
 import { QueryObserver } from "@tanstack/react-query";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { Deferred, Effect } from "effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
   availableSquadCharactersQueryKey,
@@ -34,16 +35,25 @@ describe("squad group resource queries", () => {
         retry: false,
       });
 
-      const unsubscribeDetail = detailObserver.subscribe(() => {});
+      const detailFinished = Deferred.makeUnsafe<boolean>();
+      const charactersFinished = Deferred.makeUnsafe<boolean>();
+      const unsubscribeDetail = detailObserver.subscribe((result) => {
+        if (!result.isPending && !result.isFetching) {
+          Effect.runSync(Deferred.succeed(detailFinished, true));
+        }
+      });
 
-      const unsubscribeCharacters = charactersObserver.subscribe(() => {});
+      const unsubscribeCharacters = charactersObserver.subscribe((result) => {
+        if (!result.isPending && !result.isFetching) {
+          Effect.runSync(Deferred.succeed(charactersFinished, true));
+        }
+      });
 
       try {
         expect(detailObserver.getCurrentResult().fetchStatus).toBe("idle");
         expect(charactersObserver.getCurrentResult().fetchStatus).toBe("idle");
         expect(calls).toEqual([]);
 
-        // The same subscribed observers must issue requests once the ID is valid.
         detailObserver.setOptions({
           ...squadGroupDetailQueryOptions(7, effectQuery),
           retry: false,
@@ -53,9 +63,13 @@ describe("squad group resource queries", () => {
           retry: false,
         });
 
-        await vi.waitFor(() => {
-          expect(calls).toHaveLength(2);
-        });
+        await Effect.runPromise(
+          Effect.all([
+            Deferred.await(detailFinished),
+            Deferred.await(charactersFinished),
+          ])
+        );
+        expect(calls).toHaveLength(2);
         expect(calls).toEqual(
           expect.arrayContaining([
             {
