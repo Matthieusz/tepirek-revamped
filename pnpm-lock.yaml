@@ -215,15 +215,15 @@ importers:
 
   .:
     devDependencies:
+      '@cloudflare/oxlint-config':
+        specifier: 0.1.0
+        version: 0.1.0(eslint@10.15.0(jiti@2.7.0))(oxlint@1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)))(tsrs@0.25.0-ts7.1.0-beta)(typescript@7.0.2)
       '@effect/tsgo':
         specifier: 0.70.0
         version: 0.70.0
       '@interfere/landmines':
         specifier: 0.1.0
         version: 0.1.0(oxlint@1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)))
-      '@nkzw/oxlint-config':
-        specifier: 3.0.0
-        version: 3.0.0(eslint@10.15.0(jiti@2.7.0))(oxlint@1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)))(tsrs@0.25.0-ts7.1.0-beta)(typescript@7.0.2)
       '@oxlint/plugins':
         specifier: 1.94.0
         version: 1.94.0
@@ -761,6 +761,13 @@ packages:
   '@clack/prompts@1.9.0':
     resolution: {integrity: sha512-tEj8X2No2A1c9NDnZECxiiJ8TP3vmFlN9tLlLeSaMqVW4tUmVG2R4qpv/eP4zymWxnymYLkLcIYVV0VcWj3RCQ==}
     engines: {node: '>= 20.12.0'}
+
+  '@cloudflare/oxlint-config@0.1.0':
+    resolution: {integrity: sha512-ZIajMHdEImUjtKZEHbpddrXsnNBpQT7Gy1MZg2lOL3ketdmWYpNWtZghkkKAlhgi2R8z/HATZyas4OOpMy6TIQ==}
+    engines: {node: ^22.18.0 || >=24.0.0}
+    peerDependencies:
+      oxlint: ^1.94.0
+      tsrs: '>=0.25.0-ts7.1.0-beta'
 
   '@date-fns/tz@1.5.0':
     resolution: {integrity: sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg==}
@@ -5291,6 +5298,17 @@ snapshots:
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 2.0.0
+
+  '@cloudflare/oxlint-config@0.1.0(eslint@10.15.0(jiti@2.7.0))(oxlint@1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)))(tsrs@0.25.0-ts7.1.0-beta)(typescript@7.0.2)':
+    dependencies:
+      '@nkzw/oxlint-config': 3.0.0(eslint@10.15.0(jiti@2.7.0))(oxlint@1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)))(tsrs@0.25.0-ts7.1.0-beta)(typescript@7.0.2)
+      oxlint: 1.94.0(vite-plus@1.7.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(msw@2.15.0(@types/node@26.6.6)(typescript@7.0.2))(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1))
+      tsrs: 0.25.0-ts7.1.0-beta
+    transitivePeerDependencies:
+      - '@typescript/native'
+      - eslint
+      - supports-color
+      - typescript
 
   '@date-fns/tz@1.5.0': {}
 

@@ -60,6 +60,7 @@ minimumReleaseAgeExclude:
   - "@tsrs/linux-x64-musl@0.18.0-ts7.1.0-dev.20260929"
   - "@interfere/landmines@0.1.0"
   - "@nkzw/oxlint-config@3.0.0"
+  - "@cloudflare/oxlint-config@0.1.0"
 
 onlyBuiltDependencies:
   - esbuild

@@ -1,6 +1,5 @@
+import cloudflare from "@cloudflare/oxlint-config";
 import ultraciteFmt from "ultracite/oxfmt";
-import core from "ultracite/oxlint/core";
-import react from "ultracite/oxlint/react";
 import { defineConfig } from "vite-plus";
 
 const webDomTests = [
@@ -42,18 +41,16 @@ export default defineConfig({
     ],
   },
   lint: {
-    extends: [core, react],
+    ...cloudflare,
     ignorePatterns: [
+      ...(cloudflare.ignorePatterns ?? []),
       ".codegraph/**",
       "apps/web/src/routeTree.gen.ts",
       "apps/web/src/components/*",
       "tools/oxlint/anti-slop/**",
     ],
     jsPlugins: [
-      {
-        name: "quality",
-        specifier: "@nkzw/oxlint-config/quality/index.js",
-      },
+      ...(cloudflare.jsPlugins ?? []),
       {
         name: "anti-slop-effect",
         specifier: "./tools/oxlint/anti-slop/effect/index.ts",
@@ -67,10 +64,28 @@ export default defineConfig({
       { name: "landmines-types", specifier: "@interfere/landmines/types" },
     ],
     options: {
-      typeAware: true,
+      ...cloudflare.options,
+      reportUnusedDisableDirectives: "off",
       typeCheck: true,
     },
+    overrides: [
+      ...(cloudflare.overrides ?? []),
+      {
+        files: [
+          "apps/web/src/lib/query-diagnostics.ts",
+          "tools/architecture/check.ts",
+        ],
+        rules: { "no-console": "off" },
+      },
+    ],
     rules: {
+      ...cloudflare.rules,
+      "import/no-namespace": "off",
+      "typescript/array-type": "off",
+      "@nkzw/no-instanceof": "off",
+      "no-useless-assignment": "off",
+      "unicorn/prefer-string-raw": "off",
+      "unicorn/text-encoding-identifier-case": "off",
       "anti-slop-effect/no-manual-effect-error-tag": "error",
       "anti-slop-effect/no-manual-tag-comparison": "error",
       "anti-slop-effect/no-manual-tagged-construction": "error",
@@ -86,20 +101,6 @@ export default defineConfig({
       "landmines-testing/no-unsignaled-poll": "error",
       "landmines-testing/strict-msw": "error",
       "landmines-types/no-explicit-return-types": "error",
-      "quality/no-array-filter-map": "error",
-      "quality/no-chained-type-assertions": "error",
-      "quality/no-conditional-empty-object-spread": "error",
-      "quality/no-known-value-widening": "error",
-      "quality/no-object-parameters": "error",
-      "quality/no-reduce-accumulator-copy": "error",
-      "quality/no-reflect-apply": "error",
-      "quality/no-reflect-get": "error",
-      "quality/no-unknown-returns": "error",
-      "quality/no-unknown-type-aliases": "error",
-      "quality/no-unsafe-dictionary-type": "error",
-      "quality/no-widen-then-assert": "error",
-      "no-redeclare": "off",
-      "oxc/no-accumulating-spread": "error",
       "typescript/no-redeclare": "error",
     },
   },

@@ -30,9 +30,9 @@
     "prepare": "effect-tsgo patch --typescript --tsrs && vp config --no-agent"
   },
   "devDependencies": {
+    "@cloudflare/oxlint-config": "0.1.0",
     "@effect/tsgo": "0.70.0",
     "@interfere/landmines": "0.1.0",
-    "@nkzw/oxlint-config": "3.0.0",
     "@oxlint/plugins": "1.94.0",
     "@tepirek-revamped/config": "workspace:*",
     "@types/node": "^26.6.6",
